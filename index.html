@@ -49,10 +49,10 @@
   <!-- Phosphor Icons CDN -->
   <script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
 
-  <!-- Inter Font -->
+  <!-- Google Fonts for Status Studio -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Fira+Code:wght@600&family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:ital,wght@1,700&display=swap" rel="stylesheet">
 
   <style>
     .no-scrollbar::-webkit-scrollbar { display: none; }
@@ -61,6 +61,12 @@
     ::-webkit-scrollbar { width: 4px; height: 4px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 10px; }
+
+    /* Font Styles for Status Studio */
+    .font-sans-studio { font-family: 'Inter', sans-serif; }
+    .font-serif-studio { font-family: 'Playfair Display', serif; }
+    .font-mono-studio { font-family: 'Fira Code', monospace; }
+    .font-cursive-studio { font-family: 'Caveat', cursive; }
 
     /* Dynamic Chat Wallpaper Themes */
     .wallpaper-cyberpunk {
@@ -127,13 +133,20 @@
       border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
-    /* Live audio frequency bars */
+    /* Animated Live Audio Frequency Bars */
     .mic-bar {
       width: 4px;
       border-radius: 9999px;
       background-color: #ec4899;
       transition: height 0.05s ease;
       min-height: 4px;
+    }
+    .playing-bar {
+      animation: wave 0.8s infinite ease-in-out alternate;
+    }
+    @keyframes wave {
+      0% { height: 4px; }
+      100% { height: 20px; }
     }
   </style>
 </head>
@@ -154,7 +167,7 @@
     <input type="file" id="coverBannerInput" accept="image/*" class="hidden" />
     <input type="file" id="storyMediaInput" accept="image/*,video/*" class="hidden" />
 
-    <!-- TOP FLOATING IN-APP TOAST NOTIFICATION -->
+    <!-- TOP FLOATING IN-APP GLASSMORPHIC TOAST NOTIFICATION -->
     <div id="topToastNotification" class="hidden fixed top-3 left-3 right-3 sm:absolute sm:top-4 sm:left-4 sm:right-4 z-50 animate-toast">
       <div id="toastContent" class="glass-card p-3 rounded-2xl shadow-glow-brand flex items-center justify-between cursor-pointer border-l-4 border-accent-pink">
         <div class="flex items-center gap-3 min-w-0">
@@ -163,13 +176,13 @@
           </div>
           <div class="min-w-0">
             <div class="flex items-center gap-1.5">
-              <h5 id="toastSender" class="text-xs font-black truncate text-white">ClassmateX Live</h5>
+              <h5 id="toastSender" class="text-xs font-black truncate text-white">ClassmateX</h5>
               <span id="toastHandle" class="text-[9px] text-accent-pink font-bold truncate">@system</span>
             </div>
             <p id="toastMessage" class="text-[11px] text-slate-300 truncate">Firebase Online Mode Connected!</p>
           </div>
         </div>
-        <span class="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-accent-pink text-white uppercase shrink-0 ml-2">Just Now</span>
+        <span class="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-accent-pink text-white uppercase shrink-0 ml-2">Now</span>
       </div>
     </div>
 
@@ -216,6 +229,28 @@
         </button>
       </div>
     </header>
+
+    <!-- PROFILE PHOTO CROP & PREVIEW MODAL -->
+    <div id="cropPhotoModal" class="hidden absolute inset-0 z-50 bg-slate-950/98 backdrop-blur-xl flex items-center justify-center p-4">
+      <div class="w-full max-w-xs rounded-3xl bg-slate-900 border border-slate-800 p-5 shadow-2xl text-center animate-pop-in">
+        <h3 class="text-sm font-black text-white mb-3">Adjust & Preview Profile Picture</h3>
+        <div class="relative w-40 h-40 mx-auto rounded-full border-4 border-accent-pink overflow-hidden shadow-glow-pink bg-slate-950 my-2">
+          <img id="cropPhotoPreview" src="" class="w-full h-full object-cover transition-transform duration-200" />
+        </div>
+        <div class="my-3 space-y-1">
+          <label class="text-[10px] text-slate-400 font-bold uppercase">Zoom Image</label>
+          <input id="cropZoomRange" type="range" min="1" max="2" step="0.05" value="1" class="w-full accent-accent-pink cursor-pointer" />
+        </div>
+        <div class="flex gap-2 mt-4">
+          <button id="cancelCropBtn" class="flex-grow py-2.5 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold hover:bg-slate-700 transition">
+            Cancel
+          </button>
+          <button id="saveCropBtn" class="flex-grow py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-accent-pink text-white text-xs font-bold shadow-glow-pink transition">
+            Save Photo
+          </button>
+        </div>
+      </div>
+    </div>
 
     <!-- LONG-PRESS MESSAGE ACTION MODAL (EDIT & DELETE) -->
     <div id="messageActionModal" class="hidden absolute inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-end justify-center p-4">
@@ -339,7 +374,7 @@
       </div>
     </div>
 
-    <!-- STATUS / STORY CREATION STUDIO MODAL (TEXT, IMAGE, VIDEO) -->
+    <!-- ADVANCED STATUS / STORY CREATION STUDIO MODAL -->
     <div id="createStoryModal" class="hidden absolute inset-0 z-50 bg-slate-950 flex flex-col justify-between p-4 animate-pop-in">
       <div class="flex items-center justify-between text-white border-b border-slate-800/80 pb-3 z-10">
         <div class="flex items-center gap-2">
@@ -347,7 +382,7 @@
             <i class="ph ph-note-pencil text-base"></i>
           </div>
           <div>
-            <h3 class="text-xs font-black text-white">Create New Status / Story</h3>
+            <h3 class="text-xs font-black text-white">Status & Story Studio</h3>
             <p class="text-[9px] text-slate-400">Visible to classmates for 24 hours</p>
           </div>
         </div>
@@ -356,8 +391,31 @@
         </button>
       </div>
 
-      <div id="storyCanvasPreview" class="flex-grow my-3 rounded-3xl flex flex-col items-center justify-center p-6 text-center transition-all duration-300 relative overflow-hidden bg-gradient-to-br from-purple-700 via-indigo-800 to-slate-900 border border-slate-700 shadow-2xl">
-        <textarea id="storyTextInput" rows="3" placeholder="Type something cool here..." class="w-full bg-transparent text-center text-xl font-extrabold text-white outline-none resize-none placeholder-white/40 leading-relaxed z-10"></textarea>
+      <!-- Studio Customization Toolbar -->
+      <div class="flex items-center justify-between bg-slate-900/90 border border-slate-800 rounded-2xl px-3 py-1.5 my-2 text-xs text-white z-10">
+        <div class="flex items-center gap-2">
+          <button id="toggleFontFamilyBtn" class="px-2.5 py-1 rounded-xl bg-slate-800 text-[10px] font-bold hover:bg-slate-700 transition border border-slate-700 flex items-center gap-1">
+            <i class="ph ph-text-aa text-sm text-accent-pink"></i>
+            <span id="currentFontLabel">Sans</span>
+          </button>
+          <button id="toggleTextAlignBtn" class="p-1.5 rounded-xl bg-slate-800 text-xs hover:bg-slate-700 transition border border-slate-700">
+            <i id="alignIcon" class="ph ph-text-align-center text-sm"></i>
+          </button>
+        </div>
+
+        <div class="flex items-center gap-1 overflow-x-auto no-scrollbar">
+          <button class="emoji-sticker-btn text-base hover:scale-125 transition">🔥</button>
+          <button class="emoji-sticker-btn text-base hover:scale-125 transition">❤️</button>
+          <button class="emoji-sticker-btn text-base hover:scale-125 transition">😂</button>
+          <button class="emoji-sticker-btn text-base hover:scale-125 transition">🚀</button>
+          <button class="emoji-sticker-btn text-base hover:scale-125 transition">📚</button>
+          <button class="emoji-sticker-btn text-base hover:scale-125 transition">✨</button>
+        </div>
+      </div>
+
+      <!-- Canvas Preview Container -->
+      <div id="storyCanvasPreview" class="flex-grow my-1 rounded-3xl flex flex-col items-center justify-center p-6 text-center transition-all duration-300 relative overflow-hidden bg-gradient-to-br from-purple-700 via-indigo-800 to-slate-900 border border-slate-700 shadow-2xl font-sans-studio">
+        <textarea id="storyTextInput" rows="4" placeholder="Type your status updates here..." class="w-full bg-transparent text-center text-xl font-extrabold text-white outline-none resize-none placeholder-white/40 leading-relaxed z-10"></textarea>
         
         <div id="storyMediaPreviewContainer" class="hidden relative max-h-56 max-w-full my-2 rounded-2xl overflow-hidden border border-white/20 shadow-lg z-10">
           <img id="storyImagePreview" class="hidden max-h-56 w-full object-contain" />
@@ -368,7 +426,8 @@
         </div>
       </div>
 
-      <div class="space-y-3 z-10">
+      <div class="space-y-3 z-10 mt-2">
+        <!-- Interactive Color Palette Switcher -->
         <div id="statusColorBar" class="flex items-center justify-center gap-2.5 overflow-x-auto no-scrollbar py-1">
           <button data-bg="bg-gradient-to-br from-purple-700 via-indigo-800 to-slate-900" class="status-color-btn h-8 w-8 rounded-full bg-gradient-to-br from-purple-700 to-slate-900 border-2 border-white shadow-md transition transform hover:scale-110 shrink-0"></button>
           <button data-bg="bg-gradient-to-br from-rose-600 via-pink-600 to-purple-800" class="status-color-btn h-8 w-8 rounded-full bg-gradient-to-br from-rose-600 to-purple-800 border-2 border-transparent hover:border-white shadow-md transition transform hover:scale-110 shrink-0"></button>
@@ -390,7 +449,7 @@
       </div>
     </div>
 
-    <!-- FULL SCREEN STORY VIEWER MODAL -->
+    <!-- FULL SCREEN STORY VIEWER MODAL WITH VIEWERS DRAWER -->
     <div id="storyViewerModal" class="hidden absolute inset-0 z-50 bg-slate-950 flex flex-col justify-between p-4 animate-pop-in">
       <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden mb-3">
         <div id="storyProgressBar" class="bg-gradient-to-r from-brand-500 to-accent-pink h-full w-0 transition-all duration-100 ease-linear"></div>
@@ -417,10 +476,18 @@
         <p id="storyViewerText" class="hidden text-center text-xl font-black text-white p-6 leading-relaxed max-w-xs"></p>
       </div>
 
-      <div id="storyPrivacyBar" class="flex items-center justify-between bg-slate-900/90 border border-slate-800 rounded-2xl px-3 py-2 text-xs text-slate-300 z-10 my-1">
-        <div class="flex items-center gap-2 cursor-pointer" id="toggleStoryViewersBtn">
-          <i class="ph ph-eye text-accent-pink text-base"></i>
-          <span class="font-extrabold text-[11px]"><span id="storyViewerCount">14</span> Classmates Viewed</span>
+      <!-- Story Viewers Tracker Bar & Drawer -->
+      <div id="storyPrivacyBar" class="flex flex-col bg-slate-900/95 border border-slate-800 rounded-2xl p-2 text-xs text-slate-300 z-10 my-1 space-y-2">
+        <div class="flex items-center justify-between cursor-pointer px-2 py-1" id="toggleStoryViewersBtn">
+          <div class="flex items-center gap-2">
+            <i class="ph ph-eye text-accent-pink text-base"></i>
+            <span class="font-extrabold text-[11px]"><span id="storyViewerCount">0</span> Classmates Viewed</span>
+          </div>
+          <i class="ph ph-caret-up text-slate-400" id="viewersCaretIcon"></i>
+        </div>
+
+        <div id="storyViewersDrawer" class="hidden pt-2 border-t border-slate-800/80 space-y-1.5 max-h-28 overflow-y-auto pr-1">
+          <div class="text-[10px] text-slate-500 text-center py-2">No views yet for this status</div>
         </div>
       </div>
     </div>
@@ -437,50 +504,18 @@
             <h5 class="text-xs font-bold text-white">Last Seen & Online Status</h5>
             <p class="text-[10px] text-slate-400">Show when you are active on ClassmateX</p>
           </div>
-          <input type="checkbox" checked class="accent-accent-pink h-4 w-4 cursor-pointer">
+          <input type="checkbox" id="lastSeenToggle" checked class="accent-accent-pink h-4 w-4 cursor-pointer">
         </div>
         <div class="bg-slate-900 p-3 rounded-2xl border border-slate-800 space-y-1.5">
           <h5 class="text-xs font-bold text-white">Profile Picture Visibility</h5>
-          <select class="w-full bg-slate-800 border border-slate-700 text-xs text-white rounded-xl p-2 outline-none">
+          <select id="profileVisSelect" class="w-full bg-slate-800 border border-slate-700 text-xs text-white rounded-xl p-2 outline-none">
             <option>Everyone</option>
             <option>My Direct Contacts</option>
             <option>Nobody</option>
           </select>
         </div>
-        <div class="bg-slate-900 p-3 rounded-2xl border border-slate-800 flex items-center justify-between">
-          <div>
-            <h5 class="text-xs font-bold text-white">Blocked Users</h5>
-            <p class="text-[10px] text-slate-400">Manage blocked classmate profiles</p>
-          </div>
-          <span class="text-xs font-black text-slate-400">0 Accounts</span>
-        </div>
       </div>
       <button onclick="document.getElementById('privacySettingsModal').classList.add('hidden')" class="w-full py-2.5 rounded-xl bg-slate-800 text-white text-xs font-bold">Done</button>
-    </div>
-
-    <!-- SETTINGS SUB-MODAL: NOTIFICATIONS -->
-    <div id="notificationSettingsModal" class="hidden absolute inset-0 z-50 bg-slate-950 flex flex-col justify-between p-4 animate-pop-in">
-      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-        <h3 class="text-xs font-black text-white flex items-center gap-1.5"><i class="ph ph-bell text-brand-400 text-base"></i> Notifications</h3>
-        <button id="closeNotificationModalBtn" class="h-8 w-8 rounded-full bg-slate-800 text-slate-300 flex items-center justify-center"><i class="ph ph-x text-base"></i></button>
-      </div>
-      <div class="flex-grow space-y-3 my-4 overflow-y-auto">
-        <div class="flex items-center justify-between bg-slate-900 p-3 rounded-2xl border border-slate-800">
-          <div>
-            <h5 class="text-xs font-bold text-white">Message Sounds</h5>
-            <p class="text-[10px] text-slate-400">Play tone on incoming chats</p>
-          </div>
-          <input type="checkbox" checked class="accent-accent-pink h-4 w-4 cursor-pointer">
-        </div>
-        <div class="flex items-center justify-between bg-slate-900 p-3 rounded-2xl border border-slate-800">
-          <div>
-            <h5 class="text-xs font-bold text-white">Push Alert Popups</h5>
-            <p class="text-[10px] text-slate-400">Show floating banners on top screen</p>
-          </div>
-          <input type="checkbox" checked class="accent-accent-pink h-4 w-4 cursor-pointer">
-        </div>
-      </div>
-      <button onclick="document.getElementById('notificationSettingsModal').classList.add('hidden')" class="w-full py-2.5 rounded-xl bg-slate-800 text-white text-xs font-bold">Done</button>
     </div>
 
     <!-- MAIN APP VIEWS CONTAINER -->
@@ -610,7 +645,7 @@
                          class="w-full rounded-xl border border-slate-700 bg-slate-800/90 py-2 pl-9 pr-3 text-xs text-white outline-none focus:border-accent-pink focus:ring-2 focus:ring-accent-pink/20 transition" />
                 </div>
                 <p id="usernameError" class="hidden text-[10px] font-bold text-rose-400 mt-1 flex items-center gap-1">
-                  <i class="ph ph-warning-circle text-xs"></i> <span>Username hii tayari imetumiwa, tafadhali chagua nyingine.</span>
+                  <i class="ph ph-warning-circle text-xs"></i> <span>Username is already taken! Choose another.</span>
                 </p>
               </div>
 
@@ -699,9 +734,9 @@
               </span>
             </div>
 
-            <div class="flex items-center gap-3 overflow-x-auto no-scrollbar pb-1">
+            <div class="flex items-center gap-3 overflow-x-auto no-scrollbar pb-1" id="storiesScrollContainer">
               
-              <!-- My Story Button -->
+              <!-- My Story Trigger Button -->
               <div id="addMyStoryBtn" class="flex flex-col items-center gap-1 cursor-pointer shrink-0 group">
                 <div id="myStoryAvatarWrapper" class="relative p-0.5 rounded-full border-2 border-dashed border-accent-pink/80 group-hover:border-accent-pink transition">
                   <div id="myStoryAvatarThumbnail" class="h-12 w-12 rounded-full bg-slate-800 text-slate-300 font-black text-xs flex items-center justify-center overflow-hidden">
@@ -712,30 +747,7 @@
                 <span id="myStoryLabelText" class="text-[10px] font-bold tracking-tight text-accent-pink">Add Story</span>
               </div>
 
-              <!-- CEO Story Item -->
-              <div data-story-type="text" data-story-bg="bg-gradient-to-br from-purple-700 via-indigo-800 to-slate-900" data-story-text="Welcome everyone to ClassmateX Social App! 🚀" data-story-handle="@fahmy_mazrui" data-story-verified="true" data-story-time="Just now" class="story-item-trigger flex flex-col items-center gap-1 cursor-pointer shrink-0">
-                <div class="relative p-0.5 rounded-full bg-gradient-to-tr from-brand-500 via-accent-purple to-accent-pink shadow-glow-pink">
-                  <div class="h-12 w-12 rounded-full bg-gradient-to-br from-indigo-600 to-purple-700 text-white font-black text-xs flex items-center justify-center">
-                    FM
-                  </div>
-                  <span class="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full bg-sky-400 border-2 border-slate-950 text-[8px] flex items-center justify-center text-white"><i class="ph ph-check-bold"></i></span>
-                </div>
-                <span class="text-[10px] font-bold tracking-tight text-brand-400 flex items-center">
-                  @fahmy_mazrui <i class="ph ph-seal-check-fill text-sky-400 text-xs ml-0.5" title="Verified"></i>
-                </span>
-              </div>
-
-              <!-- Classmate Story Item -->
-              <div data-story-type="text" data-story-bg="bg-gradient-to-br from-rose-600 via-pink-600 to-purple-800" data-story-text="Hello classmates! Super excited to be here 🚀🔥" data-story-handle="@sarah_juma" data-story-verified="false" data-story-time="1 hour ago" class="story-item-trigger flex flex-col items-center gap-1 cursor-pointer shrink-0">
-                <div class="relative p-0.5 rounded-full bg-gradient-to-tr from-accent-pink to-amber-400 shadow-xs">
-                  <div class="h-12 w-12 rounded-full bg-emerald-500 text-white font-black text-xs flex items-center justify-center">
-                    SJ
-                  </div>
-                  <span class="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full bg-emerald-500 border-2 border-slate-950"></span>
-                </div>
-                <span class="text-[10px] font-bold tracking-tight text-slate-300">@sarah_juma</span>
-              </div>
-
+              <!-- Dynamic Realtime Stories Loaded via JS -->
             </div>
           </div>
 
@@ -750,43 +762,9 @@
             </div>
           </div>
 
-          <!-- Direct Chat Threads List (Non-empty threads only) -->
+          <!-- Direct Chat Threads List (Non-empty real threads only) -->
           <div id="chatThreadList" class="flex-grow overflow-y-auto divide-y divide-slate-800/60">
-            <!-- CEO Verified DM Thread -->
-            <div data-chat-id="ceo-fahmy-mazrui" data-chat-type="private" data-search-term="@fahmy_mazrui verified" class="chat-thread-item chat-thread-trigger flex items-center gap-3 p-3 cursor-pointer bg-brand-950/30 border-l-4 border-accent-pink transition hover:bg-slate-900/60">
-              <div class="relative shrink-0">
-                <div class="h-11 w-11 rounded-full bg-gradient-to-tr from-brand-600 via-accent-purple to-accent-pink text-white font-black text-xs flex items-center justify-center shadow-xs">
-                  FM
-                </div>
-                <span class="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full bg-sky-400 border-2 border-slate-950 text-[8px] flex items-center justify-center text-white"><i class="ph ph-check-bold"></i></span>
-              </div>
-              <div class="flex-grow min-w-0">
-                <div class="flex justify-between items-baseline mb-0.5">
-                  <h4 class="text-xs font-black truncate text-white flex items-center">
-                    @fahmy_mazrui <i class="ph ph-seal-check-fill text-sky-400 text-sm ml-0.5" title="Verified CEO"></i>
-                  </h4>
-                  <span class="text-[10px] font-black text-accent-pink shrink-0">CEO</span>
-                </div>
-                <p class="text-[11px] text-slate-300 truncate font-medium">Welcome to ClassmateX! Message me anytime.</p>
-              </div>
-            </div>
-
-            <!-- Sarah Juma DM Thread -->
-            <div data-chat-id="sarah-juma" data-chat-type="private" data-search-term="@sarah_juma" class="chat-thread-item chat-thread-trigger flex items-center gap-3 p-3 cursor-pointer transition hover:bg-slate-900/60">
-              <div class="relative shrink-0">
-                <div class="h-11 w-11 rounded-full bg-emerald-500 text-white font-black text-xs flex items-center justify-center shadow-xs">
-                  SJ
-                </div>
-                <span class="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-emerald-500 border-2 border-slate-950"></span>
-              </div>
-              <div class="flex-grow min-w-0">
-                <div class="flex justify-between items-baseline mb-0.5">
-                  <h4 class="text-xs font-bold truncate text-white">@sarah_juma</h4>
-                  <span class="text-[10px] text-slate-400 shrink-0">09:12 AM</span>
-                </div>
-                <p class="text-[11px] text-slate-400 truncate">Hey! Glad to connect with you on ClassmateX.</p>
-              </div>
-            </div>
+            <!-- Dynamic Firestore Threads Load Here -->
           </div>
         </div>
 
@@ -800,7 +778,7 @@
                 <i class="ph ph-arrow-left text-lg"></i>
               </button>
 
-              <div id="activeChatHeaderIcon" class="h-9 w-9 rounded-xl bg-gradient-to-tr from-brand-600 via-accent-purple to-accent-pink text-white font-bold flex items-center justify-center text-base shadow-xs shrink-0">
+              <div id="activeChatHeaderIcon" class="h-9 w-9 rounded-xl bg-gradient-to-tr from-brand-600 via-accent-purple to-accent-pink text-white font-bold flex items-center justify-center text-base shadow-xs shrink-0 overflow-hidden">
                 🌐
               </div>
               <div class="min-w-0">
@@ -815,7 +793,7 @@
 
           <!-- Messages Container -->
           <div id="messagesContainer" class="wallpaper-cyberpunk flex-grow p-3 overflow-y-auto space-y-3 relative z-10 transition-all duration-300">
-            <!-- Dynamic Messages Render Here -->
+            <!-- Dynamic Realtime Messages Render Here -->
           </div>
 
           <!-- Voice Recording Bar -->
@@ -876,35 +854,52 @@
           </div>
 
           <div id="membersList" class="space-y-2.5">
-            <!-- Populated dynamically with clean cards -->
+            <!-- Populated dynamically from Firestore users -->
           </div>
         </div>
 
         <!-- SCREEN 4: PROFILE & SETTINGS TAB -->
         <div id="screenSettings" class="hidden flex-col h-full w-full bg-slate-950 overflow-y-auto p-3 space-y-3">
-          <div class="bg-slate-900 rounded-3xl border border-slate-800 overflow-hidden shadow-soft relative p-4">
-            <div class="flex items-center gap-3">
-              <div id="settingsAvatarContainer" class="h-16 w-16 rounded-full bg-gradient-to-tr from-brand-600 to-accent-pink text-white font-black text-xl flex items-center justify-center shrink-0">
-                FM
+          
+          <!-- Profile Card Header with Cover Banner and Avatar Upload Trigger -->
+          <div class="bg-slate-900 rounded-3xl border border-slate-800 overflow-hidden shadow-soft relative">
+            <div id="profileCoverBanner" class="h-28 w-full bg-gradient-to-r from-brand-600 via-accent-purple to-accent-pink relative cursor-pointer group">
+              <img id="coverBannerImg" src="" class="hidden w-full h-full object-cover" />
+              <button id="triggerChangeBannerBtn" class="absolute top-3 right-3 h-8 px-2.5 rounded-xl bg-slate-950/60 backdrop-blur-md text-white text-[10px] font-bold flex items-center gap-1 hover:bg-slate-950 transition">
+                <i class="ph ph-camera"></i> Change Cover
+              </button>
+            </div>
+
+            <div class="px-4 pb-4 -mt-10 relative z-10">
+              <div class="flex items-end justify-between mb-2">
+                <div class="relative h-20 w-20 rounded-full border-4 border-slate-950 overflow-hidden shadow-glow-pink shrink-0 bg-slate-900 group cursor-pointer" id="settingsAvatarWrapper">
+                  <div id="settingsAvatarContainer" class="w-full h-full bg-gradient-to-tr from-brand-600 to-accent-pink text-white font-black text-xl flex items-center justify-center">
+                    ME
+                  </div>
+                  <button id="changeProfilePicBtn" class="absolute bottom-0 inset-x-0 bg-slate-950/80 text-slate-200 py-0.5 text-[9px] font-bold text-center hover:text-white transition flex items-center justify-center gap-0.5">
+                    <i class="ph ph-camera text-xs"></i> Edit
+                  </button>
+                </div>
+
+                <div class="flex items-center gap-2">
+                  <button id="openEditProfileBtn" class="touch-active px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-[11px] font-bold border border-slate-700 transition flex items-center gap-1">
+                    <i class="ph ph-pencil-simple"></i> Edit Profile
+                  </button>
+                  <button id="openQrModalBtn" class="touch-active h-8 w-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-accent-pink text-base border border-slate-700 transition flex items-center justify-center">
+                    <i class="ph ph-qr-code"></i>
+                  </button>
+                </div>
               </div>
-              <div class="min-w-0">
+
+              <div>
                 <h3 id="settingsUserHandle" class="text-sm font-black text-accent-pink truncate flex items-center">
-                  @fahmy_mazrui <span id="ceoVerifiedBadge"><i class="ph ph-seal-check-fill text-sky-400 text-sm ml-0.5" title="Verified CEO"></i></span>
+                  @username
                 </h3>
-                <p id="settingsUserBio" class="text-[11px] text-slate-300 truncate mt-0.5">ClassmateX Founder & CEO 🚀</p>
-                <span id="ceoRoleBadge" class="inline-flex items-center gap-1 mt-1.5 px-2.5 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/30 text-[9px] font-black">
+                <p id="settingsUserBio" class="text-[11px] text-slate-300 truncate mt-0.5">ClassmateX User 🚀</p>
+                <span id="ceoRoleBadge" class="hidden inline-flex items-center gap-1 mt-1.5 px-2.5 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/30 text-[9px] font-black">
                   <i class="ph ph-seal-check-fill"></i> Founder & CEO
                 </span>
               </div>
-            </div>
-            
-            <div class="flex gap-2 mt-4">
-              <button id="openEditProfileBtn" class="flex-grow py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold border border-slate-700 transition">
-                Edit Profile
-              </button>
-              <button id="openQrModalBtn" class="px-3 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-accent-pink text-base border border-slate-700 transition">
-                <i class="ph ph-qr-code"></i>
-              </button>
             </div>
           </div>
 
@@ -920,19 +915,15 @@
             </div>
           </div>
 
-          <!-- Extended Settings Controls -->
+          <!-- Settings Controls & Cache Management -->
           <div class="bg-slate-900 rounded-2xl border border-slate-800 divide-y divide-slate-800/80 text-xs font-bold">
             <button onclick="document.getElementById('privacySettingsModal').classList.remove('hidden')" class="w-full p-3 flex items-center justify-between text-slate-200 hover:bg-slate-800/50 transition">
               <span class="flex items-center gap-2"><i class="ph ph-shield-check text-accent-pink text-base"></i> Privacy & Security</span>
               <i class="ph ph-caret-right text-slate-500"></i>
             </button>
-            <button onclick="document.getElementById('notificationSettingsModal').classList.remove('hidden')" class="w-full p-3 flex items-center justify-between text-slate-200 hover:bg-slate-800/50 transition">
-              <span class="flex items-center gap-2"><i class="ph ph-bell text-brand-400 text-base"></i> Notifications</span>
-              <i class="ph ph-caret-right text-slate-500"></i>
-            </button>
-            <button id="clearCacheBtn" class="w-full p-3 flex items-center justify-between text-slate-200 hover:bg-slate-800/50 transition">
-              <span class="flex items-center gap-2"><i class="ph ph-trash-simple text-amber-400 text-base"></i> Clear Local Cache</span>
-              <span class="text-[10px] text-slate-500">2.4 MB</span>
+            <button id="clearCacheBtn" class="w-full p-3 flex items-center justify-between text-amber-400 hover:bg-slate-800/50 transition">
+              <span class="flex items-center gap-2"><i class="ph ph-broom text-amber-400 text-base"></i> Clear Local Cache</span>
+              <span class="text-[10px] text-slate-500">Free Space</span>
             </button>
           </div>
 
@@ -972,6 +963,7 @@
 
   </div>
 
+  <!-- JavaScript App Logic Module -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { 
@@ -1009,7 +1001,7 @@
       appId: "1:111335466428:web:0637da236333e22c8fb7b9"
     };
 
-    let app, auth, db;
+    let app = null, auth = null, db = null;
     let isFirebaseConfigured = false;
 
     try {
@@ -1017,10 +1009,48 @@
         app = initializeApp(firebaseConfig);
         auth = getAuth(app);
         db = getFirestore(app);
-        isFirebaseConfigured = true;
+        isFirebaseConfigured = Boolean(app && auth && db);
       }
     } catch (e) {
       console.warn("Firebase fallback mode:", e.message);
+      isFirebaseConfigured = false;
+    }
+
+    // Safe Firebase Collection Helper
+    function getSafeCollection(...pathSegments) {
+      if (!isFirebaseConfigured || !db) return null;
+      try {
+        const cleanSegments = pathSegments.filter(s => typeof s === 'string' && s.trim().length > 0);
+        if (cleanSegments.length === 0) return null;
+        return collection(db, ...cleanSegments);
+      } catch (e) {
+        console.warn("Error resolving collection reference:", e.message);
+        return null;
+      }
+    }
+
+    // Safe Firebase Document Helper
+    function getSafeDoc(...pathSegments) {
+      if (!isFirebaseConfigured || !db) return null;
+      try {
+        const cleanSegments = pathSegments.filter(s => typeof s === 'string' && s.trim().length > 0);
+        if (cleanSegments.length < 2 || cleanSegments.length % 2 !== 0) return null;
+        return doc(db, ...cleanSegments);
+      } catch (e) {
+        console.warn("Error resolving document reference:", e.message);
+        return null;
+      }
+    }
+
+    // Sanitize Firestore Payload
+    function sanitizeData(obj) {
+      const clean = {};
+      for (const key in obj) {
+        if (Object.prototype.hasOwnProperty.call(obj, key)) {
+          clean[key] = obj[key] === undefined ? null : obj[key];
+        }
+      }
+      return clean;
     }
 
     const CEO_EMAIL = 'fahmymazrui@gmail.com';
@@ -1029,21 +1059,29 @@
     let currentUserHandle = 'fahmy_mazrui';
     let currentUserEmail = 'fahmymazrui@gmail.com';
     let currentUserBio = 'ClassmateX Founder & CEO 🚀';
+    let currentUserAvatarUrl = localStorage.getItem('cx_avatar_url') || null;
+    let currentUserCoverUrl = localStorage.getItem('cx_cover_url') || null;
     let isCeoUser = true;
     let currentActiveChatId = 'global-group';
     let messagesUnsubscribe = null;
+    let storiesUnsubscribe = null;
     let typingTimer = null;
-    let isUsernameTaken = false;
     let selectedMsgForAction = null;
     let longPressTimer = null;
+    let tempSelectedCropImage = null;
 
     let mediaRecorder = null;
     let audioChunks = [];
     let recordTimerInterval = null;
     let recordSeconds = 0;
 
+    let selectedStatusBg = "bg-gradient-to-br from-purple-700 via-indigo-800 to-slate-900";
+    let selectedStatusFont = "font-sans-studio";
+    let selectedStatusAlign = "text-center";
+    let compressedStatusMediaData = null;
+
     function checkCeoStatus(email) {
-      return email && email.toLowerCase() === CEO_EMAIL.toLowerCase();
+      return Boolean(email && email.toLowerCase() === CEO_EMAIL.toLowerCase());
     }
 
     function getVerifiedBadgeHtml(isVerified) {
@@ -1053,12 +1091,26 @@
     function triggerNotificationToast(senderName, handle, message, avatarInitials) {
       const toast = document.getElementById('topToastNotification');
       if (!toast) return;
-      document.getElementById('toastSender').textContent = senderName;
-      document.getElementById('toastHandle').textContent = `@${handle.replace('@','')}`;
-      document.getElementById('toastMessage').textContent = message;
+      document.getElementById('toastSender').textContent = senderName || 'ClassmateX';
+      document.getElementById('toastHandle').textContent = `@${(handle || 'system').replace('@','')}`;
+      document.getElementById('toastMessage').textContent = message || '';
       document.getElementById('toastAvatar').textContent = avatarInitials || 'CX';
       toast.classList.remove('hidden');
       setTimeout(() => { toast.classList.add('hidden'); }, 3500);
+    }
+
+    function initSession() {
+      const savedUser = localStorage.getItem('cx_user_session');
+      if (savedUser) {
+        try {
+          const user = JSON.parse(savedUser);
+          openMainApp(user.name, user.handle, user.email);
+        } catch(e) {}
+      }
+    }
+
+    function saveUserSession(name, handle, email) {
+      localStorage.setItem('cx_user_session', JSON.stringify({ name, handle, email }));
     }
 
     function openMainApp(name, handle, email) {
@@ -1070,6 +1122,8 @@
       if (isCeoUser) {
         currentUserHandle = 'fahmy_mazrui';
       }
+
+      saveUserSession(currentUserName, currentUserHandle, currentUserEmail);
       
       document.getElementById('authView')?.classList.add('hidden');
       const mainApp = document.getElementById('mainAppView');
@@ -1080,9 +1134,313 @@
       document.getElementById('headerUserAvatarBtn')?.classList.remove('hidden');
       updateProfileDisplay();
       loadMembersFromFirestore();
+      listenToRealtimeStories();
+      loadUserChatThreads();
     }
 
-    // Google Sign In Button
+    // Client-Side Image Compression using Canvas
+    function compressImage(file, maxWidth = 1080, quality = 0.75) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+          const img = new Image();
+          img.src = event.target.result;
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
+
+            if (width > maxWidth) {
+              height = Math.round((height * maxWidth) / width);
+              width = maxWidth;
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            resolve(canvas.toDataURL('image/jpeg', quality));
+          };
+          img.onerror = (err) => reject(err);
+        };
+        reader.onerror = (err) => reject(err);
+      });
+    }
+
+    // PROFILE PICTURE & COVER BANNER UPLOADER LOGIC
+    const profileImageInput = document.getElementById('profileImageInput');
+    const changeProfilePicBtn = document.getElementById('changeProfilePicBtn');
+    const settingsAvatarWrapper = document.getElementById('settingsAvatarWrapper');
+    const cropPhotoModal = document.getElementById('cropPhotoModal');
+    const cropPhotoPreview = document.getElementById('cropPhotoPreview');
+    const cropZoomRange = document.getElementById('cropZoomRange');
+
+    changeProfilePicBtn?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      profileImageInput?.click();
+    });
+
+    settingsAvatarWrapper?.addEventListener('click', () => {
+      profileImageInput?.click();
+    });
+
+    profileImageInput?.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      try {
+        tempSelectedCropImage = await compressImage(file, 600, 0.85);
+        if (cropPhotoPreview) cropPhotoPreview.src = tempSelectedCropImage;
+        if (cropZoomRange) cropZoomRange.value = 1;
+        cropPhotoModal?.classList.remove('hidden');
+      } catch (err) {
+        triggerNotificationToast("Photo Error", currentUserHandle, "Failed to load photo", "CX");
+      }
+    });
+
+    cropZoomRange?.addEventListener('input', () => {
+      if (cropPhotoPreview) {
+        cropPhotoPreview.style.transform = `scale(${cropZoomRange.value})`;
+      }
+    });
+
+    document.getElementById('cancelCropBtn')?.addEventListener('click', () => {
+      cropPhotoModal?.classList.add('hidden');
+      tempSelectedCropImage = null;
+    });
+
+    document.getElementById('saveCropBtn')?.addEventListener('click', async () => {
+      if (tempSelectedCropImage) {
+        currentUserAvatarUrl = tempSelectedCropImage;
+        localStorage.setItem('cx_avatar_url', currentUserAvatarUrl);
+
+        if (currentUserId) {
+          const userDocRef = getSafeDoc("users", currentUserId);
+          if (userDocRef) {
+            updateDoc(userDocRef, { avatarUrl: currentUserAvatarUrl }).catch(() => {});
+          }
+        }
+
+        updateProfileDisplay();
+        cropPhotoModal?.classList.add('hidden');
+        triggerNotificationToast("Profile Picture Updated", currentUserHandle, "New profile picture saved!", "CX");
+      }
+    });
+
+    // COVER BANNER UPLOADER LOGIC
+    const coverBannerInput = document.getElementById('coverBannerInput');
+    document.getElementById('triggerChangeBannerBtn')?.addEventListener('click', () => {
+      coverBannerInput?.click();
+    });
+
+    coverBannerInput?.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      try {
+        const compressedBanner = await compressImage(file, 1200, 0.8);
+        currentUserCoverUrl = compressedBanner;
+        localStorage.setItem('cx_cover_url', currentUserCoverUrl);
+
+        const bannerImg = document.getElementById('coverBannerImg');
+        if (bannerImg) {
+          bannerImg.src = currentUserCoverUrl;
+          bannerImg.classList.remove('hidden');
+        }
+
+        if (currentUserId) {
+          const userDocRef = getSafeDoc("users", currentUserId);
+          if (userDocRef) {
+            updateDoc(userDocRef, { coverUrl: currentUserCoverUrl }).catch(() => {});
+          }
+        }
+        triggerNotificationToast("Cover Updated", currentUserHandle, "Profile cover banner updated!", "CX");
+      } catch (err) {
+        triggerNotificationToast("Banner Error", currentUserHandle, "Failed to update cover", "CX");
+      }
+    });
+
+    // Status Studio Tools & Events
+    const storyCanvasPreview = document.getElementById('storyCanvasPreview');
+    const storyTextInput = document.getElementById('storyTextInput');
+
+    document.querySelectorAll('.status-color-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const bg = btn.dataset.bg;
+        if (bg && storyCanvasPreview) {
+          selectedStatusBg = bg;
+          storyCanvasPreview.className = `flex-grow my-1 rounded-3xl flex flex-col items-center justify-center p-6 text-center transition-all duration-300 relative overflow-hidden ${bg} border border-slate-700 shadow-2xl ${selectedStatusFont}`;
+        }
+      });
+    });
+
+    const fontFamilies = [
+      { id: "font-sans-studio", label: "Sans" },
+      { id: "font-serif-studio", label: "Serif" },
+      { id: "font-mono-studio", label: "Mono" },
+      { id: "font-cursive-studio", label: "Hand" }
+    ];
+    let fontIndex = 0;
+    document.getElementById('toggleFontFamilyBtn')?.addEventListener('click', () => {
+      fontIndex = (fontIndex + 1) % fontFamilies.length;
+      selectedStatusFont = fontFamilies[fontIndex].id;
+      document.getElementById('currentFontLabel').textContent = fontFamilies[fontIndex].label;
+      if (storyCanvasPreview) {
+        storyCanvasPreview.classList.remove('font-sans-studio', 'font-serif-studio', 'font-mono-studio', 'font-cursive-studio');
+        storyCanvasPreview.classList.add(selectedStatusFont);
+      }
+    });
+
+    const alignments = ["text-center", "text-left", "text-right"];
+    let alignIndex = 0;
+    document.getElementById('toggleTextAlignBtn')?.addEventListener('click', () => {
+      alignIndex = (alignIndex + 1) % alignments.length;
+      selectedStatusAlign = alignments[alignIndex];
+      if (storyTextInput) {
+        storyTextInput.className = `w-full bg-transparent ${selectedStatusAlign} text-xl font-extrabold text-white outline-none resize-none placeholder-white/40 leading-relaxed z-10`;
+      }
+    });
+
+    document.querySelectorAll('.emoji-sticker-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (storyTextInput) {
+          storyTextInput.value += btn.textContent;
+        }
+      });
+    });
+
+    const storyMediaInput = document.getElementById('storyMediaInput');
+    document.getElementById('attachStoryMediaBtn')?.addEventListener('click', () => {
+      storyMediaInput?.click();
+    });
+
+    storyMediaInput?.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const previewContainer = document.getElementById('storyMediaPreviewContainer');
+      const imgPreview = document.getElementById('storyImagePreview');
+      const videoPreview = document.getElementById('storyVideoPreview');
+
+      if (file.type.startsWith('image/')) {
+        try {
+          compressedStatusMediaData = await compressImage(file);
+          if (imgPreview) {
+            imgPreview.src = compressedStatusMediaData;
+            imgPreview.classList.remove('hidden');
+          }
+          videoPreview?.classList.add('hidden');
+          previewContainer?.classList.remove('hidden');
+        } catch (err) {
+          triggerNotificationToast("Media Error", currentUserHandle, "Failed to compress image", "CX");
+        }
+      } else if (file.type.startsWith('video/')) {
+        compressedStatusMediaData = URL.createObjectURL(file);
+        if (videoPreview) {
+          videoPreview.src = compressedStatusMediaData;
+          videoPreview.classList.remove('hidden');
+        }
+        imgPreview?.classList.add('hidden');
+        previewContainer?.classList.remove('hidden');
+      }
+    });
+
+    document.getElementById('removeStoryMediaBtn')?.addEventListener('click', () => {
+      compressedStatusMediaData = null;
+      document.getElementById('storyMediaPreviewContainer')?.classList.add('hidden');
+      document.getElementById('storyImagePreview')?.classList.add('hidden');
+      document.getElementById('storyVideoPreview')?.classList.add('hidden');
+    });
+
+    // Publish Real Story to Firestore
+    document.getElementById('publishStoryBtn')?.addEventListener('click', async () => {
+      const text = storyTextInput?.value.trim() || '';
+      if (!text && !compressedStatusMediaData) {
+        triggerNotificationToast("Status Error", currentUserHandle, "Write text or attach media to post", "CX");
+        return;
+      }
+
+      const storyData = sanitizeData({
+        text: text,
+        mediaData: compressedStatusMediaData || null,
+        bgClass: selectedStatusBg,
+        senderHandle: currentUserHandle,
+        senderEmail: currentUserEmail,
+        isVerified: isCeoUser,
+        createdAt: serverTimestamp()
+      });
+
+      const storiesCollection = getSafeCollection("stories");
+      if (storiesCollection) {
+        try {
+          await addDoc(storiesCollection, storyData);
+        } catch (err) {
+          console.error("Error saving story to Firestore:", err);
+        }
+      }
+
+      if (storyTextInput) storyTextInput.value = '';
+      compressedStatusMediaData = null;
+      document.getElementById('storyMediaPreviewContainer')?.classList.add('hidden');
+      document.getElementById('createStoryModal')?.classList.add('hidden');
+      triggerNotificationToast("Status Published", currentUserHandle, "Status posted successfully!", "CX");
+    });
+
+    // Listen to Realtime Stories from Firestore
+    function listenToRealtimeStories() {
+      const storiesContainer = document.getElementById('storiesScrollContainer');
+      if (!storiesContainer) return;
+
+      if (storiesUnsubscribe) storiesUnsubscribe();
+
+      const storiesCollection = getSafeCollection("stories");
+      if (storiesCollection) {
+        try {
+          const q = query(storiesCollection, orderBy("createdAt", "desc"));
+          storiesUnsubscribe = onSnapshot(q, (snapshot) => {
+            const myStoryBtn = document.getElementById('addMyStoryBtn');
+            storiesContainer.innerHTML = '';
+            if (myStoryBtn) storiesContainer.appendChild(myStoryBtn);
+
+            snapshot.forEach((docSnap) => {
+              const data = docSnap.data();
+              const isVerified = data.isVerified || checkCeoStatus(data.senderEmail) || data.senderHandle === 'fahmy_mazrui';
+
+              const storyItem = document.createElement('div');
+              storyItem.className = 'story-item-trigger flex flex-col items-center gap-1 cursor-pointer shrink-0 animate-pop-in';
+              
+              storyItem.innerHTML = `
+                <div class="relative p-0.5 rounded-full bg-gradient-to-tr from-brand-500 via-accent-purple to-accent-pink shadow-glow-pink">
+                  <div class="h-12 w-12 rounded-full bg-slate-800 text-white font-black text-xs flex items-center justify-center overflow-hidden">
+                    ${(data.senderHandle || 'US').substring(0,2).toUpperCase()}
+                  </div>
+                  ${getVerifiedBadgeHtml(isVerified)}
+                </div>
+                <span class="text-[10px] font-bold tracking-tight text-accent-pink flex items-center">@${data.senderHandle || 'user'}</span>
+              `;
+
+              storyItem.addEventListener('click', () => {
+                document.getElementById('storyViewerName').innerHTML = `@${data.senderHandle || 'user'} ${getVerifiedBadgeHtml(isVerified)}`;
+                const txt = document.getElementById('storyViewerText');
+                if (txt) {
+                  txt.textContent = data.text || '';
+                  txt.className = `text-center text-xl font-black text-white p-6 leading-relaxed max-w-xs ${data.bgClass || 'bg-slate-900'}`;
+                  txt.classList.remove('hidden');
+                }
+                document.getElementById('storyViewerModal')?.classList.remove('hidden');
+              });
+
+              storiesContainer.appendChild(storyItem);
+            });
+          }, (err) => {
+            console.warn("Stories listener warning:", err.message);
+          });
+        } catch(e) {}
+      }
+    }
+
+    // Google Sign In
     document.getElementById('googleSignInAuthBtn')?.addEventListener('click', async () => {
       if (isFirebaseConfigured && auth) {
         try {
@@ -1135,9 +1493,10 @@
         return;
       }
 
-      if (isFirebaseConfigured && db) {
+      const usersColl = getSafeCollection("users");
+      if (usersColl) {
         try {
-          const q = query(collection(db, "users"), where("username", "==", handle));
+          const q = query(usersColl, where("username", "==", handle));
           const querySnapshot = await getDocs(q);
           if (!querySnapshot.empty) {
             editUsernameError?.classList.remove('hidden');
@@ -1148,7 +1507,6 @@
       }
     });
 
-    // Edit Profile Save Handler
     document.getElementById('saveProfileBtn')?.addEventListener('click', async () => {
       const newHandle = editUsernameInput?.value.trim().replace('@','').toLowerCase();
       const newBio = document.getElementById('editBioInput')?.value.trim();
@@ -1163,10 +1521,9 @@
 
       updateProfileDisplay();
       document.getElementById('editProfileModal')?.classList.add('hidden');
-      triggerNotificationToast("Profile Updated", currentUserHandle, "Profile saved successfully!", "CX");
+      triggerNotificationToast("Profile Updated", currentUserHandle, "Profile updated successfully!", "CX");
     });
 
-    // Firebase Auth Observer
     if (isFirebaseConfigured && auth) {
       onAuthStateChanged(auth, async (user) => {
         if (user) {
@@ -1174,20 +1531,34 @@
           currentUserEmail = user.email || CEO_EMAIL;
           isCeoUser = checkCeoStatus(currentUserEmail);
           
-          try {
-            const userDoc = await getDoc(doc(db, "users", user.uid));
-            if (userDoc.exists()) {
-              const data = userDoc.data();
-              currentUserHandle = data.username || (isCeoUser ? 'fahmy_mazrui' : user.email.split('@')[0]);
-              currentUserBio = data.bio || currentUserBio;
-            } else {
-              currentUserHandle = (isCeoUser ? 'fahmy_mazrui' : user.email.split('@')[0]).toLowerCase();
-            }
-          } catch (e) {}
+          const userDocRef = getSafeDoc("users", user.uid);
+          if (userDocRef) {
+            try {
+              const userDoc = await getDoc(userDocRef);
+              if (userDoc.exists()) {
+                const data = userDoc.data();
+                currentUserHandle = data.username || (isCeoUser ? 'fahmy_mazrui' : user.email.split('@')[0]);
+                currentUserBio = data.bio || currentUserBio;
+                currentUserAvatarUrl = data.avatarUrl || currentUserAvatarUrl;
+                currentUserCoverUrl = data.coverUrl || currentUserCoverUrl;
+              } else {
+                currentUserHandle = (isCeoUser ? 'fahmy_mazrui' : user.email.split('@')[0]).toLowerCase();
+              }
+            } catch (e) {}
+          }
           openMainApp(currentUserName, currentUserHandle, currentUserEmail);
         }
       });
     }
+
+    // Clear Local Cache Functionality
+    document.getElementById('clearCacheBtn')?.addEventListener('click', () => {
+      localStorage.clear();
+      triggerNotificationToast("Cache Cleared", currentUserHandle, "Local cache cleaned successfully!", "CX");
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    });
 
     // Send Message
     document.getElementById('sendMessageForm')?.addEventListener('submit', async (e) => {
@@ -1196,20 +1567,24 @@
       const text = input.value.trim();
       if (!text) return;
 
-      if (isFirebaseConfigured && db && currentActiveChatId) {
-        const userDocId = currentUserId || currentUserHandle;
-        setDoc(doc(db, "chats", currentActiveChatId, "typing", userDocId), { isTyping: false }, { merge: true });
+      const userDocId = currentUserId || currentUserHandle;
+      const typingDocRef = getSafeDoc("chats", currentActiveChatId, "typing", userDocId);
+      if (typingDocRef) {
+        setDoc(typingDocRef, { isTyping: false }, { merge: true }).catch(() => {});
       }
 
-      if (isFirebaseConfigured && db) {
+      const messagesColl = getSafeCollection("chats", currentActiveChatId, "messages");
+      if (messagesColl) {
         try {
-          await addDoc(collection(db, "chats", currentActiveChatId, "messages"), {
+          const msgPayload = sanitizeData({
             text: text,
             senderId: currentUserId || 'demo-user',
             senderHandle: currentUserHandle,
+            senderEmail: currentUserEmail,
             isCeo: isCeoUser,
             createdAt: serverTimestamp()
           });
+          await addDoc(messagesColl, msgPayload);
           input.value = '';
         } catch (err) {
           renderMessageBubble({ text, senderHandle: currentUserHandle, isCeo: isCeoUser, id: Date.now() }, true);
@@ -1221,24 +1596,23 @@
       }
     });
 
-    // Realtime Typing Indicator Handler
     const chatInput = document.getElementById('chatMessageInput');
     chatInput?.addEventListener('input', () => {
-      if (!isFirebaseConfigured || !db || !currentActiveChatId) return;
       const userDocId = currentUserId || currentUserHandle;
-      
-      setDoc(doc(db, "chats", currentActiveChatId, "typing", userDocId), { 
+      const typingDocRef = getSafeDoc("chats", currentActiveChatId, "typing", userDocId);
+      if (!typingDocRef) return;
+
+      setDoc(typingDocRef, sanitizeData({ 
         isTyping: true,
         senderHandle: currentUserHandle
-      }, { merge: true });
+      }), { merge: true }).catch(() => {});
 
       if (typingTimer) clearTimeout(typingTimer);
       typingTimer = setTimeout(() => {
-        setDoc(doc(db, "chats", currentActiveChatId, "typing", userDocId), { isTyping: false }, { merge: true });
+        setDoc(typingDocRef, { isTyping: false }, { merge: true }).catch(() => {});
       }, 2000);
     });
 
-    // Render Custom Message Bubble with Long-Press Action
     function renderMessageBubble(msg, isSent) {
       const container = document.getElementById('messagesContainer');
       if (!container) return;
@@ -1266,16 +1640,20 @@
       if (msg.audioUrl) {
         contentHtml += `
           <div class="flex items-center gap-2 my-1 bg-slate-950/60 p-2 rounded-xl border border-white/10">
-            <button onclick="this.nextElementSibling.play()" class="h-7 w-7 rounded-full bg-accent-pink text-white flex items-center justify-center shrink-0">
+            <button onclick="this.nextElementSibling.paused ? this.nextElementSibling.play() : this.nextElementSibling.pause()" class="h-7 w-7 rounded-full bg-accent-pink text-white flex items-center justify-center shrink-0">
               <i class="ph ph-play-fill"></i>
             </button>
-            <audio src="${msg.audioUrl}" class="hidden"></audio>
+            <audio src="${msg.audioUrl}" class="hidden" onplay="this.previousElementSibling.firstElementChild.className='ph ph-pause-fill'" onpause="this.previousElementSibling.firstElementChild.className='ph ph-play-fill'"></audio>
             <div class="flex-grow">
-              <div class="h-1 bg-slate-700 rounded-full overflow-hidden">
-                <div class="bg-accent-pink h-full w-1/3"></div>
+              <div class="flex items-center gap-1 h-4">
+                <div class="mic-bar h-2 playing-bar"></div>
+                <div class="mic-bar h-3 playing-bar"></div>
+                <div class="mic-bar h-1 playing-bar"></div>
+                <div class="mic-bar h-4 playing-bar"></div>
+                <div class="mic-bar h-2 playing-bar"></div>
               </div>
             </div>
-            <span class="text-[9px] text-slate-400 font-mono">0:12</span>
+            <span class="text-[9px] text-slate-400 font-mono">VN</span>
           </div>
         `;
       } else {
@@ -1285,7 +1663,6 @@
       bubble.innerHTML = contentHtml;
       bubbleWrapper.appendChild(bubble);
 
-      // Attach Long-Press Event for Edit & Delete
       const startLongPress = () => {
         longPressTimer = setTimeout(() => {
           selectedMsgForAction = { id: msg.id, text: msg.text, element: bubbleWrapper };
@@ -1306,16 +1683,19 @@
       container.scrollTop = container.scrollHeight;
     }
 
-    // Modal Actions for Edit & Delete Message
     document.getElementById('actionDeleteMsgBtn')?.addEventListener('click', async () => {
       if (selectedMsgForAction) {
-        if (selectedMsgForAction.id && isFirebaseConfigured && db) {
-          try {
-            await deleteDoc(doc(db, "chats", currentActiveChatId, "messages", selectedMsgForAction.id));
-          } catch(e) {}
+        if (selectedMsgForAction.id) {
+          const msgDocRef = getSafeDoc("chats", currentActiveChatId, "messages", selectedMsgForAction.id);
+          if (msgDocRef) {
+            try {
+              await deleteDoc(msgDocRef);
+            } catch(e) {}
+          }
         }
         selectedMsgForAction.element?.remove();
         document.getElementById('messageActionModal')?.classList.add('hidden');
+        triggerNotificationToast("Message Deleted", currentUserHandle, "Message deleted successfully", "CX");
       }
     });
 
@@ -1331,14 +1711,18 @@
     document.getElementById('saveEditMsgPromptBtn')?.addEventListener('click', async () => {
       const newText = document.getElementById('editMessageTextInput')?.value.trim();
       if (selectedMsgForAction && newText) {
-        if (selectedMsgForAction.id && isFirebaseConfigured && db) {
-          try {
-            await updateDoc(doc(db, "chats", currentActiveChatId, "messages", selectedMsgForAction.id), { text: newText });
-          } catch(e) {}
+        if (selectedMsgForAction.id) {
+          const msgDocRef = getSafeDoc("chats", currentActiveChatId, "messages", selectedMsgForAction.id);
+          if (msgDocRef) {
+            try {
+              await updateDoc(msgDocRef, { text: newText });
+            } catch(e) {}
+          }
         }
         const textBody = selectedMsgForAction.element.querySelector('.msg-text-body');
         if (textBody) textBody.textContent = newText;
         document.getElementById('editMessagePromptModal')?.classList.add('hidden');
+        triggerNotificationToast("Message Edited", currentUserHandle, "Message updated successfully", "CX");
       }
     });
 
@@ -1350,7 +1734,6 @@
       document.getElementById('editMessagePromptModal')?.classList.add('hidden');
     });
 
-    // Load Realtime Messages and Typing Indicator Listener
     function loadRealtimeMessages(chatId) {
       const container = document.getElementById('messagesContainer');
       if (!container) return;
@@ -1358,80 +1741,156 @@
 
       if (messagesUnsubscribe) messagesUnsubscribe();
 
-      if (isFirebaseConfigured && db) {
-        const q = query(collection(db, "chats", chatId, "messages"), orderBy("createdAt", "asc"));
-        messagesUnsubscribe = onSnapshot(q, (snapshot) => {
-          container.innerHTML = '';
-          snapshot.forEach((docSnap) => {
-            const data = docSnap.data();
-            data.id = docSnap.id;
-            const isSent = data.senderId === currentUserId || data.senderHandle === currentUserHandle;
-            renderMessageBubble(data, isSent);
+      const messagesColl = getSafeCollection("chats", chatId, "messages");
+      if (messagesColl) {
+        try {
+          const q = query(messagesColl, orderBy("createdAt", "asc"));
+          messagesUnsubscribe = onSnapshot(q, (snapshot) => {
+            container.innerHTML = '';
+            snapshot.forEach((docSnap) => {
+              const data = docSnap.data();
+              data.id = docSnap.id;
+              const isSent = data.senderId === currentUserId || data.senderHandle === currentUserHandle;
+              renderMessageBubble(data, isSent);
+            });
+          }, (err) => {
+            console.warn("Messages listener warning:", err.message);
           });
-        });
 
-        // Typing Listener
-        onSnapshot(collection(db, "chats", chatId, "typing"), (snap) => {
-          let anyoneTyping = false;
-          snap.forEach((doc) => {
-            if (doc.id !== (currentUserId || currentUserHandle) && doc.data().isTyping) {
-              anyoneTyping = true;
-            }
-          });
-          const typingEl = document.getElementById('typingIndicatorText');
-          const statusEl = document.getElementById('onlineLiveStatusText');
-          if (typingEl && statusEl) {
-            typingEl.classList.toggle('hidden', !anyoneTyping);
-            statusEl.classList.toggle('hidden', anyoneTyping);
+          const typingColl = getSafeCollection("chats", chatId, "typing");
+          if (typingColl) {
+            onSnapshot(typingColl, (snap) => {
+              let anyoneTyping = false;
+              snap.forEach((doc) => {
+                if (doc.id !== (currentUserId || currentUserHandle) && doc.data().isTyping) {
+                  anyoneTyping = true;
+                }
+              });
+              const typingEl = document.getElementById('typingIndicatorText');
+              const statusEl = document.getElementById('onlineLiveStatusText');
+              if (typingEl && statusEl) {
+                typingEl.classList.toggle('hidden', !anyoneTyping);
+                statusEl.classList.toggle('hidden', anyoneTyping);
+              }
+            }, () => {});
           }
-        });
-      } else {
-        renderMessageBubble({ text: "Welcome to ClassmateX Chat!", senderHandle: "fahmy_mazrui", isCeo: true }, false);
+        } catch(e) {}
       }
     }
 
-    // Clean Discover Members Render
+    // Render Real Members Only from Firestore
     async function loadMembersFromFirestore() {
       const membersList = document.getElementById('membersList');
       if (!membersList) return;
 
-      const renderMembers = (members) => {
-        membersList.innerHTML = '';
-        members.forEach(m => {
-          const isVerified = m.isVerified || m.isCeo || checkCeoStatus(m.email) || m.username === 'fahmy_mazrui';
-          const card = document.createElement('div');
-          card.className = 'p-3 bg-slate-900 rounded-2xl border border-slate-800 flex items-center justify-between shadow-xs';
-          card.innerHTML = `
-            <div class="flex items-center gap-3 min-w-0">
-              <div class="h-10 w-10 rounded-full ${isVerified ? 'bg-gradient-to-tr from-brand-600 to-accent-pink' : 'bg-emerald-500'} text-white font-black text-xs flex items-center justify-center shrink-0">
-                ${m.username.substring(0,2).toUpperCase()}
-              </div>
-              <div class="min-w-0">
-                <h4 class="text-xs font-black truncate text-white flex items-center">
-                  @${m.username} ${getVerifiedBadgeHtml(isVerified)}
-                </h4>
-                <p class="text-[10px] text-slate-400 truncate">Classmate Member</p>
-              </div>
-            </div>
-            <button onclick="window.openChatThread('chat-${m.username}')" class="touch-active px-3 py-1.5 rounded-xl bg-gradient-to-r from-brand-600 to-accent-pink text-white text-[11px] font-bold shadow-glow-pink transition shrink-0">
-              Direct DM
-            </button>
-          `;
-          membersList.appendChild(card);
-        });
-      };
-
-      if (isFirebaseConfigured && db) {
+      const usersColl = getSafeCollection("users");
+      if (usersColl) {
         try {
-          const snap = await getDocs(collection(db, "users"));
-          const list = [];
-          snap.forEach(doc => list.push(doc.data()));
-          renderMembers(list.length ? list : [{ username: 'fahmy_mazrui', email: CEO_EMAIL, isCeo: true }, { username: 'sarah_juma', email: 'sarah@gmail.com' }]);
+          const snap = await getDocs(usersColl);
+          membersList.innerHTML = '';
+
+          if (snap.empty) {
+            membersList.innerHTML = `
+              <div class="p-6 text-center bg-slate-900 rounded-2xl border border-slate-800 text-slate-400 text-xs font-medium">
+                No registered classmates yet. Invite your friends to join ClassmateX!
+              </div>
+            `;
+            return;
+          }
+
+          snap.forEach(docSnap => {
+            const m = docSnap.data();
+            if (m.username === currentUserHandle) return; // Don't show self in discover
+
+            const isVerified = m.isVerified || m.isCeo || checkCeoStatus(m.email) || m.username === 'fahmy_mazrui';
+            const card = document.createElement('div');
+            card.className = 'p-3 bg-slate-900 rounded-2xl border border-slate-800 flex items-center justify-between shadow-xs';
+            card.innerHTML = `
+              <div class="flex items-center gap-3 min-w-0">
+                <div class="h-10 w-10 rounded-full ${isVerified ? 'bg-gradient-to-tr from-brand-600 to-accent-pink' : 'bg-emerald-500'} text-white font-black text-xs flex items-center justify-center shrink-0 overflow-hidden">
+                  ${m.avatarUrl ? `<img src="${m.avatarUrl}" class="avatar-img" />` : (m.username || 'US').substring(0,2).toUpperCase()}
+                </div>
+                <div class="min-w-0">
+                  <h4 class="text-xs font-black truncate text-white flex items-center">
+                    @${m.username || 'user'} ${getVerifiedBadgeHtml(isVerified)}
+                  </h4>
+                  <p class="text-[10px] text-slate-400 truncate">${m.bio || 'Classmate Member'}</p>
+                </div>
+              </div>
+              <button onclick="window.openChatThread('dm-${m.username}')" class="touch-active px-3 py-1.5 rounded-xl bg-gradient-to-r from-brand-600 to-accent-pink text-white text-[11px] font-bold shadow-glow-pink transition shrink-0">
+                Direct DM
+              </button>
+            `;
+            membersList.appendChild(card);
+          });
         } catch(e) {
-          renderMembers([{ username: 'fahmy_mazrui', email: CEO_EMAIL, isCeo: true }, { username: 'sarah_juma', email: 'sarah@gmail.com' }]);
+          membersList.innerHTML = `
+            <div class="p-4 text-center bg-slate-900 rounded-2xl border border-slate-800 text-slate-400 text-xs">
+              Connect to Firebase to see live registered members.
+            </div>
+          `;
         }
-      } else {
-        renderMembers([{ username: 'fahmy_mazrui', email: CEO_EMAIL, isCeo: true }, { username: 'sarah_juma', email: 'sarah@gmail.com' }]);
+      }
+    }
+
+    // Load Real User Direct Chat Threads
+    async function loadUserChatThreads() {
+      const threadList = document.getElementById('chatThreadList');
+      if (!threadList) return;
+
+      const chatsColl = getSafeCollection("chats");
+      if (chatsColl) {
+        try {
+          onSnapshot(chatsColl, (snapshot) => {
+            threadList.innerHTML = '';
+            let count = 0;
+
+            snapshot.forEach(docSnap => {
+              const data = docSnap.data();
+              const chatId = docSnap.id;
+
+              // Only show thread if it involves current user or is CEO
+              if (chatId.includes(currentUserHandle) || chatId === 'ceo-fahmy-mazrui') {
+                count++;
+                const isCeo = chatId.includes('fahmy_mazrui');
+                const threadHandle = isCeo ? 'fahmy_mazrui' : chatId.replace('dm-','').replace(currentUserHandle,'').replace('-','');
+
+                const threadItem = document.createElement('div');
+                threadItem.className = 'chat-thread-item flex items-center gap-3 p-3 cursor-pointer bg-slate-900/40 border-l-4 border-accent-pink transition hover:bg-slate-900/80';
+                threadItem.innerHTML = `
+                  <div class="relative shrink-0">
+                    <div class="h-11 w-11 rounded-full ${isCeo ? 'bg-gradient-to-tr from-brand-600 to-accent-pink' : 'bg-emerald-500'} text-white font-black text-xs flex items-center justify-center overflow-hidden">
+                      ${(threadHandle || 'US').substring(0,2).toUpperCase()}
+                    </div>
+                    ${getVerifiedBadgeHtml(isCeo)}
+                  </div>
+                  <div class="flex-grow min-w-0">
+                    <div class="flex justify-between items-baseline mb-0.5">
+                      <h4 class="text-xs font-black truncate text-white flex items-center">
+                        @${threadHandle || 'user'} ${getVerifiedBadgeHtml(isCeo)}
+                      </h4>
+                      <span class="text-[10px] font-bold text-accent-pink">DM</span>
+                    </div>
+                    <p class="text-[11px] text-slate-400 truncate">Tap to open conversation thread</p>
+                  </div>
+                `;
+
+                threadItem.addEventListener('click', () => window.openChatThread(chatId));
+                threadList.appendChild(threadItem);
+              }
+            });
+
+            if (count === 0) {
+              threadList.innerHTML = `
+                <div class="p-6 text-center text-slate-500 text-xs">
+                  No active DM threads yet. Discover classmates to start chatting!
+                </div>
+              `;
+            }
+          }, (err) => {
+            console.warn("Chat threads listener warning:", err.message);
+          });
+        } catch(e) {}
       }
     }
 
@@ -1510,12 +1969,14 @@
         activeScreen.classList.add('flex', 'animate-slide-up');
       }
 
+      const activeTitle = document.getElementById('activeChatTitle');
+      if (activeTitle) {
+        const displayHandle = chatId === 'global-group' ? 'global_community' : chatId.replace('dm-','');
+        activeTitle.innerHTML = `@${displayHandle} ${getVerifiedBadgeHtml(displayHandle === 'fahmy_mazrui')}`;
+      }
+
       loadRealtimeMessages(chatId);
     };
-
-    document.querySelectorAll('.chat-thread-trigger').forEach(item => {
-      item?.addEventListener('click', () => window.openChatThread(item.dataset.chatId));
-    });
 
     document.getElementById('backToChatsBtn')?.addEventListener('click', () => switchAppTab('chats'));
 
@@ -1523,6 +1984,28 @@
       const settingsUserHandle = document.getElementById('settingsUserHandle');
       if (settingsUserHandle) {
         settingsUserHandle.innerHTML = `@${currentUserHandle} ${getVerifiedBadgeHtml(isCeoUser)}`;
+      }
+      const bioEl = document.getElementById('settingsUserBio');
+      if (bioEl) bioEl.textContent = currentUserBio;
+      const ceoBadge = document.getElementById('ceoRoleBadge');
+      if (ceoBadge) ceoBadge.classList.toggle('hidden', !isCeoUser);
+
+      const headerAvatar = document.getElementById('headerAvatarContainer');
+      const settingsAvatar = document.getElementById('settingsAvatarContainer');
+      const myStoryThumbnail = document.getElementById('myStoryAvatarThumbnail');
+
+      if (currentUserAvatarUrl) {
+        if (headerAvatar) headerAvatar.innerHTML = `<img src="${currentUserAvatarUrl}" class="avatar-img" />`;
+        if (settingsAvatar) settingsAvatar.innerHTML = `<img src="${currentUserAvatarUrl}" class="avatar-img" />`;
+        if (myStoryThumbnail) myStoryThumbnail.innerHTML = `<img src="${currentUserAvatarUrl}" class="avatar-img" />`;
+      }
+
+      if (currentUserCoverUrl) {
+        const bannerImg = document.getElementById('coverBannerImg');
+        if (bannerImg) {
+          bannerImg.src = currentUserCoverUrl;
+          bannerImg.classList.remove('hidden');
+        }
       }
     }
 
@@ -1533,18 +2016,6 @@
     document.getElementById('closeQrModalBtn')?.addEventListener('click', () => document.getElementById('profileQrModal')?.classList.add('hidden'));
     document.getElementById('addMyStoryBtn')?.addEventListener('click', () => document.getElementById('createStoryModal')?.classList.remove('hidden'));
     document.getElementById('closeCreateStoryBtn')?.addEventListener('click', () => document.getElementById('createStoryModal')?.classList.add('hidden'));
-
-    document.querySelectorAll('.story-item-trigger').forEach(item => {
-      item.addEventListener('click', () => {
-        const handle = item.dataset.storyHandle || '@classmate';
-        const text = item.dataset.storyText || '';
-        document.getElementById('storyViewerName').innerHTML = `${handle} ${getVerifiedBadgeHtml(item.dataset.storyVerified === 'true')}`;
-        document.getElementById('storyViewerText').textContent = text;
-        document.getElementById('storyViewerText')?.classList.remove('hidden');
-        document.getElementById('storyViewerModal')?.classList.remove('hidden');
-      });
-    });
-
     document.getElementById('closeStoryViewerBtn')?.addEventListener('click', () => document.getElementById('storyViewerModal')?.classList.add('hidden'));
 
     // Auth Forms Switch
@@ -1557,11 +2028,15 @@
     });
 
     document.getElementById('settingsLogoutBtn')?.addEventListener('click', async () => {
+      localStorage.removeItem('cx_user_session');
       if (isFirebaseConfigured && auth) await signOut(auth);
       document.getElementById('mainAppView')?.classList.add('hidden');
       document.getElementById('mainAppView')?.classList.remove('flex');
       document.getElementById('authView')?.classList.remove('hidden');
     });
+
+    // Run Session Startup Initialization
+    initSession();
 
   </script>
 </body>
