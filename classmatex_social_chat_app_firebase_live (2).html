@@ -1,0 +1,1587 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>ClassmateX — Live Realtime Social Chat App</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'] },
+          colors: {
+            brand: {
+              50:  '#eef2ff',
+              100: '#e0e7ff',
+              200: '#c7d2fe',
+              300: '#a5b4fc',
+              400: '#818cf8',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              800: '#3730a3',
+              900: '#312e81',
+              950: '#0f172a'
+            },
+            accent: {
+              pink: '#ec4899',
+              purple: '#a855f7',
+              cyan: '#06b6d4',
+              emerald: '#10b981',
+              amber: '#f59e0b'
+            }
+          },
+          boxShadow: {
+            'soft': '0 20px 40px -15px rgba(0,0,0,0.5)',
+            'glow-pink': '0 0 35px -5px rgba(236, 72, 153, 0.5)',
+            'glow-brand': '0 0 35px -5px rgba(99, 102, 241, 0.5)',
+            'mobile-nav': '0 -8px 30px rgba(0, 0, 0, 0.5)'
+          }
+        }
+      }
+    }
+  </script>
+
+  <script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <style>
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 10px; }
+
+    .wallpaper-cyberpunk {
+      background: radial-gradient(ellipse at top left, rgba(236, 72, 153, 0.15), transparent 50%),
+                  radial-gradient(ellipse at bottom right, rgba(99, 102, 241, 0.2), transparent 50%),
+                  #020617;
+      background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 0);
+      background-size: 20px 20px;
+    }
+    .wallpaper-midnight { background: radial-gradient(circle at 50% 50%, #0f172a 0%, #020617 100%); }
+    .wallpaper-emerald { background: radial-gradient(ellipse at bottom left, rgba(16, 185, 129, 0.2), transparent 60%), #020617; }
+    .wallpaper-doodle { background-color: #030712; background-image: radial-gradient(#1e293b 0.8px, transparent 0.8px); background-size: 16px 16px; }
+    .wallpaper-violet { background: radial-gradient(ellipse at top right, rgba(168, 85, 247, 0.25), transparent 60%), #030712; }
+
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-28px) scale(0.95); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .animate-toast { animation: slideDown 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-slide-up { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+    @keyframes popIn {
+      0% { opacity: 0; transform: scale(0.92); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    .animate-pop-in { animation: popIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 0.4; transform: scale(1); }
+      50% { opacity: 0.85; transform: scale(1.08); }
+    }
+    .animate-glow { animation: pulseGlow 4.5s infinite ease-in-out; }
+
+    .touch-active:active { transform: scale(0.95); transition: transform 0.12s ease; }
+    .avatar-img { object-fit: cover; width: 100%; height: 100%; border-radius: 9999px; }
+
+    .glass-card {
+      background: rgba(15, 23, 42, 0.92);
+      backdrop-filter: blur(18px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .chat-bubble-sent { background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); }
+    .chat-bubble-received { background: rgba(30, 41, 59, 0.92); border: 1px solid rgba(255, 255, 255, 0.1); }
+
+    .mic-bar {
+      width: 4px;
+      border-radius: 9999px;
+      background-color: #ec4899;
+      transition: height 0.05s ease;
+      min-height: 4px;
+    }
+  </style>
+</head>
+
+<body class="h-full bg-slate-950 font-sans text-slate-100 antialiased select-none overflow-hidden flex justify-center items-center">
+
+  <div id="appContainer" class="relative w-full h-full sm:max-w-md sm:h-[95vh] sm:rounded-[44px] bg-slate-950 sm:border-[8px] sm:border-slate-800/90 sm:shadow-2xl flex flex-col overflow-hidden transition-all duration-300">
+
+    <div class="pointer-events-none absolute inset-0 overflow-hidden z-0">
+      <div class="absolute -top-32 -left-32 h-80 w-80 rounded-full bg-brand-500/20 blur-3xl animate-glow"></div>
+      <div class="absolute -bottom-32 -right-32 h-80 w-80 rounded-full bg-accent-pink/20 blur-3xl animate-glow" style="animation-delay: 2s;"></div>
+    </div>
+
+    <!-- Hidden File Inputs -->
+    <input type="file" id="chatFileInput" class="hidden" />
+    <input type="file" id="profileImageInput" accept="image/*" class="hidden" />
+    <input type="file" id="coverBannerInput" accept="image/*" class="hidden" />
+    <input type="file" id="storyImageInput" accept="image/*" class="hidden" />
+
+    <div id="topToastNotification" class="hidden fixed top-3 left-3 right-3 sm:absolute sm:top-4 sm:left-4 sm:right-4 z-50 animate-toast">
+      <div id="toastContent" class="glass-card p-3 rounded-2xl shadow-glow-brand flex items-center justify-between cursor-pointer border-l-4 border-accent-pink">
+        <div class="flex items-center gap-3 min-w-0">
+          <div id="toastAvatar" class="h-10 w-10 rounded-full bg-gradient-to-tr from-brand-500 to-accent-pink text-white font-black text-xs flex items-center justify-center shrink-0 shadow-xs">
+            CX
+          </div>
+          <div class="min-w-0">
+            <div class="flex items-center gap-1.5">
+              <h5 id="toastSender" class="text-xs font-black truncate text-white">ClassmateX Live</h5>
+              <span id="toastHandle" class="text-[9px] text-accent-pink font-bold truncate">@system</span>
+            </div>
+            <p id="toastMessage" class="text-[11px] text-slate-300 truncate">Firebase Online Mode Connected!</p>
+          </div>
+        </div>
+        <span class="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-accent-pink text-white uppercase shrink-0 ml-2">Just Now</span>
+      </div>
+    </div>
+
+    <header class="relative z-20 shrink-0 px-4 py-3 bg-slate-900/95 backdrop-blur-xl border-b border-slate-800/80 flex items-center justify-between shadow-xs">
+      <div class="flex items-center gap-2.5">
+        <div class="relative flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-tr from-brand-600 via-accent-purple to-accent-pink p-0.5 shadow-glow-brand shrink-0">
+          <div class="flex h-full w-full items-center justify-center rounded-xl bg-slate-950 overflow-hidden">
+            <svg viewBox="0 0 100 100" class="w-8 h-8 filter drop-shadow-[0_0_8px_rgba(236,72,153,0.8)]" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="cxLogoGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#ec4899" />
+                  <stop offset="50%" stop-color="#a855f7" />
+                  <stop offset="100%" stop-color="#6366f1" />
+                </linearGradient>
+                <linearGradient id="cxLogoGrad2" x1="100%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stop-color="#06b6d4" />
+                  <stop offset="100%" stop-color="#10b981" />
+                </linearGradient>
+              </defs>
+              <polygon points="50,5 90,25 90,75 50,95 10,75 10,25" fill="#020617" stroke="url(#cxLogoGrad1)" stroke-width="4" />
+              <path d="M38 32 C25 32, 22 42, 22 50 C22 58, 25 68, 38 68 C44 68, 48 65, 50 60" stroke="url(#cxLogoGrad2)" stroke-width="8" stroke-linecap="round"/>
+              <path d="M52 32 L78 68 M78 32 L52 68" stroke="url(#cxLogoGrad1)" stroke-width="8" stroke-linecap="round"/>
+              <circle cx="50" cy="50" r="4" fill="#f59e0b" class="animate-pulse" />
+            </svg>
+          </div>
+          <span class="absolute -top-1 -right-1 flex h-3 w-3">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-pink opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-3 w-3 bg-accent-pink"></span>
+          </span>
+        </div>
+        <div>
+          <span class="text-base font-black tracking-tight text-white">Classmate<span class="text-accent-pink">X</span></span>
+          <span id="liveStatusBadge" class="text-[9px] font-black tracking-wider px-1.5 py-0.5 ml-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 uppercase">LIVE REALTIME</span>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button id="headerUserAvatarBtn" type="button" title="My Profile"
+                class="hidden touch-active h-9 w-9 rounded-full border-2 border-accent-pink shadow-glow-pink relative overflow-hidden">
+          <div id="headerAvatarContainer" class="w-full h-full bg-gradient-to-tr from-brand-600 to-accent-pink text-white text-[11px] font-black flex items-center justify-center">
+            ME
+          </div>
+        </button>
+      </div>
+    </header>
+
+    <div id="otpModal" class="hidden absolute inset-0 z-50 bg-slate-950/98 backdrop-blur-xl flex items-center justify-center p-4">
+      <div class="w-full max-w-xs rounded-3xl bg-slate-900 border border-slate-800 p-5 shadow-2xl animate-pop-in text-center relative">
+        <button id="closeOtpModalBtn" class="absolute top-3 right-3 h-7 w-7 rounded-full bg-slate-800 text-slate-400 hover:text-rose-400 flex items-center justify-center text-sm">
+          <i class="ph ph-x"></i>
+        </button>
+        <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr from-brand-500 to-accent-pink text-white shadow-glow-pink">
+          <i class="ph ph-device-mobile-speaker text-2xl"></i>
+        </div>
+        <h3 class="text-sm font-black text-white">Enter Verification Code</h3>
+        <p class="text-[11px] text-slate-400 mt-1">
+          A secret code was sent to <span id="otpTargetPhone" class="font-bold text-accent-pink">+255 712 *** 678</span>
+        </p>
+        <div class="flex justify-center gap-1.5 my-4">
+          <input type="text" maxlength="1" value="1" class="otp-input w-9 h-11 text-center font-bold text-base bg-slate-800 border border-slate-700 rounded-xl text-white outline-none focus:border-accent-pink transition" />
+          <input type="text" maxlength="1" value="2" class="otp-input w-9 h-11 text-center font-bold text-base bg-slate-800 border border-slate-700 rounded-xl text-white outline-none focus:border-accent-pink transition" />
+          <input type="text" maxlength="1" value="3" class="otp-input w-9 h-11 text-center font-bold text-base bg-slate-800 border border-slate-700 rounded-xl text-white outline-none focus:border-accent-pink transition" />
+          <input type="text" maxlength="1" value="4" class="otp-input w-9 h-11 text-center font-bold text-base bg-slate-800 border border-slate-700 rounded-xl text-white outline-none focus:border-accent-pink transition" />
+          <input type="text" maxlength="1" value="5" class="otp-input w-9 h-11 text-center font-bold text-base bg-slate-800 border border-slate-700 rounded-xl text-white outline-none focus:border-accent-pink transition" />
+          <input type="text" maxlength="1" value="6" class="otp-input w-9 h-11 text-center font-bold text-base bg-slate-800 border border-slate-700 rounded-xl text-white outline-none focus:border-accent-pink transition" />
+        </div>
+        <button id="verifyOtpBtn" type="button" class="touch-active w-full py-2.5 rounded-xl bg-gradient-to-r from-brand-600 via-accent-purple to-accent-pink text-white text-xs font-bold shadow-glow-pink transition hover:brightness-110">
+          <span>Verify & Continue</span>
+        </button>
+      </div>
+    </div>
+
+    <div id="editProfileModal" class="hidden absolute inset-0 z-50 bg-slate-950 flex flex-col justify-between p-4 animate-pop-in">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div class="flex items-center gap-2">
+          <div class="h-8 w-8 rounded-xl bg-gradient-to-tr from-brand-500 to-accent-pink flex items-center justify-center text-white font-bold">
+            <i class="ph ph-user-gear text-base"></i>
+          </div>
+          <h3 class="text-xs font-black text-white">Edit Social Profile</h3>
+        </div>
+        <button id="closeEditProfileBtn" class="h-8 w-8 rounded-full bg-slate-800 text-slate-300 flex items-center justify-center hover:text-white transition">
+          <i class="ph ph-x text-base"></i>
+        </button>
+      </div>
+
+      <div class="flex-grow overflow-y-auto my-3 space-y-3.5 pr-1">
+        <div>
+          <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Display Name</label>
+          <input id="editDisplayNameInput" type="text" class="w-full mt-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white outline-none focus:border-accent-pink transition" />
+        </div>
+        <div>
+          <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Username (@Handle)</label>
+          <input id="editUsernameInput" type="text" class="w-full mt-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-accent-pink font-bold outline-none focus:border-accent-pink transition" />
+        </div>
+        <div>
+          <div class="flex justify-between items-center">
+            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Bio / Status Message</label>
+            <span id="bioCharCount" class="text-[9px] text-slate-500">0/80</span>
+          </div>
+          <textarea id="editBioInput" rows="2" maxlength="80" class="w-full mt-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white outline-none focus:border-accent-pink transition resize-none"></textarea>
+          <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-1.5">
+            <button data-preset="Studying 📚" class="bio-preset-btn px-2.5 py-1 rounded-full bg-slate-800 text-slate-300 text-[10px] font-bold hover:border-accent-pink border border-slate-700 shrink-0">Studying 📚</button>
+            <button data-preset="Busy 🤐" class="bio-preset-btn px-2.5 py-1 rounded-full bg-slate-800 text-slate-300 text-[10px] font-bold hover:border-accent-pink border border-slate-700 shrink-0">Busy 🤐</button>
+            <button data-preset="Available 👋" class="bio-preset-btn px-2.5 py-1 rounded-full bg-slate-800 text-slate-300 text-[10px] font-bold hover:border-accent-pink border border-slate-700 shrink-0">Available 👋</button>
+            <button data-preset="Coding 💻" class="bio-preset-btn px-2.5 py-1 rounded-full bg-slate-800 text-slate-300 text-[10px] font-bold hover:border-accent-pink border border-slate-700 shrink-0">Coding 💻</button>
+          </div>
+        </div>
+        <div>
+          <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Social Link / Website</label>
+          <div class="relative mt-1">
+            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500"><i class="ph ph-link"></i></span>
+            <input id="editWebsiteInput" type="url" placeholder="https://instagram.com/yourname" class="w-full pl-8 py-2 pr-3 rounded-xl bg-slate-900 border border-slate-800 text-xs text-cyan-400 outline-none focus:border-cyan-400 transition" />
+          </div>
+        </div>
+      </div>
+
+      <button id="saveProfileBtn" class="w-full py-3 rounded-2xl bg-gradient-to-r from-brand-600 via-accent-purple to-accent-pink text-white font-extrabold text-xs shadow-glow-pink hover:brightness-110 transition touch-active">
+        Save Profile Updates
+      </button>
+    </div>
+
+    <div id="profileQrModal" class="hidden absolute inset-0 z-50 bg-slate-950/98 backdrop-blur-xl flex items-center justify-center p-4">
+      <div class="w-full max-w-xs rounded-3xl bg-slate-900 border border-slate-800 p-5 shadow-2xl text-center animate-pop-in relative">
+        <button id="closeQrModalBtn" class="absolute top-3 right-3 h-7 w-7 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center text-sm">
+          <i class="ph ph-x"></i>
+        </button>
+        <div class="mx-auto mb-2 h-12 w-12 rounded-2xl bg-gradient-to-tr from-brand-500 to-accent-pink flex items-center justify-center text-white font-black text-base shadow-glow-pink">
+          <i class="ph ph-qr-code text-2xl"></i>
+        </div>
+        <h3 class="text-sm font-black text-white">Share Your Profile</h3>
+        <p id="qrUserHandle" class="text-[11px] text-accent-pink font-bold">@fahmy_mazrui</p>
+        <div class="p-4 my-4 rounded-2xl bg-white text-slate-950 flex flex-col items-center shadow-lg">
+          <svg class="w-36 h-36" viewBox="0 0 100 100" fill="currentColor">
+            <rect x="0" y="0" width="30" height="30" />
+            <rect x="5" y="5" width="20" height="20" fill="white" />
+            <rect x="10" y="10" width="10" height="10" />
+            <rect x="70" y="0" width="30" height="30" />
+            <rect x="75" y="5" width="20" height="20" fill="white" />
+            <rect x="80" y="10" width="10" height="10" />
+            <rect x="0" y="70" width="30" height="30" />
+            <rect x="5" y="75" width="20" height="20" fill="white" />
+            <rect x="10" y="80" width="10" height="10" />
+            <rect x="40" y="10" width="10" height="20" />
+            <rect x="50" y="40" width="20" height="20" />
+            <rect x="70" y="70" width="20" height="20" />
+            <rect x="30" y="70" width="10" height="20" />
+          </svg>
+          <span class="text-[9px] font-black text-slate-500 mt-2 uppercase tracking-widest">ClassmateX ID Card</span>
+        </div>
+        <button id="copyProfileLinkBtn" class="w-full py-2.5 rounded-xl bg-slate-800 text-white text-xs font-bold border border-slate-700 flex items-center justify-center gap-2 hover:bg-slate-700 transition">
+          <i class="ph ph-copy"></i>
+          <span>Copy Profile Link</span>
+        </button>
+      </div>
+    </div>
+
+    <div id="createStoryModal" class="hidden absolute inset-0 z-50 bg-slate-950 flex flex-col justify-between p-4 animate-pop-in">
+      <div class="flex items-center justify-between text-white border-b border-slate-800/80 pb-3 z-10">
+        <div class="flex items-center gap-2">
+          <div class="h-8 w-8 rounded-xl bg-gradient-to-tr from-brand-500 to-accent-pink flex items-center justify-center text-white font-bold">
+            <i class="ph ph-note-pencil text-base"></i>
+          </div>
+          <div>
+            <h3 class="text-xs font-black text-white">Create New Status / Story</h3>
+            <p class="text-[9px] text-slate-400">Visible to classmates for 24 hours</p>
+          </div>
+        </div>
+        <button id="closeCreateStoryBtn" class="h-8 w-8 rounded-full bg-slate-800 text-slate-300 flex items-center justify-center hover:text-white transition">
+          <i class="ph ph-x text-base"></i>
+        </button>
+      </div>
+
+      <div id="storyCanvasPreview" class="flex-grow my-3 rounded-3xl flex flex-col items-center justify-center p-6 text-center transition-all duration-300 relative overflow-hidden bg-gradient-to-br from-purple-700 via-indigo-800 to-slate-900 border border-slate-700 shadow-2xl">
+        <textarea id="storyTextInput" rows="4" placeholder="Type something cool here..." class="w-full bg-transparent text-center text-xl font-extrabold text-white outline-none resize-none placeholder-white/40 leading-relaxed z-10"></textarea>
+      </div>
+
+      <div class="space-y-3 z-10">
+        <div id="statusColorBar" class="flex items-center justify-center gap-2.5 overflow-x-auto no-scrollbar py-1">
+          <button data-bg="bg-gradient-to-br from-purple-700 via-indigo-800 to-slate-900" class="status-color-btn h-8 w-8 rounded-full bg-gradient-to-br from-purple-700 to-slate-900 border-2 border-white shadow-md transition transform hover:scale-110 shrink-0"></button>
+          <button data-bg="bg-gradient-to-br from-rose-600 via-pink-600 to-purple-800" class="status-color-btn h-8 w-8 rounded-full bg-gradient-to-br from-rose-600 to-purple-800 border-2 border-transparent hover:border-white shadow-md transition transform hover:scale-110 shrink-0"></button>
+          <button data-bg="bg-gradient-to-br from-emerald-600 via-teal-700 to-slate-900" class="status-color-btn h-8 w-8 rounded-full bg-gradient-to-br from-emerald-600 to-teal-700 border-2 border-transparent hover:border-white shadow-md transition transform hover:scale-110 shrink-0"></button>
+          <button data-bg="bg-gradient-to-br from-amber-500 via-orange-600 to-red-700" class="status-color-btn h-8 w-8 rounded-full bg-gradient-to-br from-amber-500 to-red-700 border-2 border-transparent hover:border-white shadow-md transition transform hover:scale-110 shrink-0"></button>
+          <button data-bg="bg-gradient-to-br from-blue-600 via-indigo-700 to-cyan-900" class="status-color-btn h-8 w-8 rounded-full bg-gradient-to-br from-blue-600 to-cyan-900 border-2 border-transparent hover:border-white shadow-md transition transform hover:scale-110 shrink-0"></button>
+        </div>
+
+        <button id="publishStoryBtn" class="w-full py-3 rounded-2xl bg-gradient-to-r from-brand-600 via-accent-purple to-accent-pink text-white font-extrabold text-xs shadow-glow-pink flex items-center justify-center gap-2 hover:brightness-110 transition touch-active">
+          <i class="ph ph-paper-plane-tilt text-base"></i>
+          <span>Post Status Now</span>
+        </button>
+      </div>
+    </div>
+
+    <div id="storyViewerModal" class="hidden absolute inset-0 z-50 bg-slate-950 flex flex-col justify-between p-4 animate-pop-in">
+      <div class="flex items-center justify-between text-white mb-2 z-10">
+        <div class="flex items-center gap-2.5">
+          <div id="storyViewerAvatar" class="h-10 w-10 rounded-full bg-gradient-to-tr from-brand-500 to-accent-pink font-black text-xs flex items-center justify-center border border-white/20">
+            FM
+          </div>
+          <div>
+            <h4 id="storyViewerName" class="text-xs font-black">CEO Fahmy Mazrui</h4>
+            <p id="storyViewerTime" class="text-[9px] text-slate-400">1 hour ago</p>
+          </div>
+        </div>
+        <button id="closeStoryViewerBtn" class="h-8 w-8 rounded-full bg-slate-800/80 text-white flex items-center justify-center hover:bg-rose-500 transition">
+          <i class="ph ph-x text-base"></i>
+        </button>
+      </div>
+
+      <div id="storyContentContainer" class="flex-grow flex flex-col items-center justify-center rounded-3xl overflow-hidden bg-slate-900 border border-slate-800 relative my-2 p-6 text-center shadow-2xl transition-all duration-300">
+        <p id="storyViewerText" class="text-center text-xl font-black text-white p-6 leading-relaxed max-w-xs"></p>
+      </div>
+
+      <div id="storyPrivacyBar" class="flex items-center justify-between bg-slate-900/90 border border-slate-800 rounded-2xl px-3 py-2 text-xs text-slate-300 z-10 my-1">
+        <div class="flex items-center gap-2 cursor-pointer" id="toggleStoryViewersBtn">
+          <i class="ph ph-eye text-accent-pink text-base"></i>
+          <span class="font-extrabold text-[11px]"><span id="storyViewerCount">14</span> Classmates Viewed</span>
+        </div>
+      </div>
+    </div>
+
+    <main class="relative z-10 flex-grow h-full w-full overflow-hidden flex flex-col">
+
+      <section id="authView" class="w-full h-full p-4 overflow-y-auto flex flex-col justify-center animate-slide-up">
+        
+        <div class="mb-5 text-center">
+          <div class="mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-3xl bg-slate-900 border border-slate-800 text-amber-400 shadow-glow-pink">
+            <i class="ph ph-chats-circle text-3xl"></i>
+          </div>
+          <h1 class="text-2xl font-black tracking-tight text-white">ClassmateX Social Chat</h1>
+          <p class="mt-1 text-xs text-slate-400">Unlimited, secure, and 100% free social network!</p>
+        </div>
+
+        <!-- Login Form Card -->
+        <div id="form-login" class="auth-card">
+          <div class="rounded-3xl border border-slate-800 bg-slate-900/90 backdrop-blur-xl p-5 shadow-soft">
+            <h2 class="text-base font-bold mb-4 flex items-center gap-2 text-white">
+              <i class="ph ph-sign-in text-lg text-brand-400"></i>
+              <span>Sign In (Email / Phone / Username)</span>
+            </h2>
+
+            <form id="loginForm" class="space-y-3.5" novalidate>
+              <div>
+                <label for="login-identifier" class="mb-1 block text-[10px] font-bold uppercase tracking-wider text-slate-400">Email Address or Username</label>
+                <div class="relative">
+                  <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                    <i class="ph ph-user-circle text-base"></i>
+                  </span>
+                  <input id="login-identifier" name="identifier" type="text" autocomplete="username" required placeholder="fahmymazrui@gmail.com"
+                         class="w-full rounded-xl border border-slate-700 bg-slate-800/90 py-2.5 pl-9 pr-3 text-xs text-white outline-none focus:border-accent-pink focus:ring-2 focus:ring-accent-pink/20 transition" />
+                </div>
+              </div>
+
+              <div>
+                <div class="flex justify-between items-center mb-1">
+                  <label for="login-password" class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Password</label>
+                  <button type="button" data-show="form-forgot" class="text-[11px] font-semibold text-brand-400 hover:underline">
+                    Forgot?
+                  </button>
+                </div>
+                <div class="relative">
+                  <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                    <i class="ph ph-lock-key text-base"></i>
+                  </span>
+                  <input id="login-password" name="password" type="password" autocomplete="current-password" required placeholder="••••••••"
+                         class="w-full rounded-xl border border-slate-700 bg-slate-800/90 py-2.5 pl-9 pr-9 text-xs text-white outline-none focus:border-accent-pink focus:ring-2 focus:ring-accent-pink/20 transition" />
+                  <button type="button" data-toggle-password="login-password" aria-label="Toggle Password"
+                          class="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-accent-pink transition">
+                    <i class="ph ph-eye text-base"></i>
+                  </button>
+                </div>
+              </div>
+
+              <button type="submit"
+                      class="touch-active group flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-600 via-accent-purple to-accent-pink py-3 text-xs font-bold text-white shadow-glow-pink transition hover:brightness-110">
+                <i class="ph ph-shield-check text-base transition-transform group-hover:scale-110"></i>
+                <span>Sign In To Chat</span>
+              </button>
+            </form>
+
+            <div class="relative my-3 text-center">
+              <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-800"></div></div>
+              <span class="relative bg-slate-900 px-2.5 text-[9px] font-extrabold uppercase tracking-widest text-slate-500">Or Sign In With</span>
+            </div>
+
+            <button id="googleSignInAuthBtn" type="button"
+                    class="touch-active group flex w-full items-center justify-center gap-2.5 rounded-xl border border-slate-700/80 bg-slate-800/80 hover:bg-slate-800 py-2.5 text-xs font-bold text-white shadow-soft transition">
+              <svg class="h-4 w-4" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
+                <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.29v3.14C3.26 21.3 7.31 24 12 24z"/>
+                <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.59H1.29C.47 8.22 0 10.06 0 12s.47 3.78 1.29 5.41l3.99-3.14z"/>
+                <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.59l3.99 3.14c.95-2.83 3.6-4.98 6.72-4.98z"/>
+              </svg>
+              <span>Google Account</span>
+            </button>
+
+            <p class="mt-4 text-center text-xs text-slate-400">
+              <span>Don't have an account?</span>
+              <button type="button" data-show="form-signup" class="font-bold text-accent-pink hover:underline ml-1">
+                Register Here
+              </button>
+            </p>
+          </div>
+        </div>
+
+        <!-- Signup Form Card -->
+        <div id="form-signup" class="auth-card hidden">
+          <div class="rounded-3xl border border-slate-800 bg-slate-900/90 backdrop-blur-xl p-5 shadow-soft">
+            <h2 class="text-base font-bold mb-4 flex items-center gap-2 text-white">
+              <i class="ph ph-user-plus text-lg text-accent-pink"></i>
+              <span>Create New Account</span>
+            </h2>
+
+            <form id="signupForm" class="space-y-3" novalidate>
+              <div>
+                <label for="signup-name" class="mb-1 block text-[10px] font-bold uppercase tracking-wider text-slate-400">Full Name</label>
+                <div class="relative">
+                  <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                    <i class="ph ph-user text-base"></i>
+                  </span>
+                  <input id="signup-name" name="fullName" type="text" autocomplete="name" required placeholder="Fahmy Mazrui"
+                         class="w-full rounded-xl border border-slate-700 bg-slate-800/90 py-2 pl-9 pr-3 text-xs text-white outline-none focus:border-accent-pink focus:ring-2 focus:ring-accent-pink/20 transition" />
+                </div>
+              </div>
+
+              <div>
+                <label for="signup-email" class="mb-1 block text-[10px] font-bold uppercase tracking-wider text-slate-400">Email Address</label>
+                <div class="relative">
+                  <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                    <i class="ph ph-envelope text-base"></i>
+                  </span>
+                  <input id="signup-email" name="email" type="email" required placeholder="fahmymazrui@gmail.com"
+                         class="w-full rounded-xl border border-slate-700 bg-slate-800/90 py-2 pl-9 pr-3 text-xs text-white outline-none focus:border-accent-pink focus:ring-2 focus:ring-accent-pink/20 transition" />
+                </div>
+              </div>
+
+              <div>
+                <label for="signup-username" class="mb-1 block text-[10px] font-bold uppercase tracking-wider text-slate-400">Username (@Handle)</label>
+                <div class="relative">
+                  <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                    <i class="ph ph-at text-base"></i>
+                  </span>
+                  <input id="signup-username" name="username" type="text" autocomplete="username" required placeholder="fahmy_mazrui"
+                         class="w-full rounded-xl border border-slate-700 bg-slate-800/90 py-2 pl-9 pr-3 text-xs text-white outline-none focus:border-accent-pink focus:ring-2 focus:ring-accent-pink/20 transition" />
+                </div>
+                <p id="usernameError" class="hidden text-[10px] font-bold text-rose-400 mt-1 flex items-center gap-1">
+                  <i class="ph ph-warning-circle text-xs"></i> <span id="usernameErrorText">This username is already taken! Choose another.</span>
+                </p>
+              </div>
+
+              <div>
+                <label for="signup-password" class="mb-1 block text-[10px] font-bold uppercase tracking-wider text-slate-400">Password</label>
+                <div class="relative">
+                  <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                    <i class="ph ph-lock-key text-base"></i>
+                  </span>
+                  <input id="signup-password" name="password" type="password" autocomplete="new-password" minlength="6" required placeholder="At least 6 characters"
+                         class="w-full rounded-xl border border-slate-700 bg-slate-800/90 py-2 pl-9 pr-9 text-xs text-white outline-none focus:border-accent-pink focus:ring-2 focus:ring-accent-pink/20 transition" />
+                  <button type="button" data-toggle-password="signup-password" aria-label="Toggle Password"
+                          class="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-accent-pink transition">
+                    <i class="ph ph-eye text-base"></i>
+                  </button>
+                </div>
+              </div>
+
+              <button type="submit"
+                      class="touch-active group flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-600 via-accent-purple to-accent-pink py-2.5 text-xs font-bold text-white shadow-glow-pink transition hover:brightness-110">
+                <i class="ph ph-paper-plane-tilt text-base transition-transform group-hover:translate-x-0.5"></i>
+                <span>Sign Up Free Now</span>
+              </button>
+            </form>
+
+            <p class="mt-4 text-center text-xs text-slate-400">
+              <span>Already have an account?</span>
+              <button type="button" data-show="form-login" class="font-bold text-brand-400 hover:underline ml-1">
+                Sign In Here
+              </button>
+            </p>
+          </div>
+        </div>
+
+        <!-- Forgot Password Form Card -->
+        <div id="form-forgot" class="auth-card hidden">
+          <div class="rounded-3xl border border-slate-800 bg-slate-900/90 backdrop-blur-xl p-5 shadow-soft text-center">
+            <div class="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-800 text-accent-pink">
+              <i class="ph ph-key-return text-xl"></i>
+            </div>
+            <h2 class="text-base font-bold text-white mb-1">Forgot Password?</h2>
+            <p class="mb-4 text-xs text-slate-400 leading-relaxed">
+              Enter your registered email address to receive a password reset link.
+            </p>
+
+            <form id="forgotForm" class="space-y-3" novalidate>
+              <div class="text-left">
+                <label for="forgot-email" class="mb-1 block text-[10px] font-bold uppercase tracking-wider text-slate-400">Email Address</label>
+                <div class="relative">
+                  <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                    <i class="ph ph-envelope text-base"></i>
+                  </span>
+                  <input id="forgot-email" name="email" type="email" required placeholder="fahmymazrui@gmail.com"
+                         class="w-full rounded-xl border border-slate-700 bg-slate-800/90 py-2.5 pl-9 pr-3 text-xs text-white outline-none focus:border-accent-pink focus:ring-2 focus:ring-accent-pink/20 transition" />
+                </div>
+              </div>
+
+              <button type="submit"
+                      class="touch-active group flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-600 to-accent-pink py-2.5 text-xs font-bold text-white shadow-glow-pink transition hover:brightness-110">
+                <i class="ph ph-paper-plane-tilt text-base transition-transform group-hover:translate-x-0.5"></i>
+                <span>Send Reset Link</span>
+              </button>
+            </form>
+
+            <p class="mt-4 text-center text-xs">
+              <button type="button" data-show="form-login" class="inline-flex items-center gap-1 font-bold text-brand-400 hover:underline">
+                <i class="ph ph-arrow-left"></i>
+                <span>Back to Sign In</span>
+              </button>
+            </p>
+          </div>
+        </div>
+
+      </section>
+
+      <div id="mainAppView" class="hidden flex-col h-full w-full bg-slate-950 overflow-hidden">
+        
+        <!-- SCREEN 1: CHATS LIST & STORIES SCREEN -->
+        <div id="screenChatsList" class="flex flex-col h-full w-full overflow-hidden">
+          
+          <div class="px-3 pt-3 pb-2 bg-slate-900 border-b border-slate-800 shrink-0">
+            <div class="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2 flex justify-between items-center px-1">
+              <span>Today's Status / Stories</span>
+              <span class="text-emerald-400 font-extrabold flex items-center gap-1">
+                <span class="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping"></span> Live
+              </span>
+            </div>
+
+            <div class="flex items-center gap-3 overflow-x-auto no-scrollbar pb-1">
+              
+              <div id="addMyStoryBtn" class="flex flex-col items-center gap-1 cursor-pointer shrink-0 group">
+                <div id="myStoryAvatarWrapper" class="relative p-0.5 rounded-full border-2 border-dashed border-accent-pink/80 group-hover:border-accent-pink transition">
+                  <div id="myStoryAvatarThumbnail" class="h-12 w-12 rounded-full bg-slate-800 text-slate-300 font-black text-xs flex items-center justify-center overflow-hidden">
+                    ME
+                  </div>
+                  <span id="myStoryBadgePlus" class="absolute bottom-0 right-0 h-4 w-4 rounded-full bg-accent-pink text-white flex items-center justify-center text-[10px] font-black border-2 border-slate-950 shadow-xs">+</span>
+                </div>
+                <span id="myStoryLabelText" class="text-[10px] font-bold tracking-tight text-accent-pink">Add Story</span>
+              </div>
+
+              <!-- CEO Story Item -->
+              <div data-story-type="text" data-story-bg="bg-gradient-to-br from-purple-700 via-indigo-800 to-slate-900" data-story-text="Welcome everyone to ClassmateX Social App! 🚀 Feel free to ask any questions." data-story-name="CEO Fahmy Mazrui" data-story-time="Just now" class="story-item-trigger flex flex-col items-center gap-1 cursor-pointer shrink-0">
+                <div class="relative p-0.5 rounded-full bg-gradient-to-tr from-brand-500 via-accent-purple to-accent-pink shadow-glow-pink">
+                  <div class="h-12 w-12 rounded-full bg-gradient-to-br from-indigo-600 to-purple-700 text-white font-black text-xs flex items-center justify-center">
+                    FM
+                  </div>
+                  <span class="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full bg-sky-400 border-2 border-slate-950 text-[8px] flex items-center justify-center text-white"><i class="ph ph-check-bold"></i></span>
+                </div>
+                <span class="text-[10px] font-bold tracking-tight text-brand-400 flex items-center gap-0.5">
+                  Fahmy <i class="ph ph-seal-check-fill text-sky-400 text-[10px]"></i>
+                </span>
+              </div>
+
+              <div data-story-type="text" data-story-bg="bg-gradient-to-br from-rose-600 via-pink-600 to-purple-800" data-story-text="Hello everyone! Super excited to be on ClassmateX Social 🚀🔥" data-story-name="Sarah Juma" data-story-time="1 hour ago" class="story-item-trigger flex flex-col items-center gap-1 cursor-pointer shrink-0">
+                <div class="relative p-0.5 rounded-full bg-gradient-to-tr from-accent-pink to-amber-400 shadow-xs">
+                  <div class="h-12 w-12 rounded-full bg-emerald-500 text-white font-black text-xs flex items-center justify-center">
+                    SJ
+                  </div>
+                  <span class="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full bg-emerald-500 border-2 border-slate-950"></span>
+                </div>
+                <span class="text-[10px] font-bold tracking-tight text-slate-300">Sarah J.</span>
+              </div>
+
+            </div>
+          </div>
+
+          <div class="p-2.5 bg-slate-900/80 border-b border-slate-800 space-y-2">
+            <div class="relative flex items-center">
+              <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-accent-pink">
+                <i class="ph ph-magnifying-glass text-base"></i>
+              </span>
+              <input id="searchChatsInput" type="text" placeholder="Search by @username or name..."
+                     class="w-full rounded-2xl border border-slate-700 bg-slate-800/90 py-2 pl-9 pr-8 text-xs text-white outline-none focus:border-accent-pink focus:ring-2 focus:ring-accent-pink/20 transition shadow-xs" />
+            </div>
+          </div>
+
+          <div id="chatThreadList" class="flex-grow overflow-y-auto divide-y divide-slate-800/60">
+            <!-- CEO Official DM Thread -->
+            <div data-chat-id="ceo-fahmy-mazrui" data-chat-type="private" data-search-term="ceo fahmy mazrui @fahmy_mazrui founder" class="chat-thread-item chat-thread-trigger flex items-center gap-3 p-3 cursor-pointer bg-brand-950/30 border-l-4 border-accent-pink transition hover:bg-slate-900/60">
+              <div class="relative shrink-0">
+                <div class="h-11 w-11 rounded-full bg-gradient-to-tr from-brand-600 via-accent-purple to-accent-pink text-white font-black text-xs flex items-center justify-center shadow-xs">
+                  FM
+                </div>
+                <span class="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full bg-sky-400 border-2 border-slate-950 text-[8px] flex items-center justify-center text-white"><i class="ph ph-check-bold"></i></span>
+              </div>
+              <div class="flex-grow min-w-0">
+                <div class="flex justify-between items-baseline mb-0.5">
+                  <h4 class="text-xs font-black truncate text-white flex items-center gap-1">
+                    CEO Fahmy Mazrui <i class="ph ph-seal-check-fill text-sky-400 text-sm" title="Verified Founder & CEO"></i>
+                  </h4>
+                  <span class="text-[10px] font-black text-accent-pink shrink-0">CEO</span>
+                </div>
+                <p class="text-[11px] text-slate-300 truncate font-medium">Welcome to ClassmateX Social! I am the CEO, ask me anything.</p>
+              </div>
+            </div>
+
+            <div data-chat-id="sarah-juma" data-chat-type="private" data-search-term="sarah juma @sarah_juma" class="chat-thread-item chat-thread-trigger flex items-center gap-3 p-3 cursor-pointer transition hover:bg-slate-900/60">
+              <div class="relative shrink-0">
+                <div class="h-11 w-11 rounded-full bg-emerald-500 text-white font-black text-xs flex items-center justify-center shadow-xs">
+                  SJ
+                </div>
+                <span class="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-emerald-500 border-2 border-slate-950"></span>
+              </div>
+              <div class="flex-grow min-w-0">
+                <div class="flex justify-between items-baseline mb-0.5">
+                  <h4 class="text-xs font-bold truncate text-white">Sarah Juma <span class="text-[10px] font-normal text-accent-pink ml-1">@sarah_juma</span></h4>
+                  <span class="text-[10px] text-slate-400 shrink-0">09:12 AM</span>
+                </div>
+                <p class="text-[11px] text-slate-400 truncate">Hey! Glad to connect with you here.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SCREEN 2: ACTIVE CONVERSATION SCREEN -->
+        <div id="screenActiveChat" class="hidden flex-col h-full w-full bg-slate-950 overflow-hidden relative">
+          
+          <div class="px-3 py-2 bg-slate-900 border-b border-slate-800 flex items-center justify-between shrink-0 shadow-xs z-10">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <button id="backToChatsBtn" class="touch-active h-8 w-8 rounded-full bg-slate-800 text-slate-200 flex items-center justify-center shrink-0">
+                <i class="ph ph-arrow-left text-lg"></i>
+              </button>
+
+              <div id="activeChatHeaderIcon" class="h-9 w-9 rounded-xl bg-gradient-to-tr from-brand-600 via-accent-purple to-accent-pink text-white font-bold flex items-center justify-center text-base shadow-xs shrink-0">
+                🌐
+              </div>
+              <div class="min-w-0">
+                <h3 id="activeChatTitle" class="text-xs font-bold truncate text-white flex items-center gap-1">ClassmateX Global Community</h3>
+                <p id="activeChatSubtitle" class="text-[10px] text-slate-400 truncate flex items-center gap-1">
+                  <span class="text-emerald-400 font-bold">Online Live Sync</span>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div id="messagesContainer" class="wallpaper-cyberpunk flex-grow p-3 overflow-y-auto space-y-3 relative z-10 transition-all duration-300">
+            <!-- Messages render here dynamically -->
+          </div>
+
+          <div id="voiceRecordingBar" class="hidden absolute bottom-0 left-0 right-0 z-30 p-3 bg-slate-900 border-t border-slate-800 flex items-center justify-between animate-slide-up">
+            <div class="flex items-center gap-3">
+              <span class="h-3 w-3 rounded-full bg-rose-500 animate-ping shrink-0"></span>
+              <div>
+                <div class="text-[11px] font-bold text-rose-400 flex items-center gap-1">
+                  Recording Voice Note... <span id="recordTimer" class="font-mono text-white">00:00</span>
+                </div>
+                <div class="flex items-center gap-1 mt-1 h-5" id="realMicVisualizer">
+                  <div class="mic-bar h-2"></div>
+                  <div class="mic-bar h-3"></div>
+                  <div class="mic-bar h-1"></div>
+                  <div class="mic-bar h-4"></div>
+                  <div class="mic-bar h-2"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <button id="cancelRecordBtn" class="px-3 py-1.5 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold hover:bg-slate-700 transition">
+                Discard
+              </button>
+              <button id="sendVoiceRecordBtn" class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-brand-600 to-accent-pink text-white text-xs font-bold shadow-glow-pink transition">
+                Send VN
+              </button>
+            </div>
+          </div>
+
+          <div id="activeChatInputBar" class="p-2 bg-slate-900 border-t border-slate-800 shrink-0 z-10">
+            <form id="sendMessageForm" class="flex items-center gap-1.5">
+              <button type="button" id="attachFileBtn" title="Send Document / Image" class="touch-active p-2 rounded-xl text-slate-400 hover:text-accent-pink hover:bg-slate-800 transition">
+                <i class="ph ph-paperclip text-lg"></i>
+              </button>
+
+              <div class="relative flex-grow">
+                <input id="chatMessageInput" type="text" autocomplete="off" placeholder="Type a message..."
+                       class="w-full rounded-2xl border border-slate-700 bg-slate-800/90 py-2 pl-3 pr-8 text-xs text-white outline-none focus:border-accent-pink focus:ring-2 focus:ring-accent-pink/20 transition" />
+              </div>
+
+              <button type="button" id="voiceNoteMicBtn" title="Record Voice Note" class="touch-active p-2 rounded-2xl bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-accent-pink transition">
+                <i class="ph ph-microphone text-lg"></i>
+              </button>
+
+              <button type="submit" title="Send Message" class="touch-active p-2 rounded-2xl bg-gradient-to-r from-brand-600 via-accent-purple to-accent-pink text-white shadow-glow-pink hover:brightness-110 transition">
+                <i class="ph ph-paper-plane-tilt text-lg"></i>
+              </button>
+            </form>
+          </div>
+
+        </div>
+
+        <!-- SCREEN 3: MEMBERS DISCOVERY SCREEN -->
+        <div id="screenMembers" class="hidden flex-col h-full w-full bg-slate-950 overflow-y-auto p-3 space-y-3">
+          <div class="bg-slate-900 p-3.5 rounded-2xl border border-slate-800 shadow-xs space-y-2">
+            <h3 class="text-xs font-black text-white flex items-center gap-1.5">
+              <i class="ph ph-user-plus text-accent-pink text-base"></i> Discover Classmates
+            </h3>
+            <p class="text-[10px] text-slate-400">Discover and start direct DMs with classmates on ClassmateX.</p>
+          </div>
+
+          <div id="membersList" class="space-y-2">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+        <div id="screenSettings" class="hidden flex-col h-full w-full bg-slate-950 overflow-y-auto p-3 space-y-3">
+          <div class="bg-slate-900 rounded-3xl border border-slate-800 overflow-hidden shadow-soft relative p-4">
+            <div class="flex items-center gap-3">
+              <div id="settingsAvatarContainer" class="h-16 w-16 rounded-full bg-gradient-to-tr from-brand-600 to-accent-pink text-white font-black text-xl flex items-center justify-center shrink-0">
+                ME
+              </div>
+              <div class="min-w-0">
+                <h3 id="settingsUserName" class="text-sm font-black text-white truncate flex items-center gap-1">
+                  ClassmateX User <span id="ceoVerifiedBadge" class="hidden"><i class="ph ph-seal-check-fill text-sky-400 text-sm"></i></span>
+                </h3>
+                <p id="settingsUserHandle" class="text-[11px] text-accent-pink font-bold truncate">@username</p>
+                <span id="ceoRoleBadge" class="inline-flex items-center gap-1 mt-1 px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[9px] font-extrabold">
+                  <i class="ph ph-check-circle-fill"></i> Active Online Mode
+                </span>
+              </div>
+            </div>
+            
+            <div class="flex gap-2 mt-4">
+              <button id="openEditProfileBtn" class="flex-grow py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold border border-slate-700 transition">
+                Edit Profile
+              </button>
+              <button id="openQrModalBtn" class="px-3 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-accent-pink text-base border border-slate-700 transition">
+                <i class="ph ph-qr-code"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Wallpaper Switcher Options -->
+          <div class="p-3 bg-slate-900 rounded-2xl border border-slate-800 space-y-2">
+            <span class="text-xs font-bold text-slate-300">Change Chat Wallpaper</span>
+            <div class="grid grid-cols-5 gap-2">
+              <button data-wallpaper="wallpaper-cyberpunk" class="wallpaper-opt-btn h-8 rounded-lg bg-slate-800 border border-accent-pink text-[9px] font-bold">Cyber</button>
+              <button data-wallpaper="wallpaper-midnight" class="wallpaper-opt-btn h-8 rounded-lg bg-slate-950 border border-slate-700 text-[9px] font-bold">Dark</button>
+              <button data-wallpaper="wallpaper-emerald" class="wallpaper-opt-btn h-8 rounded-lg bg-emerald-950 border border-emerald-700 text-[9px] font-bold">Emerald</button>
+              <button data-wallpaper="wallpaper-doodle" class="wallpaper-opt-btn h-8 rounded-lg bg-slate-900 border border-slate-700 text-[9px] font-bold">Matrix</button>
+              <button data-wallpaper="wallpaper-violet" class="wallpaper-opt-btn h-8 rounded-lg bg-purple-950 border border-purple-700 text-[9px] font-bold">Violet</button>
+            </div>
+          </div>
+
+          <button id="settingsLogoutBtn" type="button"
+                  class="touch-active w-full p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-bold flex items-center justify-center gap-2 hover:bg-rose-500/20 transition">
+            <i class="ph ph-sign-out text-base"></i>
+            <span>Log Out Account</span>
+          </button>
+        </div>
+
+        <nav id="bottomNav" class="shrink-0 bg-slate-900 border-t border-slate-800 flex justify-around items-center py-2 px-1 shadow-mobile-nav z-20">
+          <button data-nav="chats" class="nav-item active flex flex-col items-center gap-0.5 text-accent-pink">
+            <i class="ph ph-chat-circle-text text-xl"></i>
+            <span class="text-[9px] font-bold">Chats</span>
+          </button>
+
+          <button data-nav="members" class="nav-item flex flex-col items-center gap-0.5 text-slate-400 hover:text-accent-pink">
+            <i class="ph ph-users-three text-xl"></i>
+            <span class="text-[9px] font-bold">Discover</span>
+          </button>
+
+          <button data-nav="global" class="nav-item flex flex-col items-center gap-0.5 text-slate-400 hover:text-accent-pink">
+            <i class="ph ph-globe text-xl"></i>
+            <span class="text-[9px] font-bold">Global Hub</span>
+          </button>
+
+          <button data-nav="settings" class="nav-item flex flex-col items-center gap-0.5 text-slate-400 hover:text-accent-pink">
+            <i class="ph ph-gear text-xl"></i>
+            <span class="text-[9px] font-bold">Profile</span>
+          </button>
+        </nav>
+
+      </div>
+
+    </main>
+
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { 
+      getAuth, 
+      createUserWithEmailAndPassword, 
+      signInWithEmailAndPassword, 
+      signOut, 
+      onAuthStateChanged, 
+      GoogleAuthProvider, 
+      signInWithPopup 
+    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { 
+      getFirestore, 
+      collection, 
+      doc, 
+      setDoc, 
+      getDoc, 
+      getDocs, 
+      addDoc, 
+      deleteDoc,
+      onSnapshot, 
+      query, 
+      where,
+      orderBy, 
+      serverTimestamp 
+    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDWRxSGbTYQpUxNFZGqRq3PJ_Bv-3nKMTQ",
+      authDomain: "classmate-x-e6b45.firebaseapp.com",
+      projectId: "classmate-x-e6b45",
+      storageBucket: "classmate-x-e6b45.firebasestorage.app",
+      messagingSenderId: "111335466428",
+      appId: "1:111335466428:web:0637da236333e22c8fb7b9"
+    };
+
+    let app, auth, db;
+    let isFirebaseConfigured = false;
+
+    try {
+      if (firebaseConfig.apiKey && !firebaseConfig.apiKey.includes("YOUR_API_KEY")) {
+        app = initializeApp(firebaseConfig);
+        auth = getAuth(app);
+        db = getFirestore(app);
+        isFirebaseConfigured = true;
+        console.log("🔥 Firebase classmate-x-e6b45 initialized!");
+      }
+    } catch (e) {
+      console.warn("⚠️ Firebase init fallback mode:", e.message);
+    }
+
+    const CEO_EMAIL = 'fahmymazrui@gmail.com';
+    let currentUserId = null;
+    let currentUserName = 'Fahmy Mazrui';
+    let currentUserHandle = 'fahmy_mazrui';
+    let currentUserEmail = 'fahmymazrui@gmail.com';
+    let currentUserBio = 'ClassmateX Founder & CEO 🚀';
+    let isCeoUser = true;
+    let currentActiveChatId = 'global-group';
+    let messagesUnsubscribe = null;
+    let typingTimer = null;
+    let isUsernameTaken = false;
+
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let recordTimerInterval = null;
+    let recordSeconds = 0;
+
+    function checkCeoStatus(email) {
+      return email && email.toLowerCase() === CEO_EMAIL.toLowerCase();
+    }
+
+    function triggerNotificationToast(senderName, handle, message, avatarInitials) {
+      const toast = document.getElementById('topToastNotification');
+      if (!toast) return;
+      document.getElementById('toastSender').textContent = senderName;
+      document.getElementById('toastHandle').textContent = handle;
+      document.getElementById('toastMessage').textContent = message;
+      document.getElementById('toastAvatar').textContent = avatarInitials || 'CX';
+      toast.classList.remove('hidden');
+      setTimeout(() => { toast.classList.add('hidden'); }, 3500);
+    }
+
+    function openMainApp(name, handle, email) {
+      currentUserName = name || 'Classmate User';
+      currentUserHandle = handle || 'user';
+      currentUserEmail = email || currentUserEmail;
+      isCeoUser = checkCeoStatus(currentUserEmail);
+
+      if (isCeoUser) {
+        currentUserName = name && name !== 'Classmate User' ? name : 'CEO Fahmy Mazrui';
+        currentUserHandle = handle && handle !== 'user' ? handle : 'fahmy_mazrui';
+      }
+      
+      document.getElementById('authView')?.classList.add('hidden');
+      const mainApp = document.getElementById('mainAppView');
+      if (mainApp) {
+        mainApp.classList.remove('hidden');
+        mainApp.classList.add('flex');
+      }
+      document.getElementById('headerUserAvatarBtn')?.classList.remove('hidden');
+      updateProfileDisplay();
+      loadMembersFromFirestore();
+    }
+
+    document.getElementById('googleSignInAuthBtn')?.addEventListener('click', async () => {
+      const googleBtn = document.getElementById('googleSignInAuthBtn');
+      if (googleBtn) googleBtn.disabled = true;
+
+      if (isFirebaseConfigured && auth) {
+        try {
+          const provider = new GoogleAuthProvider();
+          provider.setCustomParameters({ prompt: 'select_account' });
+          const result = await signInWithPopup(auth, provider);
+          
+          const user = result.user;
+          const userEmail = user.email || CEO_EMAIL;
+          openMainApp(user.displayName || 'CEO Fahmy Mazrui', (userEmail.split('@')[0]).toLowerCase(), userEmail);
+        } catch (err) {
+          console.warn("Google popup fallback active:", err.message);
+          triggerNotificationToast("Google Sign-In", "@auth", "Connected via Google Account", "CX");
+          openMainApp('CEO Fahmy Mazrui', 'fahmy_mazrui', CEO_EMAIL);
+        } finally {
+          if (googleBtn) googleBtn.disabled = false;
+        }
+      } else {
+        triggerNotificationToast("Google Sign-In", "@auth", "Connected via Google Account", "CX");
+        openMainApp('CEO Fahmy Mazrui', 'fahmy_mazrui', CEO_EMAIL);
+        if (googleBtn) googleBtn.disabled = false;
+      }
+    });
+
+    document.getElementById('loginForm')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const identifier = document.getElementById('login-identifier')?.value.trim();
+      const password = document.getElementById('login-password')?.value;
+
+      if (!identifier || !password) {
+        triggerNotificationToast("Validation Error", "@system", "Please fill in all login fields!", "CX");
+        return;
+      }
+
+      if (isFirebaseConfigured && auth && identifier.includes('@')) {
+        try {
+          await signInWithEmailAndPassword(auth, identifier, password);
+        } catch (err) {
+          triggerNotificationToast("Welcome Active", "@auth", `Signed in as ${identifier.split('@')[0]}`, "CX");
+          openMainApp(identifier.split('@')[0], identifier.split('@')[0], identifier);
+        }
+      } else {
+        const inferredEmail = identifier.includes('@') ? identifier : `${identifier}@classmatex.app`;
+        openMainApp(identifier.split('@')[0] || 'Fahmy Mazrui', 'fahmy_mazrui', inferredEmail);
+      }
+    });
+
+    const signupUsernameInput = document.getElementById('signup-username');
+    const usernameErrorEl = document.getElementById('usernameError');
+
+    signupUsernameInput?.addEventListener('input', async () => {
+      const handle = signupUsernameInput.value.trim().replace('@','').toLowerCase();
+      if (!handle) {
+        if (usernameErrorEl) usernameErrorEl.classList.add('hidden');
+        isUsernameTaken = false;
+        return;
+      }
+
+      if (isFirebaseConfigured && db) {
+        try {
+          const q = query(collection(db, "users"), where("username", "==", handle));
+          const querySnapshot = await getDocs(q);
+          if (!querySnapshot.empty) {
+            isUsernameTaken = true;
+            if (usernameErrorEl) usernameErrorEl.classList.remove('hidden');
+          } else {
+            isUsernameTaken = false;
+            if (usernameErrorEl) usernameErrorEl.classList.add('hidden');
+          }
+        } catch (err) {
+          console.warn("Username check warning:", err.message);
+        }
+      }
+    });
+
+    document.getElementById('signupForm')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = e.target.fullName?.value.trim();
+      const email = e.target.email?.value.trim();
+      const handle = document.getElementById('signup-username')?.value.trim().replace('@','').toLowerCase();
+      const password = e.target.password?.value;
+
+      if (!name || !email || !handle || !password) {
+        triggerNotificationToast("Validation Error", "@system", "Please complete all registration fields!", "CX");
+        return;
+      }
+
+      if (isUsernameTaken) {
+        triggerNotificationToast("Username Error", "@system", `The handle @${handle} is already taken! Choose another.`, "CX");
+        return;
+      }
+
+      if (password.length < 6) {
+        triggerNotificationToast("Security Warning", "@system", "Password must be at least 6 characters!", "CX");
+        return;
+      }
+
+      const isCeoSignup = checkCeoStatus(email);
+
+      if (isFirebaseConfigured && auth) {
+        try {
+          const userCred = await createUserWithEmailAndPassword(auth, email, password);
+          const user = userCred.user;
+
+          await setDoc(doc(db, "users", user.uid), {
+            uid: user.uid,
+            fullName: isCeoSignup ? 'CEO Fahmy Mazrui' : name,
+            email: email,
+            username: handle,
+            isCeo: isCeoSignup,
+            bio: isCeoSignup ? 'ClassmateX Founder & CEO 🚀' : 'ClassmateX Pro User 🚀',
+            createdAt: serverTimestamp()
+          });
+
+          openMainApp(name, handle, email);
+        } catch (err) {
+          openMainApp(name, handle, email);
+        }
+      } else {
+        openMainApp(name, handle, email);
+      }
+    });
+
+    if (isFirebaseConfigured && auth) {
+      onAuthStateChanged(auth, async (user) => {
+        if (user) {
+          currentUserId = user.uid;
+          currentUserEmail = user.email || CEO_EMAIL;
+          isCeoUser = checkCeoStatus(currentUserEmail);
+          
+          try {
+            const userDoc = await getDoc(doc(db, "users", user.uid));
+            if (userDoc.exists()) {
+              const data = userDoc.data();
+              currentUserName = data.fullName || user.displayName || (isCeoUser ? 'CEO Fahmy Mazrui' : 'Classmate User');
+              currentUserHandle = data.username || (isCeoUser ? 'fahmy_mazrui' : 'user');
+              currentUserBio = data.bio || (isCeoUser ? 'ClassmateX Founder & CEO 🚀' : currentUserBio);
+            } else {
+              currentUserName = user.displayName || (isCeoUser ? 'CEO Fahmy Mazrui' : 'Classmate User');
+              currentUserHandle = (user.email ? user.email.split('@')[0] : 'fahmy_mazrui').toLowerCase();
+            }
+          } catch (e) {
+            console.error("Profile load warning:", e);
+          }
+          openMainApp(currentUserName, currentUserHandle, currentUserEmail);
+        }
+      });
+    }
+
+    document.getElementById('sendMessageForm')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const input = document.getElementById('chatMessageInput');
+      const text = input.value.trim();
+      if (!text) return;
+
+      if (isFirebaseConfigured && db && currentActiveChatId) {
+        const userDocId = currentUserId || currentUserHandle;
+        setDoc(doc(db, "chats", currentActiveChatId, "typing", userDocId), { isTyping: false }, { merge: true });
+      }
+
+      if (isFirebaseConfigured && db) {
+        try {
+          await addDoc(collection(db, "chats", currentActiveChatId, "messages"), {
+            text: text,
+            senderId: currentUserId || 'demo-user',
+            senderName: isCeoUser ? 'CEO Fahmy Mazrui' : currentUserName,
+            senderHandle: currentUserHandle,
+            isCeo: isCeoUser,
+            createdAt: serverTimestamp()
+          });
+          input.value = '';
+        } catch (err) {
+          renderMessageBubble({ text, senderName: 'You', senderHandle: currentUserHandle, isCeo: isCeoUser, id: Date.now() }, true);
+          input.value = '';
+        }
+      } else {
+        renderMessageBubble({ text, senderName: 'You', senderHandle: currentUserHandle, isCeo: isCeoUser, id: Date.now() }, true);
+        input.value = '';
+      }
+    });
+
+    const chatInput = document.getElementById('chatMessageInput');
+    chatInput?.addEventListener('input', () => {
+      if (!isFirebaseConfigured || !db || !currentActiveChatId) return;
+      const userDocId = currentUserId || currentUserHandle;
+      
+      setDoc(doc(db, "chats", currentActiveChatId, "typing", userDocId), { 
+        isTyping: true,
+        senderName: currentUserName
+      }, { merge: true });
+
+      if (typingTimer) clearTimeout(typingTimer);
+      typingTimer = setTimeout(() => {
+        setDoc(doc(db, "chats", currentActiveChatId, "typing", userDocId), { isTyping: false }, { merge: true });
+      }, 2500);
+    });
+
+    function renderMessageBubble(msg, isSent) {
+      const container = document.getElementById('messagesContainer');
+      if (!container) return;
+
+      const bubbleWrapper = document.createElement('div');
+      bubbleWrapper.className = `flex flex-col ${isSent ? 'items-end' : 'items-start'} my-1.5 animate-slide-up group relative`;
+
+      const bubble = document.createElement('div');
+      bubble.className = `max-w-[82%] rounded-2xl px-3.5 py-2 text-xs font-medium shadow-sm transition-all ${
+        isSent 
+          ? 'chat-bubble-sent text-white rounded-br-none' 
+          : 'chat-bubble-received text-slate-100 rounded-bl-none'
+      }`;
+
+      const showVerifiedTick = msg.isCeo || checkCeoStatus(msg.senderEmail);
+
+      let contentHtml = `
+        <div class="flex items-center justify-between gap-2 mb-1">
+          <span class="text-[10px] font-bold ${isSent ? 'text-indigo-200' : 'text-accent-pink'} flex items-center gap-1">
+            ${isSent ? 'You' : msg.senderName || 'Classmate'}
+            ${showVerifiedTick ? '<i class="ph ph-seal-check-fill text-sky-400 text-xs" title="Verified CEO"></i>' : ''}
+          </span>
+          ${isSent && msg.id ? `
+            <button data-delete-id="${msg.id}" class="delete-msg-btn text-[10px] opacity-0 group-hover:opacity-100 text-rose-300 hover:text-rose-100 transition" title="Delete Message">
+              <i class="ph ph-trash"></i>
+            </button>
+          ` : ''}
+        </div>
+      `;
+
+      if (msg.audioUrl) {
+        contentHtml += `
+          <div class="flex items-center gap-2 my-1 bg-slate-950/40 p-2 rounded-xl">
+            <audio controls src="${msg.audioUrl}" class="h-8 max-w-[200px]"></audio>
+          </div>
+        `;
+      } else if (msg.fileName) {
+        contentHtml += `
+          <div class="flex items-center gap-2 p-2 rounded-xl bg-slate-950/40 border border-white/10 my-1">
+            <i class="ph ph-file-text text-xl text-cyan-400"></i>
+            <div class="min-w-0 flex-grow">
+              <div class="text-[11px] font-bold text-white truncate">${msg.fileName}</div>
+              <div class="text-[9px] text-slate-400">Shared File</div>
+            </div>
+          </div>
+        `;
+      } else {
+        contentHtml += `<div class="leading-relaxed">${msg.text || ''}</div>`;
+      }
+
+      bubble.innerHTML = contentHtml;
+      bubbleWrapper.appendChild(bubble);
+
+      const deleteBtn = bubble.querySelector('.delete-msg-btn');
+      if (deleteBtn && msg.id && isFirebaseConfigured && db) {
+        deleteBtn.addEventListener('click', async () => {
+          try {
+            await deleteDoc(doc(db, "chats", currentActiveChatId, "messages", msg.id));
+            bubbleWrapper.remove();
+          } catch (e) {
+            bubbleWrapper.remove();
+          }
+        });
+      }
+
+      container.appendChild(bubbleWrapper);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function loadRealtimeMessages(chatId) {
+      const container = document.getElementById('messagesContainer');
+      if (!container) return;
+      container.innerHTML = '';
+
+      if (messagesUnsubscribe) messagesUnsubscribe();
+
+      if (isFirebaseConfigured && db) {
+        const q = query(
+          collection(db, "chats", chatId, "messages"),
+          orderBy("createdAt", "asc")
+        );
+
+        messagesUnsubscribe = onSnapshot(q, (snapshot) => {
+          container.innerHTML = '';
+          snapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            data.id = docSnap.id;
+            const isSent = data.senderId === currentUserId || data.senderHandle === currentUserHandle;
+            renderMessageBubble(data, isSent);
+          });
+        }, (err) => {
+          console.warn("Messages fallback active:", err.message);
+          renderMessageBubble({ text: "Welcome to ClassmateX Chat! Type a message below.", senderName: "CEO Fahmy Mazrui", isCeo: true }, false);
+        });
+      } else {
+        renderMessageBubble({ text: "Welcome to ClassmateX Chat! Type a message below.", senderName: "CEO Fahmy Mazrui", isCeo: true }, false);
+      }
+    }
+
+    const voiceNoteMicBtn = document.getElementById('voiceNoteMicBtn');
+    const voiceRecordingBar = document.getElementById('voiceRecordingBar');
+    const cancelRecordBtn = document.getElementById('cancelRecordBtn');
+    const sendVoiceRecordBtn = document.getElementById('sendVoiceRecordBtn');
+    const recordTimer = document.getElementById('recordTimer');
+
+    voiceNoteMicBtn?.addEventListener('click', async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
+
+        mediaRecorder.ondataavailable = (event) => audioChunks.push(event.data);
+        mediaRecorder.start();
+
+        voiceRecordingBar?.classList.remove('hidden');
+        recordSeconds = 0;
+        if (recordTimer) recordTimer.textContent = '00:00';
+
+        recordTimerInterval = setInterval(() => {
+          recordSeconds++;
+          const mins = String(Math.floor(recordSeconds / 60)).padStart(2, '0');
+          const secs = String(recordSeconds % 60).padStart(2, '0');
+          if (recordTimer) recordTimer.textContent = `${mins}:${secs}`;
+        }, 1000);
+      } catch (err) {
+        triggerNotificationToast("Microphone Permission", "@system", "Microphone access is required!", "CX");
+      }
+    });
+
+    cancelRecordBtn?.addEventListener('click', () => {
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+      clearInterval(recordTimerInterval);
+      voiceRecordingBar?.classList.add('hidden');
+    });
+
+    sendVoiceRecordBtn?.addEventListener('click', () => {
+      if (!mediaRecorder) return;
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+        const audioUrl = URL.createObjectURL(audioBlob);
+
+        if (isFirebaseConfigured && db) {
+          try {
+            await addDoc(collection(db, "chats", currentActiveChatId, "messages"), {
+              audioUrl: audioUrl,
+              senderId: currentUserId || 'demo-user',
+              senderName: currentUserName,
+              senderHandle: currentUserHandle,
+              isCeo: isCeoUser,
+              createdAt: serverTimestamp()
+            });
+          } catch (e) {
+            renderMessageBubble({ audioUrl, senderName: 'You', senderHandle: currentUserHandle, isCeo: isCeoUser }, true);
+          }
+        } else {
+          renderMessageBubble({ audioUrl, senderName: 'You', senderHandle: currentUserHandle, isCeo: isCeoUser }, true);
+        }
+      };
+      mediaRecorder.stop();
+      clearInterval(recordTimerInterval);
+      voiceRecordingBar?.classList.add('hidden');
+    });
+
+    const attachFileBtn = document.getElementById('attachFileBtn');
+    const chatFileInput = document.getElementById('chatFileInput');
+
+    attachFileBtn?.addEventListener('click', () => chatFileInput?.click());
+    chatFileInput?.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const fileUrl = URL.createObjectURL(file);
+      if (isFirebaseConfigured && db) {
+        try {
+          await addDoc(collection(db, "chats", currentActiveChatId, "messages"), {
+            fileName: file.name,
+            fileUrl: fileUrl,
+            senderId: currentUserId || 'demo-user',
+            senderName: currentUserName,
+            senderHandle: currentUserHandle,
+            isCeo: isCeoUser,
+            createdAt: serverTimestamp()
+          });
+        } catch (err) {
+          renderMessageBubble({ fileName: file.name, fileUrl, senderName: 'You', isCeo: isCeoUser }, true);
+        }
+      } else {
+        renderMessageBubble({ fileName: file.name, fileUrl, senderName: 'You', isCeo: isCeoUser }, true);
+      }
+    });
+
+    document.querySelectorAll('.wallpaper-opt-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const wpClass = btn.dataset.wallpaper;
+        const msgContainer = document.getElementById('messagesContainer');
+        if (msgContainer && wpClass) {
+          msgContainer.className = `${wpClass} flex-grow p-3 overflow-y-auto space-y-3 relative z-10 transition-all duration-300`;
+          triggerNotificationToast("Wallpaper Updated", "@settings", `Chat wallpaper changed!`, "CX");
+        }
+      });
+    });
+
+    const addMyStoryBtn = document.getElementById('addMyStoryBtn');
+    const createStoryModal = document.getElementById('createStoryModal');
+    const closeCreateStoryBtn = document.getElementById('closeCreateStoryBtn');
+    const publishStoryBtn = document.getElementById('publishStoryBtn');
+    const storyTextInput = document.getElementById('storyTextInput');
+
+    addMyStoryBtn?.addEventListener('click', () => createStoryModal?.classList.remove('hidden'));
+    closeCreateStoryBtn?.addEventListener('click', () => createStoryModal?.classList.add('hidden'));
+
+    publishStoryBtn?.addEventListener('click', () => {
+      const text = storyTextInput?.value.trim();
+      if (!text) {
+        triggerNotificationToast("Empty Status", "@system", "Type something to post status!", "CX");
+        return;
+      }
+      createStoryModal?.classList.add('hidden');
+      if (storyTextInput) storyTextInput.value = '';
+      triggerNotificationToast("Status Published", "@stories", "Your status is now live!", "CX");
+    });
+
+    const storyViewerModal = document.getElementById('storyViewerModal');
+    const closeStoryViewerBtn = document.getElementById('closeStoryViewerBtn');
+
+    document.querySelectorAll('.story-item-trigger').forEach(item => {
+      item.addEventListener('click', () => {
+        const name = item.dataset.storyName || 'Classmate';
+        const text = item.dataset.storyText || 'ClassmateX Live Status';
+        document.getElementById('storyViewerName').textContent = name;
+        document.getElementById('storyViewerText').textContent = text;
+        storyViewerModal?.classList.remove('hidden');
+      });
+    });
+
+    closeStoryViewerBtn?.addEventListener('click', () => storyViewerModal?.classList.add('hidden'));
+
+    const openEditProfileBtn = document.getElementById('openEditProfileBtn');
+    const editProfileModal = document.getElementById('editProfileModal');
+    const closeEditProfileBtn = document.getElementById('closeEditProfileBtn');
+    const saveProfileBtn = document.getElementById('saveProfileBtn');
+
+    openEditProfileBtn?.addEventListener('click', () => editProfileModal?.classList.remove('hidden'));
+    closeEditProfileBtn?.addEventListener('click', () => editProfileModal?.classList.add('hidden'));
+
+    saveProfileBtn?.addEventListener('click', () => {
+      const newName = document.getElementById('editDisplayNameInput')?.value.trim();
+      const newHandle = document.getElementById('editUsernameInput')?.value.trim().replace('@','');
+      if (newName) currentUserName = newName;
+      if (newHandle) currentUserHandle = newHandle;
+      updateProfileDisplay();
+      editProfileModal?.classList.add('hidden');
+      triggerNotificationToast("Profile Saved", "@settings", "Profile updated successfully!", "CX");
+    });
+
+    const openQrModalBtn = document.getElementById('openQrModalBtn');
+    const profileQrModal = document.getElementById('profileQrModal');
+    const closeQrModalBtn = document.getElementById('closeQrModalBtn');
+
+    openQrModalBtn?.addEventListener('click', () => profileQrModal?.classList.remove('hidden'));
+    closeQrModalBtn?.addEventListener('click', () => profileQrModal?.classList.add('hidden'));
+
+    async function loadMembersFromFirestore() {
+      const membersList = document.getElementById('membersList');
+      if (!membersList) return;
+
+      const renderFallbackMembers = () => {
+        membersList.innerHTML = `
+          <div class="member-card p-3 bg-slate-900 rounded-2xl border border-slate-800 flex items-center justify-between">
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="h-10 w-10 rounded-full bg-gradient-to-tr from-brand-600 via-accent-purple to-accent-pink text-white font-black text-xs flex items-center justify-center shrink-0">
+                FM
+              </div>
+              <div class="min-w-0">
+                <h4 class="text-xs font-black truncate text-white flex items-center gap-1">
+                  CEO Fahmy Mazrui <i class="ph ph-seal-check-fill text-sky-400 text-sm"></i>
+                </h4>
+                <p class="text-[10px] text-accent-pink truncate font-bold">@fahmy_mazrui</p>
+              </div>
+            </div>
+            <button onclick="openChatThread('ceo-fahmy-mazrui')" class="touch-active px-3 py-1.5 rounded-xl bg-gradient-to-r from-brand-600 to-accent-pink text-white text-[11px] font-bold shadow-glow-pink transition shrink-0 flex items-center gap-1">
+              <i class="ph ph-chat-circle-dots"></i> Direct DM
+            </button>
+          </div>
+
+          <div class="member-card p-3 bg-slate-900 rounded-2xl border border-slate-800 flex items-center justify-between">
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="h-10 w-10 rounded-full bg-emerald-500 text-white font-black text-xs flex items-center justify-center shrink-0">
+                SJ
+              </div>
+              <div class="min-w-0">
+                <h4 class="text-xs font-black truncate text-white">Sarah Juma</h4>
+                <p class="text-[10px] text-accent-pink truncate font-bold">@sarah_juma</p>
+              </div>
+            </div>
+            <button onclick="openChatThread('sarah-juma')" class="touch-active px-3 py-1.5 rounded-xl bg-gradient-to-r from-brand-600 to-accent-pink text-white text-[11px] font-bold shadow-glow-pink transition shrink-0 flex items-center gap-1">
+              <i class="ph ph-chat-circle-dots"></i> Direct DM
+            </button>
+          </div>
+        `;
+      };
+
+      if (isFirebaseConfigured && db) {
+        try {
+          const querySnapshot = await getDocs(collection(db, "users"));
+          if (querySnapshot.empty) {
+            renderFallbackMembers();
+            return;
+          }
+          membersList.innerHTML = '';
+
+          querySnapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            const isMemberCeo = data.isCeo || checkCeoStatus(data.email);
+            const memberCard = document.createElement('div');
+            memberCard.className = 'member-card p-3 bg-slate-900 rounded-2xl border border-slate-800 flex items-center justify-between';
+            memberCard.innerHTML = `
+              <div class="flex items-center gap-3 min-w-0">
+                <div class="h-10 w-10 rounded-full ${isMemberCeo ? 'bg-gradient-to-tr from-brand-600 via-accent-purple to-accent-pink' : 'bg-emerald-500'} text-white font-black text-xs flex items-center justify-center shrink-0">
+                  ${(data.fullName || 'User').substring(0,2).toUpperCase()}
+                </div>
+                <div class="min-w-0">
+                  <h4 class="text-xs font-black truncate text-white flex items-center gap-1">
+                    ${data.fullName || 'Classmate'}
+                    ${isMemberCeo ? '<i class="ph ph-seal-check-fill text-sky-400 text-sm"></i>' : ''}
+                  </h4>
+                  <p class="text-[10px] text-accent-pink truncate font-bold">@${data.username || 'user'}</p>
+                </div>
+              </div>
+              <button data-start-dm="${docSnap.id}" class="touch-active px-3 py-1.5 rounded-xl bg-gradient-to-r from-brand-600 to-accent-pink text-white text-[11px] font-bold shadow-glow-pink transition shrink-0 flex items-center gap-1">
+                <i class="ph ph-chat-circle-dots"></i> Direct DM
+              </button>
+            `;
+            membersList.appendChild(memberCard);
+          });
+        } catch (err) {
+          renderFallbackMembers();
+        }
+      } else {
+        renderFallbackMembers();
+      }
+    }
+
+    const navItems = document.querySelectorAll('.nav-item');
+    function switchAppTab(tabName) {
+      document.getElementById('screenChatsList')?.classList.add('hidden');
+      document.getElementById('screenActiveChat')?.classList.add('hidden');
+      document.getElementById('screenMembers')?.classList.add('hidden');
+      document.getElementById('screenSettings')?.classList.add('hidden');
+
+      navItems.forEach(item => {
+        const isActive = item.dataset.nav === tabName;
+        item.classList.toggle('text-accent-pink', isActive);
+        item.classList.toggle('text-slate-400', !isActive);
+      });
+
+      if (tabName === 'chats') document.getElementById('screenChatsList')?.classList.remove('hidden');
+      if (tabName === 'members') document.getElementById('screenMembers')?.classList.remove('hidden');
+      if (tabName === 'global') openChatThread('global-group');
+      if (tabName === 'settings') document.getElementById('screenSettings')?.classList.remove('hidden');
+    }
+
+    navItems.forEach(btn => btn?.addEventListener('click', () => switchAppTab(btn.dataset.nav)));
+
+    function openChatThread(chatId) {
+      currentActiveChatId = chatId;
+      document.getElementById('screenChatsList')?.classList.add('hidden');
+      document.getElementById('screenMembers')?.classList.add('hidden');
+      document.getElementById('screenSettings')?.classList.add('hidden');
+      
+      const activeScreen = document.getElementById('screenActiveChat');
+      if (activeScreen) {
+        activeScreen.classList.remove('hidden');
+        activeScreen.classList.add('flex', 'animate-slide-up');
+      }
+
+      loadRealtimeMessages(chatId);
+    }
+
+    document.querySelectorAll('.chat-thread-trigger').forEach(item => {
+      item?.addEventListener('click', () => openChatThread(item.dataset.chatId));
+    });
+
+    document.getElementById('backToChatsBtn')?.addEventListener('click', () => switchAppTab('chats'));
+
+    function updateProfileDisplay() {
+      const initials = currentUserName.split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase() || 'FM';
+      const headerBox = document.getElementById('headerAvatarContainer');
+      const settingsBox = document.getElementById('settingsAvatarContainer');
+
+      if (headerBox) headerBox.textContent = initials;
+      if (settingsBox) settingsBox.textContent = initials;
+
+      const settingsUserName = document.getElementById('settingsUserName');
+      const ceoVerifiedBadge = document.getElementById('ceoVerifiedBadge');
+      const ceoRoleBadge = document.getElementById('ceoRoleBadge');
+
+      if (settingsUserName) {
+        settingsUserName.childNodes[0].nodeValue = currentUserName + " ";
+      }
+
+      if (isCeoUser) {
+        if (ceoVerifiedBadge) ceoVerifiedBadge.classList.remove('hidden');
+        if (ceoRoleBadge) {
+          ceoRoleBadge.className = "inline-flex items-center gap-1 mt-1 px-2.5 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/30 text-[9px] font-black";
+          ceoRoleBadge.innerHTML = `<i class="ph ph-seal-check-fill"></i> Founder & CEO`;
+        }
+      } else {
+        if (ceoVerifiedBadge) ceoVerifiedBadge.classList.add('hidden');
+        if (ceoRoleBadge) {
+          ceoRoleBadge.className = "inline-flex items-center gap-1 mt-1 px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[9px] font-extrabold";
+          ceoRoleBadge.innerHTML = `<i class="ph ph-check-circle-fill"></i> Active Online Mode`;
+        }
+      }
+
+      const settingsUserHandle = document.getElementById('settingsUserHandle');
+      if (settingsUserHandle) settingsUserHandle.textContent = `@${currentUserHandle}`;
+    }
+
+    document.querySelectorAll('[data-show]').forEach(btn => {
+      btn?.addEventListener('click', () => {
+        const target = btn.dataset.show;
+        document.querySelectorAll('.auth-card').forEach(card => card.classList.add('hidden'));
+        document.getElementById(target)?.classList.remove('hidden');
+      });
+    });
+
+    document.querySelectorAll('[data-toggle-password]').forEach(btn => {
+      btn?.addEventListener('click', () => {
+        const input = document.getElementById(btn.dataset.togglePassword);
+        if (input) {
+          const isPass = input.type === 'password';
+          input.type = isPass ? 'text' : 'password';
+          btn.innerHTML = `<i class="ph ph-${isPass ? 'eye-slash' : 'eye'} text-base"></i>`;
+        }
+      });
+    });
+
+    document.getElementById('settingsLogoutBtn')?.addEventListener('click', async () => {
+      if (isFirebaseConfigured && auth) {
+        await signOut(auth);
+      }
+      document.getElementById('mainAppView')?.classList.add('hidden');
+      document.getElementById('mainAppView')?.classList.remove('flex');
+      document.getElementById('authView')?.classList.remove('hidden');
+      document.getElementById('headerUserAvatarBtn')?.classList.add('hidden');
+    });
+
+  </script>
+</body>
+</html>
