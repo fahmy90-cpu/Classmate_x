@@ -59,7 +59,7 @@
     window.OneSignalDeferred = window.OneSignalDeferred || [];
     OneSignalDeferred.push(async function(OneSignal) {
       await OneSignal.init({
-        appId: "PASTE_ONESIGNAL_APP_ID_HERE",
+        appId: "a9ace05b-c41f-48cb-9c6c-3a4736bd296e",
         allowLocalhostAsSecureOrigin: true,
         notifyButton: { enable: false },
         // GitHub Pages: service worker iko kwenye subfolder (/repo/) si root
@@ -2191,8 +2191,8 @@
 
     // ===== PUSH NOTIFICATIONS (OneSignal - free tier) =====
     // Weka credentials zako hapa (OneSignal Dashboard > Settings > Keys & IDs)
-    const ONESIGNAL_APP_ID = 'PASTE_ONESIGNAL_APP_ID_HERE';
-    const ONESIGNAL_REST_KEY = 'PASTE_ONESIGNAL_REST_API_KEY_HERE';
+    const ONESIGNAL_APP_ID = 'a9ace05b-c41f-48cb-9c6c-3a4736bd296e';
+    const ONESIGNAL_REST_KEY = 'os_v2_app_vgwoaw6ed5emxhdmhjdtnpjjn2ksezyovc2uewupnd6adedfropvco27662q2v5erneex2z4vl5qiezw466ere64prhviiie3bw4arq';
 
     async function notifyPush(targetHandle, title, message) {
       if (ONESIGNAL_REST_KEY.indexOf('PASTE') === 0) return; // bado haijawekwa
