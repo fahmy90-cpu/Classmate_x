@@ -62,6 +62,17 @@
         appId: "a9ace05b-c41f-48cb-9c6c-3a4736bd296e",
         allowLocalhostAsSecureOrigin: true,
         notifyButton: { enable: false },
+        slidedown: {
+          prompts: [{
+            type: 'push',
+            autoPrompt: false,
+            text: {
+              actionMessage: 'Pata notifications za ujumbe mpya kutoka ClassmateX!',
+              acceptButton: 'Ruhusu',
+              cancelButton: 'Hapana'
+            }
+          }]
+        },
         // GitHub Pages: service worker iko kwenye subfolder (/repo/) si root
         serviceWorkerParam: { scope: location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1) },
         serviceWorkerPath: "OneSignalSDKWorker.js"
@@ -264,7 +275,7 @@
             <p id="wpModalHandle" class="text-xs font-bold text-accent-pink">@fahmy_mazrui</p>
             <p id="wpModalLastSeen" class="text-[9px] text-slate-400 mt-0.5 flex items-center justify-center gap-1"></p>
             <span id="wpModalRoleBadge" class="inline-flex items-center gap-1 mt-1 px-2.5 py-0.5 rounded-full bg-sky-500/20 text-sky-400 border border-sky-500/30 text-[9px] font-black">
-              <svg viewBox="0 0 24 24" width="14" height="14" preserveAspectRatio="xMidYMid meet" class="inline-block shrink-0 ml-0.5" style="width:14px;height:14px;flex:0 0 auto" title="Verified"><path fill="#0AA5F2" d="M12 1.4l2.2 1.6 2.6-.5 1.1 2.4 2.5.9-.5 2.6L21.4 12l-1.6 2.2.5 2.6-2.5.9-1.1 2.4-2.6-.5L12 22.6l-2.2-1.6-2.6.5-1.1-2.4-2.5-.9.5-2.6L2.6 12l1.6-2.2-.5-2.6 2.5-.9 1.1-2.4 2.6.5z"/><path fill="#ffffff" d="M10.8 16l-3.3-3.3 1.4-1.4 1.9 1.9 5.1-5.1 1.4 1.4z"/></svg> Founder & CEO
+              <svg viewBox="0 0 24 24" width="14" height="14" preserveAspectRatio="xMidYMid meet" class="inline-block shrink-0 ml-0.5" style="width:14px;height:14px;flex:0 0 auto" title="Verified"><path fill="#0AA5F2" d="M23.25 12.0L23.06 12.43L22.56 12.83L21.94 13.18L21.41 13.49L21.17 13.82L21.27 14.23L21.63 14.72L22.08 15.27L22.38 15.83L22.39 16.31L22.05 16.63L21.44 16.81L20.73 16.89L20.13 16.98L19.77 17.19L19.71 17.6L19.86 18.19L20.06 18.88L20.13 19.51L19.95 19.95L19.51 20.13L18.88 20.06L18.19 19.86L17.6 19.71L17.19 19.77L16.98 20.13L16.89 20.73L16.81 21.44L16.63 22.05L16.31 22.39L15.83 22.38L15.27 22.08L14.72 21.63L14.23 21.27L13.82 21.17L13.49 21.41L13.18 21.94L12.83 22.56L12.43 23.06L12.0 23.25L11.57 23.06L11.17 22.56L10.82 21.94L10.51 21.41L10.18 21.17L9.77 21.27L9.28 21.63L8.73 22.08L8.17 22.38L7.69 22.39L7.37 22.05L7.19 21.44L7.11 20.73L7.02 20.13L6.81 19.77L6.4 19.71L5.81 19.86L5.12 20.06L4.49 20.13L4.05 19.95L3.87 19.51L3.94 18.88L4.14 18.19L4.29 17.6L4.23 17.19L3.87 16.98L3.27 16.89L2.56 16.81L1.95 16.63L1.61 16.31L1.62 15.83L1.92 15.27L2.37 14.72L2.73 14.23L2.83 13.82L2.59 13.49L2.06 13.18L1.44 12.83L0.94 12.43L0.75 12.0L0.94 11.57L1.44 11.17L2.06 10.82L2.59 10.51L2.83 10.18L2.73 9.77L2.37 9.28L1.92 8.73L1.62 8.17L1.61 7.69L1.95 7.37L2.56 7.19L3.27 7.11L3.87 7.02L4.23 6.81L4.29 6.4L4.14 5.81L3.94 5.12L3.87 4.49L4.05 4.05L4.49 3.87L5.12 3.94L5.81 4.14L6.4 4.29L6.81 4.23L7.02 3.87L7.11 3.27L7.19 2.56L7.37 1.95L7.69 1.61L8.17 1.62L8.73 1.92L9.28 2.37L9.77 2.73L10.18 2.83L10.51 2.59L10.82 2.06L11.17 1.44L11.57 0.94L12.0 0.75L12.43 0.94L12.83 1.44L13.18 2.06L13.49 2.59L13.82 2.83L14.23 2.73L14.72 2.37L15.27 1.92L15.83 1.62L16.31 1.61L16.63 1.95L16.81 2.56L16.89 3.27L16.98 3.87L17.19 4.23L17.6 4.29L18.19 4.14L18.88 3.94L19.51 3.87L19.95 4.05L20.13 4.49L20.06 5.12L19.86 5.81L19.71 6.4L19.77 6.81L20.13 7.02L20.73 7.11L21.44 7.19L22.05 7.37L22.39 7.69L22.38 8.17L22.08 8.73L21.63 9.28L21.27 9.77L21.17 10.18L21.41 10.51L21.94 10.82L22.56 11.17L23.06 11.57L23.25 12.0Z"/><path d="M6.8 12.7L10.2 16.1L17.4 8.5" stroke="#ffffff" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg> Founder & CEO
             </span>
           </div>
 
@@ -577,13 +588,13 @@
       </div>
 
       <!-- Live Story Preview Canvas -->
-      <div id="storyCanvasPreview" class="flex-grow my-3 rounded-3xl flex flex-col items-center justify-center p-6 text-center transition-all duration-300 relative overflow-hidden bg-gradient-to-br from-purple-700 via-indigo-800 to-slate-900 border border-slate-700 shadow-2xl">
+      <div id="storyCanvasPreview" class="flex-grow -mx-4 my-1 rounded-2xl flex flex-col items-center justify-center p-6 text-center transition-all duration-300 relative overflow-hidden bg-gradient-to-br from-purple-700 via-indigo-800 to-slate-900 border-y border-slate-700 shadow-2xl">
         <textarea id="storyTextInput" rows="3" placeholder="Type something cool here..." class="w-full bg-transparent text-center text-xl font-extrabold text-white outline-none resize-none placeholder-white/40 leading-relaxed z-10"></textarea>
 
         <!-- Media Attachment Preview -->
-        <div id="storyMediaPreviewContainer" class="hidden relative max-h-52 max-w-full my-2 rounded-2xl overflow-hidden border border-white/20 shadow-lg z-10">
-          <img id="storyImagePreview" class="hidden max-h-52 w-full object-contain" />
-          <video id="storyVideoPreview" class="hidden max-h-52 w-full object-contain" controls></video>
+        <div id="storyMediaPreviewContainer" class="hidden relative max-h-[62vh] max-w-full my-2 rounded-2xl overflow-hidden border border-white/20 shadow-lg z-10">
+          <img id="storyImagePreview" class="hidden max-h-[62vh] w-full object-contain" />
+          <video id="storyVideoPreview" class="hidden max-h-[62vh] w-full object-contain" controls></video>
           <button id="removeStoryMediaBtn" class="absolute top-2 right-2 h-7 w-7 rounded-full bg-rose-500 text-white flex items-center justify-center text-xs shadow-md">
             <i class="ph ph-trash"></i>
           </button>
@@ -592,6 +603,14 @@
 
       <!-- Color Swatches & Action Bar -->
       <div class="space-y-3 z-10">
+        <div class="flex items-center justify-center gap-2 py-1">
+          <button id="storyBoldBtn" class="story-tool-btn h-8 w-8 rounded-full bg-slate-800 text-white text-sm border border-slate-700 touch-active flex items-center justify-center" title="Bold"><span class="font-black">B</span></button>
+          <button id="storySizeBtn" class="story-tool-btn h-8 px-2.5 rounded-full bg-slate-800 text-white text-[10px] font-black border border-slate-700 touch-active" title="Font size">Aa</button>
+          <button data-scolor="#ffffff" class="story-tool-btn story-color-dot h-7 w-7 rounded-full border-2 border-white touch-active" style="background:#ffffff"></button>
+          <button data-scolor="#fbbf24" class="story-tool-btn story-color-dot h-7 w-7 rounded-full border-2 border-transparent touch-active" style="background:#fbbf24"></button>
+          <button data-scolor="#000000" class="story-tool-btn story-color-dot h-7 w-7 rounded-full border-2 border-transparent touch-active" style="background:#000000"></button>
+        </div>
+
         <div id="statusColorBar" class="flex items-center justify-center gap-2.5 overflow-x-auto no-scrollbar py-1">
           <button data-bg="bg-gradient-to-br from-purple-700 via-indigo-800 to-slate-900" class="status-color-btn h-8 w-8 rounded-full bg-gradient-to-br from-purple-700 to-slate-900 border-2 border-white shadow-md transition transform hover:scale-110 shrink-0"></button>
           <button data-bg="bg-gradient-to-br from-rose-600 via-pink-600 to-purple-800" class="status-color-btn h-8 w-8 rounded-full bg-gradient-to-br from-rose-600 to-purple-800 border-2 border-transparent hover:border-white shadow-md transition transform hover:scale-110 shrink-0"></button>
@@ -644,7 +663,7 @@
       <div id="storyPrivacyBar" class="flex items-center justify-between bg-slate-900/90 border border-slate-800 rounded-2xl px-3 py-2 text-xs text-slate-300 z-10 my-1">
         <div class="flex items-center gap-2">
           <i class="ph ph-eye text-accent-pink text-base"></i>
-          <span class="font-extrabold text-[11px]"><span>18</span> Classmates Viewed</span>
+          <span class="font-extrabold text-[11px]"><span id="storyViewsCount">0</span> Classmates Viewed</span>
         </div>
       </div>
     </div>
@@ -909,7 +928,7 @@
               <div class="flex-grow min-w-0">
                 <div class="flex justify-between items-baseline mb-0.5">
                   <h4 class="text-xs font-black truncate text-white flex items-center">
-                    @fahmy_mazrui <svg viewBox="0 0 24 24" width="14" height="14" preserveAspectRatio="xMidYMid meet" class="inline-block shrink-0 ml-0.5" style="width:14px;height:14px;flex:0 0 auto" title="Verified"><path fill="#0AA5F2" d="M12 1.4l2.2 1.6 2.6-.5 1.1 2.4 2.5.9-.5 2.6L21.4 12l-1.6 2.2.5 2.6-2.5.9-1.1 2.4-2.6-.5L12 22.6l-2.2-1.6-2.6.5-1.1-2.4-2.5-.9.5-2.6L2.6 12l1.6-2.2-.5-2.6 2.5-.9 1.1-2.4 2.6.5z"/><path fill="#ffffff" d="M10.8 16l-3.3-3.3 1.4-1.4 1.9 1.9 5.1-5.1 1.4 1.4z"/></svg>
+                    @fahmy_mazrui <svg viewBox="0 0 24 24" width="14" height="14" preserveAspectRatio="xMidYMid meet" class="inline-block shrink-0 ml-0.5" style="width:14px;height:14px;flex:0 0 auto" title="Verified"><path fill="#0AA5F2" d="M23.25 12.0L23.06 12.43L22.56 12.83L21.94 13.18L21.41 13.49L21.17 13.82L21.27 14.23L21.63 14.72L22.08 15.27L22.38 15.83L22.39 16.31L22.05 16.63L21.44 16.81L20.73 16.89L20.13 16.98L19.77 17.19L19.71 17.6L19.86 18.19L20.06 18.88L20.13 19.51L19.95 19.95L19.51 20.13L18.88 20.06L18.19 19.86L17.6 19.71L17.19 19.77L16.98 20.13L16.89 20.73L16.81 21.44L16.63 22.05L16.31 22.39L15.83 22.38L15.27 22.08L14.72 21.63L14.23 21.27L13.82 21.17L13.49 21.41L13.18 21.94L12.83 22.56L12.43 23.06L12.0 23.25L11.57 23.06L11.17 22.56L10.82 21.94L10.51 21.41L10.18 21.17L9.77 21.27L9.28 21.63L8.73 22.08L8.17 22.38L7.69 22.39L7.37 22.05L7.19 21.44L7.11 20.73L7.02 20.13L6.81 19.77L6.4 19.71L5.81 19.86L5.12 20.06L4.49 20.13L4.05 19.95L3.87 19.51L3.94 18.88L4.14 18.19L4.29 17.6L4.23 17.19L3.87 16.98L3.27 16.89L2.56 16.81L1.95 16.63L1.61 16.31L1.62 15.83L1.92 15.27L2.37 14.72L2.73 14.23L2.83 13.82L2.59 13.49L2.06 13.18L1.44 12.83L0.94 12.43L0.75 12.0L0.94 11.57L1.44 11.17L2.06 10.82L2.59 10.51L2.83 10.18L2.73 9.77L2.37 9.28L1.92 8.73L1.62 8.17L1.61 7.69L1.95 7.37L2.56 7.19L3.27 7.11L3.87 7.02L4.23 6.81L4.29 6.4L4.14 5.81L3.94 5.12L3.87 4.49L4.05 4.05L4.49 3.87L5.12 3.94L5.81 4.14L6.4 4.29L6.81 4.23L7.02 3.87L7.11 3.27L7.19 2.56L7.37 1.95L7.69 1.61L8.17 1.62L8.73 1.92L9.28 2.37L9.77 2.73L10.18 2.83L10.51 2.59L10.82 2.06L11.17 1.44L11.57 0.94L12.0 0.75L12.43 0.94L12.83 1.44L13.18 2.06L13.49 2.59L13.82 2.83L14.23 2.73L14.72 2.37L15.27 1.92L15.83 1.62L16.31 1.61L16.63 1.95L16.81 2.56L16.89 3.27L16.98 3.87L17.19 4.23L17.6 4.29L18.19 4.14L18.88 3.94L19.51 3.87L19.95 4.05L20.13 4.49L20.06 5.12L19.86 5.81L19.71 6.4L19.77 6.81L20.13 7.02L20.73 7.11L21.44 7.19L22.05 7.37L22.39 7.69L22.38 8.17L22.08 8.73L21.63 9.28L21.27 9.77L21.17 10.18L21.41 10.51L21.94 10.82L22.56 11.17L23.06 11.57L23.25 12.0Z"/><path d="M6.8 12.7L10.2 16.1L17.4 8.5" stroke="#ffffff" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
                   </h4>
                   <span class="text-[10px] font-black text-accent-pink shrink-0">CEO</span>
                 </div>
@@ -1033,11 +1052,11 @@
               </div>
               <div class="min-w-0">
                 <h3 id="settingsUserHandle" class="text-sm font-black text-accent-pink truncate flex items-center">
-                  @fahmy_mazrui <span id="ceoVerifiedBadge"><svg viewBox="0 0 24 24" width="14" height="14" preserveAspectRatio="xMidYMid meet" class="inline-block shrink-0 ml-0.5" style="width:14px;height:14px;flex:0 0 auto" title="Verified"><path fill="#0AA5F2" d="M12 1.4l2.2 1.6 2.6-.5 1.1 2.4 2.5.9-.5 2.6L21.4 12l-1.6 2.2.5 2.6-2.5.9-1.1 2.4-2.6-.5L12 22.6l-2.2-1.6-2.6.5-1.1-2.4-2.5-.9.5-2.6L2.6 12l1.6-2.2-.5-2.6 2.5-.9 1.1-2.4 2.6.5z"/><path fill="#ffffff" d="M10.8 16l-3.3-3.3 1.4-1.4 1.9 1.9 5.1-5.1 1.4 1.4z"/></svg></span>
+                  @fahmy_mazrui <span id="ceoVerifiedBadge"><svg viewBox="0 0 24 24" width="14" height="14" preserveAspectRatio="xMidYMid meet" class="inline-block shrink-0 ml-0.5" style="width:14px;height:14px;flex:0 0 auto" title="Verified"><path fill="#0AA5F2" d="M23.25 12.0L23.06 12.43L22.56 12.83L21.94 13.18L21.41 13.49L21.17 13.82L21.27 14.23L21.63 14.72L22.08 15.27L22.38 15.83L22.39 16.31L22.05 16.63L21.44 16.81L20.73 16.89L20.13 16.98L19.77 17.19L19.71 17.6L19.86 18.19L20.06 18.88L20.13 19.51L19.95 19.95L19.51 20.13L18.88 20.06L18.19 19.86L17.6 19.71L17.19 19.77L16.98 20.13L16.89 20.73L16.81 21.44L16.63 22.05L16.31 22.39L15.83 22.38L15.27 22.08L14.72 21.63L14.23 21.27L13.82 21.17L13.49 21.41L13.18 21.94L12.83 22.56L12.43 23.06L12.0 23.25L11.57 23.06L11.17 22.56L10.82 21.94L10.51 21.41L10.18 21.17L9.77 21.27L9.28 21.63L8.73 22.08L8.17 22.38L7.69 22.39L7.37 22.05L7.19 21.44L7.11 20.73L7.02 20.13L6.81 19.77L6.4 19.71L5.81 19.86L5.12 20.06L4.49 20.13L4.05 19.95L3.87 19.51L3.94 18.88L4.14 18.19L4.29 17.6L4.23 17.19L3.87 16.98L3.27 16.89L2.56 16.81L1.95 16.63L1.61 16.31L1.62 15.83L1.92 15.27L2.37 14.72L2.73 14.23L2.83 13.82L2.59 13.49L2.06 13.18L1.44 12.83L0.94 12.43L0.75 12.0L0.94 11.57L1.44 11.17L2.06 10.82L2.59 10.51L2.83 10.18L2.73 9.77L2.37 9.28L1.92 8.73L1.62 8.17L1.61 7.69L1.95 7.37L2.56 7.19L3.27 7.11L3.87 7.02L4.23 6.81L4.29 6.4L4.14 5.81L3.94 5.12L3.87 4.49L4.05 4.05L4.49 3.87L5.12 3.94L5.81 4.14L6.4 4.29L6.81 4.23L7.02 3.87L7.11 3.27L7.19 2.56L7.37 1.95L7.69 1.61L8.17 1.62L8.73 1.92L9.28 2.37L9.77 2.73L10.18 2.83L10.51 2.59L10.82 2.06L11.17 1.44L11.57 0.94L12.0 0.75L12.43 0.94L12.83 1.44L13.18 2.06L13.49 2.59L13.82 2.83L14.23 2.73L14.72 2.37L15.27 1.92L15.83 1.62L16.31 1.61L16.63 1.95L16.81 2.56L16.89 3.27L16.98 3.87L17.19 4.23L17.6 4.29L18.19 4.14L18.88 3.94L19.51 3.87L19.95 4.05L20.13 4.49L20.06 5.12L19.86 5.81L19.71 6.4L19.77 6.81L20.13 7.02L20.73 7.11L21.44 7.19L22.05 7.37L22.39 7.69L22.38 8.17L22.08 8.73L21.63 9.28L21.27 9.77L21.17 10.18L21.41 10.51L21.94 10.82L22.56 11.17L23.06 11.57L23.25 12.0Z"/><path d="M6.8 12.7L10.2 16.1L17.4 8.5" stroke="#ffffff" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
                 </h3>
                 <p id="settingsUserBio" class="text-[11px] text-slate-300 truncate mt-0.5">ClassmateX Founder & CEO 🚀</p>
                 <span id="ceoRoleBadge" class="inline-flex items-center gap-1 mt-1.5 px-2.5 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/30 text-[9px] font-black">
-                  <svg viewBox="0 0 24 24" width="14" height="14" preserveAspectRatio="xMidYMid meet" class="inline-block shrink-0 ml-0.5" style="width:14px;height:14px;flex:0 0 auto" title="Verified"><path fill="#0AA5F2" d="M12 1.4l2.2 1.6 2.6-.5 1.1 2.4 2.5.9-.5 2.6L21.4 12l-1.6 2.2.5 2.6-2.5.9-1.1 2.4-2.6-.5L12 22.6l-2.2-1.6-2.6.5-1.1-2.4-2.5-.9.5-2.6L2.6 12l1.6-2.2-.5-2.6 2.5-.9 1.1-2.4 2.6.5z"/><path fill="#ffffff" d="M10.8 16l-3.3-3.3 1.4-1.4 1.9 1.9 5.1-5.1 1.4 1.4z"/></svg> Founder & CEO
+                  <svg viewBox="0 0 24 24" width="14" height="14" preserveAspectRatio="xMidYMid meet" class="inline-block shrink-0 ml-0.5" style="width:14px;height:14px;flex:0 0 auto" title="Verified"><path fill="#0AA5F2" d="M23.25 12.0L23.06 12.43L22.56 12.83L21.94 13.18L21.41 13.49L21.17 13.82L21.27 14.23L21.63 14.72L22.08 15.27L22.38 15.83L22.39 16.31L22.05 16.63L21.44 16.81L20.73 16.89L20.13 16.98L19.77 17.19L19.71 17.6L19.86 18.19L20.06 18.88L20.13 19.51L19.95 19.95L19.51 20.13L18.88 20.06L18.19 19.86L17.6 19.71L17.19 19.77L16.98 20.13L16.89 20.73L16.81 21.44L16.63 22.05L16.31 22.39L15.83 22.38L15.27 22.08L14.72 21.63L14.23 21.27L13.82 21.17L13.49 21.41L13.18 21.94L12.83 22.56L12.43 23.06L12.0 23.25L11.57 23.06L11.17 22.56L10.82 21.94L10.51 21.41L10.18 21.17L9.77 21.27L9.28 21.63L8.73 22.08L8.17 22.38L7.69 22.39L7.37 22.05L7.19 21.44L7.11 20.73L7.02 20.13L6.81 19.77L6.4 19.71L5.81 19.86L5.12 20.06L4.49 20.13L4.05 19.95L3.87 19.51L3.94 18.88L4.14 18.19L4.29 17.6L4.23 17.19L3.87 16.98L3.27 16.89L2.56 16.81L1.95 16.63L1.61 16.31L1.62 15.83L1.92 15.27L2.37 14.72L2.73 14.23L2.83 13.82L2.59 13.49L2.06 13.18L1.44 12.83L0.94 12.43L0.75 12.0L0.94 11.57L1.44 11.17L2.06 10.82L2.59 10.51L2.83 10.18L2.73 9.77L2.37 9.28L1.92 8.73L1.62 8.17L1.61 7.69L1.95 7.37L2.56 7.19L3.27 7.11L3.87 7.02L4.23 6.81L4.29 6.4L4.14 5.81L3.94 5.12L3.87 4.49L4.05 4.05L4.49 3.87L5.12 3.94L5.81 4.14L6.4 4.29L6.81 4.23L7.02 3.87L7.11 3.27L7.19 2.56L7.37 1.95L7.69 1.61L8.17 1.62L8.73 1.92L9.28 2.37L9.77 2.73L10.18 2.83L10.51 2.59L10.82 2.06L11.17 1.44L11.57 0.94L12.0 0.75L12.43 0.94L12.83 1.44L13.18 2.06L13.49 2.59L13.82 2.83L14.23 2.73L14.72 2.37L15.27 1.92L15.83 1.62L16.31 1.61L16.63 1.95L16.81 2.56L16.89 3.27L16.98 3.87L17.19 4.23L17.6 4.29L18.19 4.14L18.88 3.94L19.51 3.87L19.95 4.05L20.13 4.49L20.06 5.12L19.86 5.81L19.71 6.4L19.77 6.81L20.13 7.02L20.73 7.11L21.44 7.19L22.05 7.37L22.39 7.69L22.38 8.17L22.08 8.73L21.63 9.28L21.27 9.77L21.17 10.18L21.41 10.51L21.94 10.82L22.56 11.17L23.06 11.57L23.25 12.0Z"/><path d="M6.8 12.7L10.2 16.1L17.4 8.5" stroke="#ffffff" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg> Founder & CEO
                 </span>
               </div>
             </div>
@@ -1311,7 +1330,8 @@
       query, 
       where,
       orderBy,
-      limit
+      limit,
+      arrayUnion
     } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
     import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
 
@@ -1369,6 +1389,7 @@
     let storyProgressInterval = null;
     let storyQueue = [];
     let storyIndex = 0;
+    let storyPaused = false;
 
     // XSS PROTECTION: ESCAPE ALL USER TEXT BEFORE INSERTING INTO innerHTML
     function escapeHtml(str) {
@@ -1484,6 +1505,29 @@
       });
     }
 
+    function compressSquareImageToDataUrl(file, size, quality) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            const side = Math.min(img.width, img.height);
+            const sx = (img.width - side) / 2;
+            const sy = (img.height - side) / 2;
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            canvas.getContext('2d').drawImage(img, sx, sy, side, side, 0, 0, size, size);
+            resolve(canvas.toDataURL('image/jpeg', quality || 0.85));
+          };
+          img.onerror = reject;
+          img.src = e.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
     function fileToDataUrl(file) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -1501,7 +1545,7 @@
     }
 
     function metaBadgeSvg(color, size) {
-      return `<svg viewBox="0 0 24 24" width="${size || 14}" height="${size || 14}" preserveAspectRatio="xMidYMid meet" class="inline-block shrink-0 ml-0.5" style="width:${size || 14}px;height:${size || 14}px;flex:0 0 auto" title="Verified"><path fill="${color}" d="M12 1.4l2.2 1.6 2.6-.5 1.1 2.4 2.5.9-.5 2.6L21.4 12l-1.6 2.2.5 2.6-2.5.9-1.1 2.4-2.6-.5L12 22.6l-2.2-1.6-2.6.5-1.1-2.4-2.5-.9.5-2.6L2.6 12l1.6-2.2-.5-2.6 2.5-.9 1.1-2.4 2.6.5z"/><path fill="#ffffff" d="M10.8 16l-3.3-3.3 1.4-1.4 1.9 1.9 5.1-5.1 1.4 1.4z"/></svg>`;
+      return `<svg viewBox="0 0 24 24" width="${size || 14}" height="${size || 14}" preserveAspectRatio="xMidYMid meet" class="inline-block shrink-0 ml-0.5" style="width:${size || 14}px;height:${size || 14}px;flex:0 0 auto" title="Verified"><path fill="${color}" d="M23.25 12.0L23.06 12.43L22.56 12.83L21.94 13.18L21.41 13.49L21.17 13.82L21.27 14.23L21.63 14.72L22.08 15.27L22.38 15.83L22.39 16.31L22.05 16.63L21.44 16.81L20.73 16.89L20.13 16.98L19.77 17.19L19.71 17.6L19.86 18.19L20.06 18.88L20.13 19.51L19.95 19.95L19.51 20.13L18.88 20.06L18.19 19.86L17.6 19.71L17.19 19.77L16.98 20.13L16.89 20.73L16.81 21.44L16.63 22.05L16.31 22.39L15.83 22.38L15.27 22.08L14.72 21.63L14.23 21.27L13.82 21.17L13.49 21.41L13.18 21.94L12.83 22.56L12.43 23.06L12.0 23.25L11.57 23.06L11.17 22.56L10.82 21.94L10.51 21.41L10.18 21.17L9.77 21.27L9.28 21.63L8.73 22.08L8.17 22.38L7.69 22.39L7.37 22.05L7.19 21.44L7.11 20.73L7.02 20.13L6.81 19.77L6.4 19.71L5.81 19.86L5.12 20.06L4.49 20.13L4.05 19.95L3.87 19.51L3.94 18.88L4.14 18.19L4.29 17.6L4.23 17.19L3.87 16.98L3.27 16.89L2.56 16.81L1.95 16.63L1.61 16.31L1.62 15.83L1.92 15.27L2.37 14.72L2.73 14.23L2.83 13.82L2.59 13.49L2.06 13.18L1.44 12.83L0.94 12.43L0.75 12.0L0.94 11.57L1.44 11.17L2.06 10.82L2.59 10.51L2.83 10.18L2.73 9.77L2.37 9.28L1.92 8.73L1.62 8.17L1.61 7.69L1.95 7.37L2.56 7.19L3.27 7.11L3.87 7.02L4.23 6.81L4.29 6.4L4.14 5.81L3.94 5.12L3.87 4.49L4.05 4.05L4.49 3.87L5.12 3.94L5.81 4.14L6.4 4.29L6.81 4.23L7.02 3.87L7.11 3.27L7.19 2.56L7.37 1.95L7.69 1.61L8.17 1.62L8.73 1.92L9.28 2.37L9.77 2.73L10.18 2.83L10.51 2.59L10.82 2.06L11.17 1.44L11.57 0.94L12.0 0.75L12.43 0.94L12.83 1.44L13.18 2.06L13.49 2.59L13.82 2.83L14.23 2.73L14.72 2.37L15.27 1.92L15.83 1.62L16.31 1.61L16.63 1.95L16.81 2.56L16.89 3.27L16.98 3.87L17.19 4.23L17.6 4.29L18.19 4.14L18.88 3.94L19.51 3.87L19.95 4.05L20.13 4.49L20.06 5.12L19.86 5.81L19.71 6.4L19.77 6.81L20.13 7.02L20.73 7.11L21.44 7.19L22.05 7.37L22.39 7.69L22.38 8.17L22.08 8.73L21.63 9.28L21.27 9.77L21.17 10.18L21.41 10.51L21.94 10.82L22.56 11.17L23.06 11.57L23.25 12.0Z"/><path d="M6.8 12.7L10.2 16.1L17.4 8.5" stroke="#ffffff" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
     }
 
     function getRoleBadgeHtml(role) {
@@ -1625,6 +1669,11 @@
         if (window.OneSignalReady) {
           window.OneSignalReady.login(currentUserHandle).then(() => {
             return window.OneSignalReady.User.addTag('handle', currentUserHandle);
+          }).then(() => {
+            // MOMBA RUHUSA ya notifications (bila hii hakuna mtu anayepata prompt!)
+            if (window.OneSignalReady.Slidedown) {
+              window.OneSignalReady.Slidedown.promptPush();
+            }
           }).catch(() => {});
         }
       } catch (e) {}
@@ -1782,13 +1831,13 @@
       if (roleBadge) {
         if (userRole === 'admin') {
           roleBadge.className = "inline-flex items-center gap-1 mt-1 px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30 text-[9px] font-black";
-          roleBadge.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" preserveAspectRatio="xMidYMid meet" class="inline-block shrink-0 ml-0.5" style="width:14px;height:14px;flex:0 0 auto" title="Verified"><path fill="#0AA5F2" d="M12 1.4l2.2 1.6 2.6-.5 1.1 2.4 2.5.9-.5 2.6L21.4 12l-1.6 2.2.5 2.6-2.5.9-1.1 2.4-2.6-.5L12 22.6l-2.2-1.6-2.6.5-1.1-2.4-2.5-.9.5-2.6L2.6 12l1.6-2.2-.5-2.6 2.5-.9 1.1-2.4 2.6.5z"/><path fill="#ffffff" d="M10.8 16l-3.3-3.3 1.4-1.4 1.9 1.9 5.1-5.1 1.4 1.4z"/></svg> Verified Admin`;
+          roleBadge.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" preserveAspectRatio="xMidYMid meet" class="inline-block shrink-0 ml-0.5" style="width:14px;height:14px;flex:0 0 auto" title="Verified"><path fill="#0AA5F2" d="M23.25 12.0L23.06 12.43L22.56 12.83L21.94 13.18L21.41 13.49L21.17 13.82L21.27 14.23L21.63 14.72L22.08 15.27L22.38 15.83L22.39 16.31L22.05 16.63L21.44 16.81L20.73 16.89L20.13 16.98L19.77 17.19L19.71 17.6L19.86 18.19L20.06 18.88L20.13 19.51L19.95 19.95L19.51 20.13L18.88 20.06L18.19 19.86L17.6 19.71L17.19 19.77L16.98 20.13L16.89 20.73L16.81 21.44L16.63 22.05L16.31 22.39L15.83 22.38L15.27 22.08L14.72 21.63L14.23 21.27L13.82 21.17L13.49 21.41L13.18 21.94L12.83 22.56L12.43 23.06L12.0 23.25L11.57 23.06L11.17 22.56L10.82 21.94L10.51 21.41L10.18 21.17L9.77 21.27L9.28 21.63L8.73 22.08L8.17 22.38L7.69 22.39L7.37 22.05L7.19 21.44L7.11 20.73L7.02 20.13L6.81 19.77L6.4 19.71L5.81 19.86L5.12 20.06L4.49 20.13L4.05 19.95L3.87 19.51L3.94 18.88L4.14 18.19L4.29 17.6L4.23 17.19L3.87 16.98L3.27 16.89L2.56 16.81L1.95 16.63L1.61 16.31L1.62 15.83L1.92 15.27L2.37 14.72L2.73 14.23L2.83 13.82L2.59 13.49L2.06 13.18L1.44 12.83L0.94 12.43L0.75 12.0L0.94 11.57L1.44 11.17L2.06 10.82L2.59 10.51L2.83 10.18L2.73 9.77L2.37 9.28L1.92 8.73L1.62 8.17L1.61 7.69L1.95 7.37L2.56 7.19L3.27 7.11L3.87 7.02L4.23 6.81L4.29 6.4L4.14 5.81L3.94 5.12L3.87 4.49L4.05 4.05L4.49 3.87L5.12 3.94L5.81 4.14L6.4 4.29L6.81 4.23L7.02 3.87L7.11 3.27L7.19 2.56L7.37 1.95L7.69 1.61L8.17 1.62L8.73 1.92L9.28 2.37L9.77 2.73L10.18 2.83L10.51 2.59L10.82 2.06L11.17 1.44L11.57 0.94L12.0 0.75L12.43 0.94L12.83 1.44L13.18 2.06L13.49 2.59L13.82 2.83L14.23 2.73L14.72 2.37L15.27 1.92L15.83 1.62L16.31 1.61L16.63 1.95L16.81 2.56L16.89 3.27L16.98 3.87L17.19 4.23L17.6 4.29L18.19 4.14L18.88 3.94L19.51 3.87L19.95 4.05L20.13 4.49L20.06 5.12L19.86 5.81L19.71 6.4L19.77 6.81L20.13 7.02L20.73 7.11L21.44 7.19L22.05 7.37L22.39 7.69L22.38 8.17L22.08 8.73L21.63 9.28L21.27 9.77L21.17 10.18L21.41 10.51L21.94 10.82L22.56 11.17L23.06 11.57L23.25 12.0Z"/><path d="M6.8 12.7L10.2 16.1L17.4 8.5" stroke="#ffffff" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg> Verified Admin`;
         } else if (userRole === 'moderator') {
           roleBadge.className = "inline-flex items-center gap-1 mt-1 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[9px] font-black";
-          roleBadge.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" preserveAspectRatio="xMidYMid meet" class="inline-block shrink-0 ml-0.5" style="width:14px;height:14px;flex:0 0 auto" title="Verified"><path fill="#0AA5F2" d="M12 1.4l2.2 1.6 2.6-.5 1.1 2.4 2.5.9-.5 2.6L21.4 12l-1.6 2.2.5 2.6-2.5.9-1.1 2.4-2.6-.5L12 22.6l-2.2-1.6-2.6.5-1.1-2.4-2.5-.9.5-2.6L2.6 12l1.6-2.2-.5-2.6 2.5-.9 1.1-2.4 2.6.5z"/><path fill="#ffffff" d="M10.8 16l-3.3-3.3 1.4-1.4 1.9 1.9 5.1-5.1 1.4 1.4z"/></svg> Verified Moderator`;
+          roleBadge.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" preserveAspectRatio="xMidYMid meet" class="inline-block shrink-0 ml-0.5" style="width:14px;height:14px;flex:0 0 auto" title="Verified"><path fill="#0AA5F2" d="M23.25 12.0L23.06 12.43L22.56 12.83L21.94 13.18L21.41 13.49L21.17 13.82L21.27 14.23L21.63 14.72L22.08 15.27L22.38 15.83L22.39 16.31L22.05 16.63L21.44 16.81L20.73 16.89L20.13 16.98L19.77 17.19L19.71 17.6L19.86 18.19L20.06 18.88L20.13 19.51L19.95 19.95L19.51 20.13L18.88 20.06L18.19 19.86L17.6 19.71L17.19 19.77L16.98 20.13L16.89 20.73L16.81 21.44L16.63 22.05L16.31 22.39L15.83 22.38L15.27 22.08L14.72 21.63L14.23 21.27L13.82 21.17L13.49 21.41L13.18 21.94L12.83 22.56L12.43 23.06L12.0 23.25L11.57 23.06L11.17 22.56L10.82 21.94L10.51 21.41L10.18 21.17L9.77 21.27L9.28 21.63L8.73 22.08L8.17 22.38L7.69 22.39L7.37 22.05L7.19 21.44L7.11 20.73L7.02 20.13L6.81 19.77L6.4 19.71L5.81 19.86L5.12 20.06L4.49 20.13L4.05 19.95L3.87 19.51L3.94 18.88L4.14 18.19L4.29 17.6L4.23 17.19L3.87 16.98L3.27 16.89L2.56 16.81L1.95 16.63L1.61 16.31L1.62 15.83L1.92 15.27L2.37 14.72L2.73 14.23L2.83 13.82L2.59 13.49L2.06 13.18L1.44 12.83L0.94 12.43L0.75 12.0L0.94 11.57L1.44 11.17L2.06 10.82L2.59 10.51L2.83 10.18L2.73 9.77L2.37 9.28L1.92 8.73L1.62 8.17L1.61 7.69L1.95 7.37L2.56 7.19L3.27 7.11L3.87 7.02L4.23 6.81L4.29 6.4L4.14 5.81L3.94 5.12L3.87 4.49L4.05 4.05L4.49 3.87L5.12 3.94L5.81 4.14L6.4 4.29L6.81 4.23L7.02 3.87L7.11 3.27L7.19 2.56L7.37 1.95L7.69 1.61L8.17 1.62L8.73 1.92L9.28 2.37L9.77 2.73L10.18 2.83L10.51 2.59L10.82 2.06L11.17 1.44L11.57 0.94L12.0 0.75L12.43 0.94L12.83 1.44L13.18 2.06L13.49 2.59L13.82 2.83L14.23 2.73L14.72 2.37L15.27 1.92L15.83 1.62L16.31 1.61L16.63 1.95L16.81 2.56L16.89 3.27L16.98 3.87L17.19 4.23L17.6 4.29L18.19 4.14L18.88 3.94L19.51 3.87L19.95 4.05L20.13 4.49L20.06 5.12L19.86 5.81L19.71 6.4L19.77 6.81L20.13 7.02L20.73 7.11L21.44 7.19L22.05 7.37L22.39 7.69L22.38 8.17L22.08 8.73L21.63 9.28L21.27 9.77L21.17 10.18L21.41 10.51L21.94 10.82L22.56 11.17L23.06 11.57L23.25 12.0Z"/><path d="M6.8 12.7L10.2 16.1L17.4 8.5" stroke="#ffffff" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg> Verified Moderator`;
         } else {
           roleBadge.className = "inline-flex items-center gap-1 mt-1 px-2.5 py-0.5 rounded-full bg-sky-500/20 text-sky-400 border border-sky-500/30 text-[9px] font-black";
-          roleBadge.innerHTML = isVerified ? `<svg viewBox="0 0 24 24" width="14" height="14" preserveAspectRatio="xMidYMid meet" class="inline-block shrink-0 ml-0.5" style="width:14px;height:14px;flex:0 0 auto" title="Verified"><path fill="#0AA5F2" d="M12 1.4l2.2 1.6 2.6-.5 1.1 2.4 2.5.9-.5 2.6L21.4 12l-1.6 2.2.5 2.6-2.5.9-1.1 2.4-2.6-.5L12 22.6l-2.2-1.6-2.6.5-1.1-2.4-2.5-.9.5-2.6L2.6 12l1.6-2.2-.5-2.6 2.5-.9 1.1-2.4 2.6.5z"/><path fill="#ffffff" d="M10.8 16l-3.3-3.3 1.4-1.4 1.9 1.9 5.1-5.1 1.4 1.4z"/></svg> Founder & CEO` : `<i class="ph ph-student"></i> Classmate Student`;
+          roleBadge.innerHTML = isVerified ? `<svg viewBox="0 0 24 24" width="14" height="14" preserveAspectRatio="xMidYMid meet" class="inline-block shrink-0 ml-0.5" style="width:14px;height:14px;flex:0 0 auto" title="Verified"><path fill="#0AA5F2" d="M23.25 12.0L23.06 12.43L22.56 12.83L21.94 13.18L21.41 13.49L21.17 13.82L21.27 14.23L21.63 14.72L22.08 15.27L22.38 15.83L22.39 16.31L22.05 16.63L21.44 16.81L20.73 16.89L20.13 16.98L19.77 17.19L19.71 17.6L19.86 18.19L20.06 18.88L20.13 19.51L19.95 19.95L19.51 20.13L18.88 20.06L18.19 19.86L17.6 19.71L17.19 19.77L16.98 20.13L16.89 20.73L16.81 21.44L16.63 22.05L16.31 22.39L15.83 22.38L15.27 22.08L14.72 21.63L14.23 21.27L13.82 21.17L13.49 21.41L13.18 21.94L12.83 22.56L12.43 23.06L12.0 23.25L11.57 23.06L11.17 22.56L10.82 21.94L10.51 21.41L10.18 21.17L9.77 21.27L9.28 21.63L8.73 22.08L8.17 22.38L7.69 22.39L7.37 22.05L7.19 21.44L7.11 20.73L7.02 20.13L6.81 19.77L6.4 19.71L5.81 19.86L5.12 20.06L4.49 20.13L4.05 19.95L3.87 19.51L3.94 18.88L4.14 18.19L4.29 17.6L4.23 17.19L3.87 16.98L3.27 16.89L2.56 16.81L1.95 16.63L1.61 16.31L1.62 15.83L1.92 15.27L2.37 14.72L2.73 14.23L2.83 13.82L2.59 13.49L2.06 13.18L1.44 12.83L0.94 12.43L0.75 12.0L0.94 11.57L1.44 11.17L2.06 10.82L2.59 10.51L2.83 10.18L2.73 9.77L2.37 9.28L1.92 8.73L1.62 8.17L1.61 7.69L1.95 7.37L2.56 7.19L3.27 7.11L3.87 7.02L4.23 6.81L4.29 6.4L4.14 5.81L3.94 5.12L3.87 4.49L4.05 4.05L4.49 3.87L5.12 3.94L5.81 4.14L6.4 4.29L6.81 4.23L7.02 3.87L7.11 3.27L7.19 2.56L7.37 1.95L7.69 1.61L8.17 1.62L8.73 1.92L9.28 2.37L9.77 2.73L10.18 2.83L10.51 2.59L10.82 2.06L11.17 1.44L11.57 0.94L12.0 0.75L12.43 0.94L12.83 1.44L13.18 2.06L13.49 2.59L13.82 2.83L14.23 2.73L14.72 2.37L15.27 1.92L15.83 1.62L16.31 1.61L16.63 1.95L16.81 2.56L16.89 3.27L16.98 3.87L17.19 4.23L17.6 4.29L18.19 4.14L18.88 3.94L19.51 3.87L19.95 4.05L20.13 4.49L20.06 5.12L19.86 5.81L19.71 6.4L19.77 6.81L20.13 7.02L20.73 7.11L21.44 7.19L22.05 7.37L22.39 7.69L22.38 8.17L22.08 8.73L21.63 9.28L21.27 9.77L21.17 10.18L21.41 10.51L21.94 10.82L22.56 11.17L23.06 11.57L23.25 12.0Z"/><path d="M6.8 12.7L10.2 16.1L17.4 8.5" stroke="#ffffff" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg> Founder & CEO` : `<i class="ph ph-student"></i> Classmate Student`;
         }
       }
 
@@ -2418,13 +2467,49 @@
       const file = e.target.files[0];
       if (!file) return;
       try {
-        const dataUrl = await compressImageToDataUrl(file, 256, 0.85);
+        const dataUrl = await compressSquareImageToDataUrl(file, 256, 0.85); // center-crop square
         updateAllUserAvatarsInDom(dataUrl);
         if (db) setDoc(getPublicDoc("users", currentUserHandle), { avatar: dataUrl }, { merge: true }).catch(() => {});
         triggerNotificationToast("Profile Photo Updated", currentUserHandle, "Avatar imewekwa (punguzwa, bure)", "CX");
       } catch (err) {
         triggerNotificationToast("Upload Failed", "system", "Picha haikupakiwa — jaribu nyingine", "CX");
       }
+    });
+
+    // ===== STORY STUDIO: bold / size / text color =====
+    let storyFontSize = 20;
+    let storyFontBold = false;
+    let storyFontColor = '#ffffff';
+
+    function applyStoryTextStyle() {
+      const el = document.getElementById('storyTextInput');
+      if (!el) return;
+      el.style.fontSize = storyFontSize + 'px';
+      el.style.fontWeight = storyFontBold ? '900' : '700';
+      el.style.color = storyFontColor;
+      const boldBtn = document.getElementById('storyBoldBtn');
+      if (boldBtn) boldBtn.classList.toggle('border-accent-pink', storyFontBold);
+      const sizeBtn = document.getElementById('storySizeBtn');
+      if (sizeBtn) sizeBtn.textContent = storyFontSize >= 36 ? 'A+' : storyFontSize >= 28 ? 'Aa' : 'A-';
+    }
+
+    document.getElementById('storyBoldBtn')?.addEventListener('click', () => {
+      storyFontBold = !storyFontBold;
+      applyStoryTextStyle();
+    });
+
+    document.getElementById('storySizeBtn')?.addEventListener('click', () => {
+      storyFontSize = storyFontSize >= 36 ? 20 : storyFontSize >= 28 ? 36 : 28;
+      applyStoryTextStyle();
+    });
+
+    document.querySelectorAll('.story-color-dot').forEach(btn => {
+      btn.addEventListener('click', () => {
+        storyFontColor = btn.dataset.scolor || '#ffffff';
+        document.querySelectorAll('.story-color-dot').forEach(b => b.classList.replace('border-white', 'border-transparent'));
+        btn.classList.replace('border-transparent', 'border-white');
+        applyStoryTextStyle();
+      });
     });
 
     // Story Swatch Color Selection
@@ -2505,6 +2590,9 @@
           mediaType: selectedStoryMedia ? selectedStoryMedia.type : 'text',
           mediaUrl: storyMediaUrl,
           avatar: currentUserAvatar || null,
+          textSize: storyFontSize,
+          textBold: storyFontBold,
+          textColor: storyFontColor,
           createdAtMs: Date.now(),
           expiresAtMs: Date.now() + 24 * 3600 * 1000
         });
@@ -2548,7 +2636,12 @@
         storyText: st.text || '',
         storyHandle: '@' + st.handle,
         storyBg: st.bg,
-        storyMediaUrl: st.mediaUrl || ''
+        storyMediaUrl: st.mediaUrl || '',
+        storySize: st.textSize || 20,
+        storyBold: !!st.textBold,
+        storyColor: st.textColor || '#ffffff',
+        storyId: st._id || null,
+        viewsCount: (st.views || []).length
       }));
       storyIndex = 0;
       openStoryViewer(storyQueue[0]);
@@ -2582,7 +2675,7 @@
           snap = await getDocs(query(getPublicCol("stories"), where("expiresAtMs", ">", Date.now()), orderBy("expiresAtMs", "asc")));
         }
         const stories = [];
-        snap.forEach(d => stories.push(d.data()));
+        snap.forEach(d => { const v = d.data(); v._id = d.id; stories.push(v); });
         // GROUP: duara MOJA kwa mtu (kama Instagram) — hatujizalishi
         const byHandle = {};
         stories.forEach(s => {
@@ -2594,6 +2687,46 @@
           appendStoryItem(byHandle[handle]);
         });
       } catch (e) {}
+    }
+
+    function startStoryProgress() {
+      const bar = document.getElementById('storyProgressBar');
+      const modal = document.getElementById('storyViewerModal');
+      if (!bar) return;
+      if (storyProgressInterval) { clearInterval(storyProgressInterval); storyProgressInterval = null; }
+      let progress = parseFloat(bar.style.width) || 0;
+      storyProgressInterval = setInterval(() => {
+        progress += 4;
+        bar.style.width = `${progress}%`;
+        if (progress >= 100) {
+          clearInterval(storyProgressInterval);
+          storyProgressInterval = null;
+          if (storyQueue.length > storyIndex + 1) {
+            storyIndex++;
+            openStoryViewer(storyQueue[storyIndex]);
+          } else {
+            storyQueue = [];
+            storyIndex = 0;
+            modal?.classList.add('hidden');
+          }
+        }
+      }, 100);
+    }
+
+    function pauseStory() {
+      if (storyPaused) return;
+      storyPaused = true;
+      if (storyProgressInterval) { clearInterval(storyProgressInterval); storyProgressInterval = null; }
+      const v = document.getElementById('storyViewerVideo');
+      if (v && !v.paused) v.pause();
+    }
+
+    function resumeStory() {
+      if (!storyPaused) return;
+      storyPaused = false;
+      startStoryProgress();
+      const v = document.getElementById('storyViewerVideo');
+      if (v && v.src) v.play().catch(() => {});
     }
 
     function openStoryViewer(data) {
@@ -2626,30 +2759,28 @@
       if (textEl) {
         textEl.textContent = data.storyText || '';
         textEl.classList.remove('hidden');
+        textEl.style.fontSize = (data.storySize || 20) + 'px';
+        textEl.style.fontWeight = data.storyBold ? '900' : '700';
+        textEl.style.color = data.storyColor || '#ffffff';
       }
 
       modal?.classList.remove('hidden');
 
+      // Views halisi: onyesha + record
+      const vcEl = document.getElementById('storyViewsCount');
+      if (vcEl) vcEl.textContent = data.viewsCount || 0;
+      if (data.storyId && currentUserHandle) {
+        try {
+          updateDoc(getPublicDoc("stories", data.storyId), { views: arrayUnion(currentUserHandle) }).then(() => {
+            if (vcEl) vcEl.textContent = (parseInt(vcEl.textContent || '0', 10) + 1);
+          }).catch(() => {});
+        } catch (e) {}
+      }
+
       if (bar) {
-        if (storyProgressInterval) clearInterval(storyProgressInterval);
         bar.style.width = '0%';
-        let progress = 0;
-        storyProgressInterval = setInterval(() => {
-          progress += 5;
-          bar.style.width = `${progress}%`;
-          if (progress >= 100) {
-            clearInterval(storyProgressInterval);
-            storyProgressInterval = null;
-            if (storyQueue.length > storyIndex + 1) {
-              storyIndex++;
-              openStoryViewer(storyQueue[storyIndex]);
-            } else {
-              storyQueue = [];
-              storyIndex = 0;
-              modal?.classList.add('hidden');
-            }
-          }
-        }, 100);
+        storyPaused = false;
+        startStoryProgress();
       }
     }
 
@@ -2666,6 +2797,14 @@
       if (sv) { sv.pause(); sv.src = ''; }
       document.getElementById('storyViewerModal')?.classList.add('hidden');
     });
+
+    // HOLD kupause story (kama Instagram) — shika screen kusitisha, achilia kuendelea
+    const holdArea = document.getElementById('storyContentContainer');
+    holdArea?.addEventListener('touchstart', (e) => { e.stopPropagation(); pauseStory(); }, { passive: true });
+    holdArea?.addEventListener('touchend', () => resumeStory());
+    holdArea?.addEventListener('touchcancel', () => resumeStory());
+    holdArea?.addEventListener('mousedown', () => pauseStory());
+    holdArea?.addEventListener('mouseup', () => resumeStory());
 
     // Live Chat Wallpaper Switcher
     document.querySelectorAll('.wallpaper-opt-btn').forEach(btn => {
@@ -3007,7 +3146,11 @@
       document.getElementById('profileQrModal')?.classList.remove('hidden');
     });
     document.getElementById('closeQrModalBtn')?.addEventListener('click', () => document.getElementById('profileQrModal')?.classList.add('hidden'));
-    document.getElementById('addMyStoryBtn')?.addEventListener('click', () => document.getElementById('createStoryModal')?.classList.remove('hidden'));
+    document.getElementById('addMyStoryBtn')?.addEventListener('click', () => {
+      storyFontSize = 20; storyFontBold = false; storyFontColor = '#ffffff';
+      applyStoryTextStyle();
+      document.getElementById('createStoryModal')?.classList.remove('hidden');
+    });
     document.getElementById('closeCreateStoryBtn')?.addEventListener('click', () => document.getElementById('createStoryModal')?.classList.add('hidden'));
 
     // Clear Local Cache Handler
@@ -3152,6 +3295,10 @@
       document.getElementById('mainAppView')?.classList.remove('flex');
       document.getElementById('headerUserAvatarBtn')?.classList.add('hidden');
       document.getElementById('globalTopHeader')?.classList.remove('hidden');
+      // Rudi kwenye LOGIN page (reset cards) + toa device kutoka push
+      try { if (window.OneSignalReady) window.OneSignalReady.logout(); } catch (e) {}
+      document.querySelectorAll('.auth-card').forEach(c => c.classList.add('hidden'));
+      document.getElementById('form-login')?.classList.remove('hidden');
       document.getElementById('authView')?.classList.remove('hidden');
     });
 
