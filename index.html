@@ -1352,6 +1352,8 @@
     let currentSubtitleHtml = '';
     let mutedChats = [];
     let blockedUsers = [];
+    let myThreads = [];
+    let threadListeners = {};
     let currentActiveChatId = 'global-group';
     let messagesUnsubscribe = null;
     let selectedMsgForAction = null;
@@ -1611,6 +1613,11 @@
       blockedUsers = Array.isArray(userDoc?.blockedUsers) ? userDoc.blockedUsers.slice() : [];
       loadStoriesFromFirestore();
 
+      // DM inbox threads + incoming-DM listener
+      myThreads = Array.isArray(userDoc?.threads) ? userDoc.threads : [];
+      renderAllThreads();
+      attachInboxListener();
+
       // OneSignal: link device to username for targeted push
       try {
         if (window.OneSignalReady) {
@@ -1632,6 +1639,96 @@
       
       updateProfileDisplay();
       loadMembersFromFirestore();
+    }
+
+    // ===== DM INBOX THREADS: preview + unread count (realtime) =====
+    function saveMyThreads() {
+      if (db && currentUserHandle) {
+        setDoc(getPublicDoc("users", currentUserHandle), { threads: myThreads.slice(0, 30) }, { merge: true }).catch(() => {});
+      }
+    }
+
+    function renderAllThreads() {
+      const list = document.getElementById('chatThreadList');
+      if (!list) return;
+      list.querySelectorAll('[data-dynamic-thread]').forEach(el => el.remove());
+      myThreads.forEach(t => renderThreadItem(t));
+      myThreads.forEach(t => attachThreadListener(t.chatId));
+    }
+
+    function renderThreadItem(t) {
+      const list = document.getElementById('chatThreadList');
+      if (!list) return;
+      let item = list.querySelector(`[data-chat-id="${t.chatId}"][data-dynamic-thread]`);
+      if (!item) {
+        item = document.createElement('div');
+        item.className = 'chat-thread-item chat-thread-trigger flex items-center gap-3 p-3 cursor-pointer transition hover:bg-slate-900/60';
+        item.dataset.chatId = t.chatId;
+        item.setAttribute('data-dynamic-thread', '1');
+        item.dataset.searchTerm = '@' + t.handle;
+        item.addEventListener('click', () => window.openChatThread(t.chatId));
+        list.insertBefore(item, list.firstChild);
+      }
+      const unreadHtml = (t.unread || 0) > 0
+        ? `<span class="min-w-[18px] h-[18px] px-1 rounded-full bg-accent-pink text-white text-[9px] font-black flex items-center justify-center shrink-0">${t.unread > 9 ? '9+' : t.unread}</span>`
+        : '';
+      item.innerHTML = `
+        <div class="relative shrink-0">
+          <div class="h-11 w-11 rounded-full bg-gradient-to-tr from-brand-500 to-accent-pink text-white font-black text-xs flex items-center justify-center overflow-hidden">
+            ${t.avatar ? `<img src="${t.avatar}" class="avatar-img" />` : String(t.handle).substring(0,2).toUpperCase()}
+          </div>
+          <span class="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-emerald-400 border-2 border-slate-950"></span>
+        </div>
+        <div class="flex-grow min-w-0">
+          <div class="flex justify-between items-baseline mb-0.5 gap-2">
+            <h4 class="text-xs font-black truncate text-white">@${t.handle}</h4>
+            <span class="text-[10px] text-slate-400 shrink-0">${t.lastMsgTime || ''}</span>
+          </div>
+          <div class="flex justify-between items-center gap-2">
+            <p class="text-[11px] truncate ${(t.unread || 0) > 0 ? 'text-slate-100 font-bold' : 'text-slate-400 font-medium'}">${escapeHtml(t.lastMsg || 'Anza mazungumzo...')}</p>
+            ${unreadHtml}
+          </div>
+        </div>`;
+    }
+
+    function attachThreadListener(chatId) {
+      if (!db || threadListeners[chatId]) return;
+      try {
+        threadListeners[chatId] = onSnapshot(getPublicCol(`messages_${chatId}`), (snap) => {
+          const t = myThreads.find(x => x.chatId === chatId);
+          if (!t) return;
+          let unread = 0, lastMsg = null, lastTime = 0;
+          snap.forEach(d => {
+            const m = d.data();
+            if ((m.createdAtMs || 0) > lastTime) { lastTime = m.createdAtMs; lastMsg = m; }
+            if (m.senderHandle && m.senderHandle !== currentUserHandle && (m.createdAtMs || 0) > (t.lastReadMs || 0)) unread++;
+          });
+          t.unread = unread;
+          if (lastMsg) {
+            t.lastMsg = lastMsg.text || (lastMsg.mediaType === 'image' ? '\u{1F4F7} Picha' : lastMsg.mediaUrl ? '\u{1F4CE} Faili' : '');
+            t.lastMsgTime = lastMsg.time || '';
+          }
+          renderThreadItem(t);
+        }, () => {});
+      } catch (e) {}
+    }
+
+    function attachInboxListener() {
+      if (!db || !currentUserHandle || threadListeners['__inbox__']) return;
+      try {
+        threadListeners['__inbox__'] = onSnapshot(getPublicCol(`messages_dm-${currentUserHandle}`), (snap) => {
+          snap.forEach(d => {
+            const m = d.data();
+            if (!m.senderHandle || m.senderHandle === currentUserHandle) return;
+            const cid = 'dm-' + m.senderHandle;
+            if (!myThreads.find(x => x.chatId === cid)) {
+              myThreads.unshift({ chatId: cid, handle: m.senderHandle, lastReadMs: 0, unread: 0, lastMsg: '', lastMsgTime: '' });
+              attachThreadListener(cid);
+            }
+          });
+          saveMyThreads();
+        }, () => {});
+      } catch (e) {}
     }
 
     // ===== FULLSCREEN IMAGE VIEWER =====
@@ -1991,6 +2088,20 @@
         }
       }
 
+      // Track DM thread in inbox + mark read
+      if (chatId.startsWith('dm-')) {
+        let tt = myThreads.find(x => x.chatId === chatId);
+        if (!tt) {
+          tt = { chatId: chatId, handle: chatId.replace('dm-', ''), lastReadMs: 0, unread: 0, lastMsg: '', lastMsgTime: '' };
+          myThreads.unshift(tt);
+        }
+        tt.lastReadMs = Date.now();
+        tt.unread = 0;
+        saveMyThreads();
+        renderThreadItem(tt);
+        attachThreadListener(chatId);
+      }
+
       loadRealtimeMessages(chatId);
     };
 
@@ -2027,7 +2138,7 @@
       let contentHtml = `
         <div class="flex items-center justify-between gap-2 mb-1">
           <span class="text-[10px] font-bold ${isSent ? 'text-indigo-200' : 'text-accent-pink'} flex items-center">
-            @${msg.senderHandle || 'user'} ${getVerifiedBadgeHtml(isVerifiedUser)}${getRoleBadgeHtml(msg.senderRole)}
+            @${msg.senderHandle || 'user'} ${isVerifiedUser ? getVerifiedBadgeHtml(true) : getRoleBadgeHtml(msg.senderRole)}
           </span>
         </div>
       `;
@@ -2095,7 +2206,10 @@
         }
         cancelLongPress();
         longPressTimer = setTimeout(() => {
-          selectedMsgForAction = { id: msg.id, text: msg.text, author: msg.senderHandle, element: bubbleWrapper };
+          const isOwnMsg = msg.senderHandle === currentUserHandle || (msg.senderId && msg.senderId === currentUserId);
+          selectedMsgForAction = { id: msg.id, text: msg.text, author: msg.senderHandle, element: bubbleWrapper, isOwn: isOwnMsg };
+          document.getElementById('actionEditMsgBtn')?.classList.toggle('hidden', !isOwnMsg);
+          document.getElementById('actionDeleteMsgBtn')?.classList.toggle('hidden', !isOwnMsg);
           document.getElementById('messageActionModal')?.classList.remove('hidden');
         }, 450);
       };
@@ -2644,7 +2758,7 @@
           const h4 = document.createElement('h4');
           h4.className = 'text-xs font-black truncate text-white flex items-center';
           h4.textContent = '@' + username;
-          if (mRole !== 'user') h4.insertAdjacentHTML('beforeend', getVerifiedBadgeHtml(!!m.isCeo) + getRoleBadgeHtml(mRole));
+          if (mRole !== 'user') h4.insertAdjacentHTML('beforeend', m.isCeo ? getVerifiedBadgeHtml(true) : getRoleBadgeHtml(mRole));
           const p = document.createElement('p');
           p.className = 'text-[10px] text-slate-400 truncate';
           const mOnline = isUserOnline(m);
@@ -2978,6 +3092,10 @@
       }
       try { if (auth) await signOut(auth); } catch(e) {}
       if (messagesUnsubscribe) { messagesUnsubscribe(); messagesUnsubscribe = null; }
+      if (typingUnsubscribe) { typingUnsubscribe(); typingUnsubscribe = null; }
+      Object.values(threadListeners).forEach(u => { try { u(); } catch (e) {} });
+      threadListeners = {};
+      myThreads = [];
       renderedMsgIds.clear();
       currentUserId = null;
       isCeoUser = false;
@@ -3094,7 +3212,7 @@
       name.className = 'text-[11px] font-black text-white truncate flex items-center';
       name.textContent = '@' + username;
       if (u.banned) name.insertAdjacentHTML('beforeend', '<span class="ml-1 px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-400 text-[8px] font-black">BANNED</span>');
-      if (role !== 'user') name.insertAdjacentHTML('beforeend', getVerifiedBadgeHtml(!!u.isCeo) + getRoleBadgeHtml(role));
+      if (role !== 'user') name.insertAdjacentHTML('beforeend', u.isCeo ? getVerifiedBadgeHtml(true) : getRoleBadgeHtml(role));
       const sub = document.createElement('p');
       sub.className = 'text-[9px] text-slate-500 truncate';
       sub.textContent = (u.email || '') + ' \u2022 ' + (online ? 'Online sasa' : 'Last seen: ' + timeAgo(u.lastActiveMs));
