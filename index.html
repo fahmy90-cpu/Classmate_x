@@ -866,9 +866,6 @@
             </div>
           </div>
 
-          <!-- Realtime Search Input -->            </div>
-          </div>
-
           <!-- Realtime Search Input -->
           <div class="p-2.5 bg-slate-900/80 border-b border-slate-800 space-y-2">
             <div class="relative flex items-center">
@@ -1254,7 +1251,7 @@
           </div>
         </div>
 
-        <!-- Bottom Navigation -->        <!-- Bottom Navigation -->
+        <!-- Bottom Navigation -->
         <nav id="bottomNav" class="shrink-0 bg-slate-900 border-t border-slate-800 flex justify-around items-center py-2 px-1 shadow-mobile-nav z-20">
           <button data-nav="chats" class="nav-item active flex flex-col items-center gap-0.5 text-accent-pink transition transform active:scale-90">
             <i class="ph ph-chat-circle-text text-xl"></i>
@@ -3320,7 +3317,7 @@
       }
     });
 
-    // ===== AUTH STATE PERSISTENCE (stay logged in on refresh) =====    // ===== AUTH STATE PERSISTENCE (stay logged in on refresh) =====
+    // ===== AUTH STATE PERSISTENCE (stay logged in on refresh) =====
     if (auth) {
       onAuthStateChanged(auth, async (user) => {
         if (!user) return;
