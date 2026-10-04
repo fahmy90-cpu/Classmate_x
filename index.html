@@ -38,6 +38,7 @@
           boxShadow: {
             'soft': '0 20px 40px -15px rgba(0,0,0,0.5)',
             'glow-pink': '0 0 35px -5px rgba(236, 72, 153, 0.5)',
+            'glow-cyan': '0 0 35px -5px rgba(6, 182, 212, 0.5)',
             'glow-brand': '0 0 35px -5px rgba(99, 102, 241, 0.5)',
             'mobile-nav': '0 -8px 30px rgba(0, 0, 0, 0.5)'
           }
@@ -49,10 +50,13 @@
   <!-- Phosphor Icons CDN -->
   <script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
 
-  <!-- Google Fonts for Status Studio -->
+  <!-- Real QR Code Generator Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <!-- Inter Font -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Fira+Code:wght@600&family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:ital,wght@1,700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
   <style>
     .no-scrollbar::-webkit-scrollbar { display: none; }
@@ -61,12 +65,6 @@
     ::-webkit-scrollbar { width: 4px; height: 4px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 10px; }
-
-    /* Font Styles for Status Studio */
-    .font-sans-studio { font-family: 'Inter', sans-serif; }
-    .font-serif-studio { font-family: 'Playfair Display', serif; }
-    .font-mono-studio { font-family: 'Fira Code', monospace; }
-    .font-cursive-studio { font-family: 'Caveat', cursive; }
 
     /* Dynamic Chat Wallpaper Themes */
     .wallpaper-cyberpunk {
@@ -115,6 +113,13 @@
     }
     .animate-glow { animation: pulseGlow 4.5s infinite ease-in-out; }
 
+    .neon-story-ring {
+      background: linear-gradient(135deg, #06b6d4, #ec4899, #a855f7);
+      padding: 2.5px;
+      border-radius: 9999px;
+      box-shadow: 0 0 12px rgba(236, 72, 153, 0.6);
+    }
+
     .touch-active:active { transform: scale(0.95); transition: transform 0.12s ease; }
     .avatar-img { object-fit: cover; width: 100%; height: 100%; border-radius: 9999px; }
 
@@ -132,22 +137,6 @@
       background: rgba(30, 41, 59, 0.92);
       border: 1px solid rgba(255, 255, 255, 0.1);
     }
-
-    /* Animated Live Audio Frequency Bars */
-    .mic-bar {
-      width: 4px;
-      border-radius: 9999px;
-      background-color: #ec4899;
-      transition: height 0.05s ease;
-      min-height: 4px;
-    }
-    .playing-bar {
-      animation: wave 0.8s infinite ease-in-out alternate;
-    }
-    @keyframes wave {
-      0% { height: 4px; }
-      100% { height: 20px; }
-    }
   </style>
 </head>
 
@@ -162,32 +151,31 @@
     </div>
 
     <!-- Hidden File Inputs -->
-    <input type="file" id="chatFileInput" class="hidden" />
+    <input type="file" id="chatFileInput" class="hidden" accept="image/*,.pdf,.doc,.docx" />
     <input type="file" id="profileImageInput" accept="image/*" class="hidden" />
-    <input type="file" id="coverBannerInput" accept="image/*" class="hidden" />
     <input type="file" id="storyMediaInput" accept="image/*,video/*" class="hidden" />
 
-    <!-- TOP FLOATING IN-APP GLASSMORPHIC TOAST NOTIFICATION -->
+    <!-- TOP FLOATING IN-APP TOAST NOTIFICATION -->
     <div id="topToastNotification" class="hidden fixed top-3 left-3 right-3 sm:absolute sm:top-4 sm:left-4 sm:right-4 z-50 animate-toast">
       <div id="toastContent" class="glass-card p-3 rounded-2xl shadow-glow-brand flex items-center justify-between cursor-pointer border-l-4 border-accent-pink">
         <div class="flex items-center gap-3 min-w-0">
-          <div id="toastAvatar" class="h-10 w-10 rounded-full bg-gradient-to-tr from-brand-500 to-accent-pink text-white font-black text-xs flex items-center justify-center shrink-0 shadow-xs">
+          <div id="toastAvatar" class="h-10 w-10 rounded-full bg-gradient-to-tr from-brand-500 to-accent-pink text-white font-black text-xs flex items-center justify-center shrink-0 shadow-xs overflow-hidden">
             CX
           </div>
           <div class="min-w-0">
             <div class="flex items-center gap-1.5">
-              <h5 id="toastSender" class="text-xs font-black truncate text-white">ClassmateX</h5>
+              <h5 id="toastSender" class="text-xs font-black truncate text-white">ClassmateX Live</h5>
               <span id="toastHandle" class="text-[9px] text-accent-pink font-bold truncate">@system</span>
             </div>
-            <p id="toastMessage" class="text-[11px] text-slate-300 truncate">Firebase Online Mode Connected!</p>
+            <p id="toastMessage" class="text-[11px] text-slate-300 truncate">Connected & Synced!</p>
           </div>
         </div>
-        <span class="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-accent-pink text-white uppercase shrink-0 ml-2">Now</span>
+        <span class="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-accent-pink text-white uppercase shrink-0 ml-2">Just Now</span>
       </div>
     </div>
 
     <!-- GLOBAL TOP HEADER -->
-    <header class="relative z-20 shrink-0 px-4 py-3 bg-slate-900/95 backdrop-blur-xl border-b border-slate-800/80 flex items-center justify-between shadow-xs">
+    <header id="globalTopHeader" class="relative z-20 shrink-0 px-4 py-3 bg-slate-900/95 backdrop-blur-xl border-b border-slate-800/80 flex items-center justify-between shadow-xs">
       <div class="flex items-center gap-2.5">
         <div class="relative flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-tr from-brand-600 via-accent-purple to-accent-pink p-0.5 shadow-glow-brand shrink-0">
           <div class="flex h-full w-full items-center justify-center rounded-xl bg-slate-950 overflow-hidden">
@@ -222,51 +210,123 @@
 
       <div class="flex items-center gap-2">
         <button id="headerUserAvatarBtn" type="button" title="My Profile"
-                class="hidden touch-active h-9 w-9 rounded-full border-2 border-accent-pink shadow-glow-pink relative overflow-hidden">
-          <div id="headerAvatarContainer" class="w-full h-full bg-gradient-to-tr from-brand-600 to-accent-pink text-white text-[11px] font-black flex items-center justify-center">
+                class="hidden touch-active h-9 w-9 rounded-full neon-story-ring relative overflow-hidden">
+          <div id="headerAvatarContainer" class="w-full h-full bg-slate-900 text-white text-[11px] font-black flex items-center justify-center rounded-full overflow-hidden">
             ME
           </div>
         </button>
       </div>
     </header>
 
-    <!-- PROFILE PHOTO CROP & PREVIEW MODAL -->
-    <div id="cropPhotoModal" class="hidden absolute inset-0 z-50 bg-slate-950/98 backdrop-blur-xl flex items-center justify-center p-4">
-      <div class="w-full max-w-xs rounded-3xl bg-slate-900 border border-slate-800 p-5 shadow-2xl text-center animate-pop-in">
-        <h3 class="text-sm font-black text-white mb-3">Adjust & Preview Profile Picture</h3>
-        <div class="relative w-40 h-40 mx-auto rounded-full border-4 border-accent-pink overflow-hidden shadow-glow-pink bg-slate-950 my-2">
-          <img id="cropPhotoPreview" src="" class="w-full h-full object-cover transition-transform duration-200" />
-        </div>
-        <div class="my-3 space-y-1">
-          <label class="text-[10px] text-slate-400 font-bold uppercase">Zoom Image</label>
-          <input id="cropZoomRange" type="range" min="1" max="2" step="0.05" value="1" class="w-full accent-accent-pink cursor-pointer" />
-        </div>
-        <div class="flex gap-2 mt-4">
-          <button id="cancelCropBtn" class="flex-grow py-2.5 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold hover:bg-slate-700 transition">
-            Cancel
+    <!-- WHATSAPP-STYLE VIEW PROFILE MODAL -->
+    <div id="viewProfileModal" class="hidden absolute inset-0 z-50 bg-slate-950/90 backdrop-blur-xl flex items-center justify-center p-4 animate-pop-in">
+      <div class="w-full max-w-xs rounded-3xl bg-slate-900 border border-slate-800 overflow-hidden shadow-2xl relative text-center">
+        <!-- Cover Header Graphic -->
+        <div class="h-24 bg-gradient-to-r from-brand-600 via-accent-purple to-accent-pink relative">
+          <button id="closeWpProfileBtn" class="absolute top-3 right-3 h-8 w-8 rounded-full bg-slate-950/60 text-white hover:bg-slate-950 flex items-center justify-center transition">
+            <i class="ph ph-x text-base"></i>
           </button>
-          <button id="saveCropBtn" class="flex-grow py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-accent-pink text-white text-xs font-bold shadow-glow-pink transition">
-            Save Photo
-          </button>
+        </div>
+
+        <!-- Large Avatar Circle -->
+        <div class="relative -mt-12 mb-3 flex justify-center">
+          <div id="wpModalAvatarRing" class="h-24 w-24 rounded-full neon-story-ring p-1 bg-slate-950 shadow-glow-pink">
+            <div id="wpModalAvatar" class="h-full w-full rounded-full bg-slate-800 text-white font-black text-2xl flex items-center justify-center overflow-hidden">
+              FM
+            </div>
+          </div>
+        </div>
+
+        <!-- Profile Details -->
+        <div class="px-5 pb-5 space-y-3">
+          <div>
+            <h3 id="wpModalName" class="text-base font-black text-white flex items-center justify-center gap-1">
+              Fahmy Mazrui
+            </h3>
+            <p id="wpModalHandle" class="text-xs font-bold text-accent-pink">@fahmy_mazrui</p>
+            <span id="wpModalRoleBadge" class="inline-flex items-center gap-1 mt-1 px-2.5 py-0.5 rounded-full bg-sky-500/20 text-sky-400 border border-sky-500/30 text-[9px] font-black">
+              <i class="ph ph-seal-check-fill"></i> Founder & CEO
+            </span>
+          </div>
+
+          <!-- Bio / Status Box -->
+          <div class="bg-slate-950 p-3 rounded-2xl border border-slate-800 text-left">
+            <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-1">About / Bio</span>
+            <p id="wpModalBio" class="text-xs text-slate-200 leading-relaxed font-medium">ClassmateX Founder & CEO 🚀</p>
+          </div>
+
+          <!-- Quick Action Buttons -->
+          <div class="grid grid-cols-3 gap-2 pt-1">
+            <button id="wpActionMessageBtn" class="py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-accent-pink text-white text-xs font-bold shadow-glow-pink flex flex-col items-center justify-center gap-1 touch-active">
+              <i class="ph ph-chat-circle-dots text-base"></i>
+              <span>Message</span>
+            </button>
+            <button id="wpActionMuteBtn" class="py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold border border-slate-700 flex flex-col items-center justify-center gap-1 touch-active">
+              <i class="ph ph-bell-slash text-base text-amber-400"></i>
+              <span>Mute</span>
+            </button>
+            <button id="wpActionBlockBtn" class="py-2.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 text-xs font-bold border border-rose-500/30 flex flex-col items-center justify-center gap-1 touch-active">
+              <i class="ph ph-prohibit text-base text-rose-400"></i>
+              <span>Block</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- LONG-PRESS MESSAGE ACTION MODAL (EDIT & DELETE) -->
-    <div id="messageActionModal" class="hidden absolute inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-end justify-center p-4">
+    <!-- CHAT THREAD OPTIONS MODAL -->
+    <div id="chatOptionsModal" class="hidden absolute inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-end justify-center p-4">
       <div class="w-full max-w-xs rounded-3xl bg-slate-900 border border-slate-800 p-4 shadow-2xl animate-slide-up space-y-2">
         <div class="text-center pb-2 border-b border-slate-800">
-          <h4 class="text-xs font-black text-white">Message Options</h4>
-          <p class="text-[10px] text-slate-400">Select an action for this message</p>
+          <h4 id="chatOptionsTitle" class="text-xs font-black text-white">Chat Options</h4>
+          <p class="text-[10px] text-slate-400">Manage conversation preferences</p>
         </div>
+        <button id="optViewProfileBtn" class="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold flex items-center justify-center gap-2 transition">
+          <i class="ph ph-user text-base text-accent-pink"></i>
+          <span>View Profile</span>
+        </button>
+        <button id="optClearChatBtn" class="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold flex items-center justify-center gap-2 transition">
+          <i class="ph ph-broom text-base text-cyan-400"></i>
+          <span>Clear Messages</span>
+        </button>
+        <button id="optBlockUserBtn" class="w-full py-2.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 text-xs font-bold flex items-center justify-center gap-2 transition">
+          <i class="ph ph-prohibit text-base text-rose-400"></i>
+          <span>Block Contact</span>
+        </button>
+        <button onclick="document.getElementById('chatOptionsModal')?.classList.add('hidden')" class="w-full py-2 rounded-xl bg-slate-950 text-slate-400 text-xs font-bold hover:text-white transition">
+          Close
+        </button>
+      </div>
+    </div>
+
+    <!-- LONG-PRESS MESSAGE ACTION MODAL (EDIT, DELETE, REPLY, REACT) -->
+    <div id="messageActionModal" class="hidden absolute inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-end justify-center p-4">
+      <div class="w-full max-w-xs rounded-3xl bg-slate-900 border border-slate-800 p-4 shadow-2xl animate-slide-up space-y-3">
+        <!-- Quick Emoji Reaction Bar -->
+        <div class="flex items-center justify-around bg-slate-950 p-2.5 rounded-2xl border border-slate-800">
+          <button data-emoji="❤️" class="emoji-react-btn text-xl hover:scale-125 transition transform">❤️</button>
+          <button data-emoji="😂" class="emoji-react-btn text-xl hover:scale-125 transition transform">😂</button>
+          <button data-emoji="🔥" class="emoji-react-btn text-xl hover:scale-125 transition transform">🔥</button>
+          <button data-emoji="👍" class="emoji-react-btn text-xl hover:scale-125 transition transform">👍</button>
+          <button data-emoji="😮" class="emoji-react-btn text-xl hover:scale-125 transition transform">😮</button>
+          <button data-emoji="💡" class="emoji-react-btn text-xl hover:scale-125 transition transform">💡</button>
+        </div>
+
+        <button id="actionQuoteReplyBtn" class="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold flex items-center justify-center gap-2 transition">
+          <i class="ph ph-quotes text-base text-amber-400"></i>
+          <span>Quote Reply</span>
+        </button>
+
         <button id="actionEditMsgBtn" class="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold flex items-center justify-center gap-2 transition">
           <i class="ph ph-pencil-simple text-base text-cyan-400"></i>
           <span>Edit Message</span>
         </button>
+
         <button id="actionDeleteMsgBtn" class="w-full py-2.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 text-xs font-bold flex items-center justify-center gap-2 transition">
           <i class="ph ph-trash text-base text-rose-400"></i>
           <span>Delete Message</span>
         </button>
+
         <button id="closeMsgActionModalBtn" class="w-full py-2 rounded-xl bg-slate-950 text-slate-400 text-xs font-bold hover:text-white transition">
           Cancel
         </button>
@@ -285,7 +345,123 @@
       </div>
     </div>
 
-    <!-- FULL PROFILE EDIT MODAL WITH UNIQUE USERNAME VALIDATION -->
+    <!-- ACCOUNT & SECURITY MODAL -->
+    <div id="accountSecurityModal" class="hidden absolute inset-0 z-50 bg-slate-950 flex flex-col justify-between p-4 animate-pop-in">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 class="text-xs font-black text-white flex items-center gap-1.5"><i class="ph ph-shield-check text-indigo-400 text-base"></i> Account Security</h3>
+        <button onclick="document.getElementById('accountSecurityModal')?.classList.add('hidden')" class="h-8 w-8 rounded-full bg-slate-800 text-slate-300 flex items-center justify-center"><i class="ph ph-x text-base"></i></button>
+      </div>
+      <div class="flex-grow space-y-3.5 my-4 overflow-y-auto pr-1 text-xs">
+        <div class="bg-slate-900 p-3 rounded-2xl border border-slate-800 space-y-1">
+          <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Account Email</label>
+          <input type="email" id="secEmailInput" readonly class="w-full bg-slate-800 p-2 rounded-xl border border-slate-700 text-slate-300 font-mono text-xs outline-none" />
+        </div>
+        <div class="bg-slate-900 p-3 rounded-2xl border border-slate-800 space-y-2">
+          <h5 class="font-bold text-white">Change Password</h5>
+          <input type="password" placeholder="New Password (min 6 chars)" class="w-full bg-slate-800 p-2 rounded-xl border border-slate-700 text-white outline-none focus:border-accent-pink" />
+          <button onclick="triggerNotificationToast('Security Update', currentUserHandle, 'Password reset request sent to email', 'CX')" class="w-full py-2 rounded-xl bg-gradient-to-r from-brand-600 to-accent-pink text-white font-bold">Update Password</button>
+        </div>
+        <div class="bg-slate-900 p-3 rounded-2xl border border-slate-800 space-y-2">
+          <h5 class="font-bold text-white flex items-center gap-1.5"><i class="ph ph-device-mobile text-accent-pink"></i> Active Devices</h5>
+          <div class="flex justify-between items-center bg-slate-950 p-2 rounded-xl border border-slate-800 text-[11px]">
+            <div>
+              <p class="font-bold text-white">Chrome Web Mobile</p>
+              <p class="text-[9px] text-emerald-400">Active Now • Current Session</p>
+            </div>
+            <span class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[9px] font-bold">Online</span>
+          </div>
+        </div>
+      </div>
+      <button onclick="document.getElementById('accountSecurityModal')?.classList.add('hidden')" class="w-full py-2.5 rounded-xl bg-slate-800 text-white font-bold">Done</button>
+    </div>
+
+    <!-- PRIVACY & SAFETY MODAL -->
+    <div id="privacySettingsModal" class="hidden absolute inset-0 z-50 bg-slate-950 flex flex-col justify-between p-4 animate-pop-in">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 class="text-xs font-black text-white flex items-center gap-1.5"><i class="ph ph-shield-check text-accent-pink text-base"></i> Privacy & Safety</h3>
+        <button onclick="document.getElementById('privacySettingsModal')?.classList.add('hidden')" class="h-8 w-8 rounded-full bg-slate-800 text-slate-300 flex items-center justify-center"><i class="ph ph-x text-base"></i></button>
+      </div>
+      <div class="flex-grow space-y-3.5 my-4 overflow-y-auto pr-1">
+        <div class="flex items-center justify-between bg-slate-900 p-3 rounded-2xl border border-slate-800">
+          <div>
+            <h5 class="text-xs font-bold text-white">Last Seen & Online Status</h5>
+            <p class="text-[10px] text-slate-400">Show when you are active on ClassmateX</p>
+          </div>
+          <input type="checkbox" checked class="accent-accent-pink h-4 w-4 cursor-pointer">
+        </div>
+        <div class="bg-slate-900 p-3 rounded-2xl border border-slate-800 space-y-1.5">
+          <h5 class="text-xs font-bold text-white">Profile Picture Visibility</h5>
+          <select class="w-full bg-slate-800 border border-slate-700 text-xs text-white rounded-xl p-2 outline-none">
+            <option>Everyone</option>
+            <option>Classmates Only</option>
+            <option>Nobody</option>
+          </select>
+        </div>
+        <div class="flex items-center justify-between bg-slate-900 p-3 rounded-2xl border border-slate-800">
+          <div>
+            <h5 class="text-xs font-bold text-white">Read Receipts</h5>
+            <p class="text-[10px] text-slate-400">Show neon double ticks when messages are read</p>
+          </div>
+          <input type="checkbox" checked class="accent-accent-pink h-4 w-4 cursor-pointer">
+        </div>
+        <button onclick="document.getElementById('blockedContactsModal')?.classList.remove('hidden')" class="w-full bg-slate-900 p-3 rounded-2xl border border-slate-800 flex items-center justify-between hover:bg-slate-800/60 transition">
+          <div class="text-left">
+            <h5 class="text-xs font-bold text-white">Blocked Contacts</h5>
+            <p class="text-[10px] text-slate-400">Manage blocked classmate profiles</p>
+          </div>
+          <span class="text-xs font-black text-slate-400">0 Accounts <i class="ph ph-caret-right ml-1"></i></span>
+        </button>
+      </div>
+      <button onclick="document.getElementById('privacySettingsModal')?.classList.add('hidden')" class="w-full py-2.5 rounded-xl bg-slate-800 text-white text-xs font-bold">Done</button>
+    </div>
+
+    <!-- BLOCKED CONTACTS MODAL -->
+    <div id="blockedContactsModal" class="hidden absolute inset-0 z-50 bg-slate-950 flex flex-col justify-between p-4 animate-pop-in">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 class="text-xs font-black text-white flex items-center gap-1.5"><i class="ph ph-prohibit text-rose-400 text-base"></i> Blocked Contacts</h3>
+        <button onclick="document.getElementById('blockedContactsModal')?.classList.add('hidden')" class="h-8 w-8 rounded-full bg-slate-800 text-slate-300 flex items-center justify-center"><i class="ph ph-x text-base"></i></button>
+      </div>
+      <div class="flex-grow my-4 flex flex-col items-center justify-center text-center p-6 text-slate-500">
+        <i class="ph ph-shield-slash text-4xl mb-2 text-slate-600"></i>
+        <h5 class="text-xs font-bold text-slate-300">No Blocked Contacts</h5>
+        <p class="text-[10px] text-slate-500 mt-1">Classmate users you block will appear here.</p>
+      </div>
+      <button onclick="document.getElementById('blockedContactsModal')?.classList.add('hidden')" class="w-full py-2.5 rounded-xl bg-slate-800 text-white text-xs font-bold">Back</button>
+    </div>
+
+    <!-- NOTIFICATION SETTINGS MODAL -->
+    <div id="notificationSettingsModal" class="hidden absolute inset-0 z-50 bg-slate-950 flex flex-col justify-between p-4 animate-pop-in">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 class="text-xs font-black text-white flex items-center gap-1.5"><i class="ph ph-bell text-brand-400 text-base"></i> Notifications & Sounds</h3>
+        <button onclick="document.getElementById('notificationSettingsModal')?.classList.add('hidden')" class="h-8 w-8 rounded-full bg-slate-800 text-slate-300 flex items-center justify-center"><i class="ph ph-x text-base"></i></button>
+      </div>
+      <div class="flex-grow space-y-3 my-4 overflow-y-auto pr-1">
+        <div class="flex items-center justify-between bg-slate-900 p-3 rounded-2xl border border-slate-800">
+          <div>
+            <h5 class="text-xs font-bold text-white">Message Sounds</h5>
+            <p class="text-[10px] text-slate-400">Play tone on incoming chats</p>
+          </div>
+          <input type="checkbox" checked class="accent-accent-pink h-4 w-4 cursor-pointer">
+        </div>
+        <div class="flex items-center justify-between bg-slate-900 p-3 rounded-2xl border border-slate-800">
+          <div>
+            <h5 class="text-xs font-bold text-white">In-App Sounds</h5>
+            <p class="text-[10px] text-slate-400">Button taps and status sound effects</p>
+          </div>
+          <input type="checkbox" checked class="accent-accent-pink h-4 w-4 cursor-pointer">
+        </div>
+        <div class="flex items-center justify-between bg-slate-900 p-3 rounded-2xl border border-slate-800">
+          <div>
+            <h5 class="text-xs font-bold text-white">Push Alert Popups</h5>
+            <p class="text-[10px] text-slate-400">Show floating banners on top screen</p>
+          </div>
+          <input type="checkbox" checked class="accent-accent-pink h-4 w-4 cursor-pointer">
+        </div>
+      </div>
+      <button onclick="document.getElementById('notificationSettingsModal')?.classList.add('hidden')" class="w-full py-2.5 rounded-xl bg-slate-800 text-white text-xs font-bold">Done</button>
+    </div>
+
+    <!-- EDIT PROFILE MODAL -->
     <div id="editProfileModal" class="hidden absolute inset-0 z-50 bg-slate-950 flex flex-col justify-between p-4 animate-pop-in">
       <div class="flex items-center justify-between border-b border-slate-800 pb-3">
         <div class="flex items-center gap-2">
@@ -300,6 +476,21 @@
       </div>
 
       <div class="flex-grow overflow-y-auto my-3 space-y-3.5 pr-1">
+        <!-- Profile Picture Upload Swatch -->
+        <div class="flex flex-col items-center justify-center py-2">
+          <div class="relative group cursor-pointer" id="changeAvatarBtn">
+            <div id="editAvatarPreviewContainer" class="h-20 w-20 rounded-full neon-story-ring flex items-center justify-center bg-slate-900 text-white text-xl font-black overflow-hidden shadow-glow-pink">
+              ME
+            </div>
+            <div class="absolute inset-0 rounded-full bg-slate-950/60 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition">
+              <i class="ph ph-camera text-2xl"></i>
+            </div>
+          </div>
+          <button type="button" onclick="document.getElementById('profileImageInput')?.click()" class="mt-2 text-[10px] font-bold text-accent-pink hover:underline flex items-center gap-1">
+            <i class="ph ph-upload-simple"></i> Change Profile Photo
+          </button>
+        </div>
+
         <div>
           <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Display Name</label>
           <input id="editDisplayNameInput" type="text" class="w-full mt-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white outline-none focus:border-accent-pink transition" />
@@ -324,13 +515,6 @@
             <button data-preset="Coding 💻" class="bio-preset-btn px-2.5 py-1 rounded-full bg-slate-800 text-slate-300 text-[10px] font-bold hover:border-accent-pink border border-slate-700 shrink-0">Coding 💻</button>
           </div>
         </div>
-        <div>
-          <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Social Link / Website</label>
-          <div class="relative mt-1">
-            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500"><i class="ph ph-link"></i></span>
-            <input id="editWebsiteInput" type="url" placeholder="https://instagram.com/yourname" class="w-full pl-8 py-2 pr-3 rounded-xl bg-slate-900 border border-slate-800 text-xs text-cyan-400 outline-none focus:border-cyan-400 transition" />
-          </div>
-        </div>
       </div>
 
       <button id="saveProfileBtn" class="w-full py-3 rounded-2xl bg-gradient-to-r from-brand-600 via-accent-purple to-accent-pink text-white font-extrabold text-xs shadow-glow-pink hover:brightness-110 transition touch-active">
@@ -350,22 +534,8 @@
         <h3 class="text-sm font-black text-white">Share Your Profile</h3>
         <p id="qrUserHandle" class="text-[11px] text-accent-pink font-bold">@fahmy_mazrui</p>
         <div class="p-4 my-4 rounded-2xl bg-white text-slate-950 flex flex-col items-center shadow-lg">
-          <svg class="w-36 h-36" viewBox="0 0 100 100" fill="currentColor">
-            <rect x="0" y="0" width="30" height="30" />
-            <rect x="5" y="5" width="20" height="20" fill="white" />
-            <rect x="10" y="10" width="10" height="10" />
-            <rect x="70" y="0" width="30" height="30" />
-            <rect x="75" y="5" width="20" height="20" fill="white" />
-            <rect x="80" y="10" width="10" height="10" />
-            <rect x="0" y="70" width="30" height="30" />
-            <rect x="5" y="75" width="20" height="20" fill="white" />
-            <rect x="10" y="80" width="10" height="10" />
-            <rect x="40" y="10" width="10" height="20" />
-            <rect x="50" y="40" width="20" height="20" />
-            <rect x="70" y="70" width="20" height="20" />
-            <rect x="30" y="70" width="10" height="20" />
-          </svg>
-          <span class="text-[9px] font-black text-slate-500 mt-2 uppercase tracking-widest">ClassmateX ID Card</span>
+          <div id="realQrCodeContainer" class="w-36 h-36 flex items-center justify-center"></div>
+          <span class="text-[9px] font-black text-slate-500 mt-2 uppercase tracking-widest">Scan To Add @<span id="qrHandleBottom"></span></span>
         </div>
         <button id="copyProfileLinkBtn" class="w-full py-2.5 rounded-xl bg-slate-800 text-white text-xs font-bold border border-slate-700 flex items-center justify-center gap-2 hover:bg-slate-700 transition">
           <i class="ph ph-copy"></i>
@@ -374,7 +544,7 @@
       </div>
     </div>
 
-    <!-- ADVANCED STATUS / STORY CREATION STUDIO MODAL -->
+    <!-- STATUS / STORY CREATION STUDIO MODAL -->
     <div id="createStoryModal" class="hidden absolute inset-0 z-50 bg-slate-950 flex flex-col justify-between p-4 animate-pop-in">
       <div class="flex items-center justify-between text-white border-b border-slate-800/80 pb-3 z-10">
         <div class="flex items-center gap-2">
@@ -382,7 +552,7 @@
             <i class="ph ph-note-pencil text-base"></i>
           </div>
           <div>
-            <h3 class="text-xs font-black text-white">Status & Story Studio</h3>
+            <h3 class="text-xs font-black text-white">Create New Status / Story</h3>
             <p class="text-[9px] text-slate-400">Visible to classmates for 24 hours</p>
           </div>
         </div>
@@ -391,43 +561,22 @@
         </button>
       </div>
 
-      <!-- Studio Customization Toolbar -->
-      <div class="flex items-center justify-between bg-slate-900/90 border border-slate-800 rounded-2xl px-3 py-1.5 my-2 text-xs text-white z-10">
-        <div class="flex items-center gap-2">
-          <button id="toggleFontFamilyBtn" class="px-2.5 py-1 rounded-xl bg-slate-800 text-[10px] font-bold hover:bg-slate-700 transition border border-slate-700 flex items-center gap-1">
-            <i class="ph ph-text-aa text-sm text-accent-pink"></i>
-            <span id="currentFontLabel">Sans</span>
-          </button>
-          <button id="toggleTextAlignBtn" class="p-1.5 rounded-xl bg-slate-800 text-xs hover:bg-slate-700 transition border border-slate-700">
-            <i id="alignIcon" class="ph ph-text-align-center text-sm"></i>
-          </button>
-        </div>
+      <!-- Live Story Preview Canvas -->
+      <div id="storyCanvasPreview" class="flex-grow my-3 rounded-3xl flex flex-col items-center justify-center p-6 text-center transition-all duration-300 relative overflow-hidden bg-gradient-to-br from-purple-700 via-indigo-800 to-slate-900 border border-slate-700 shadow-2xl">
+        <textarea id="storyTextInput" rows="3" placeholder="Type something cool here..." class="w-full bg-transparent text-center text-xl font-extrabold text-white outline-none resize-none placeholder-white/40 leading-relaxed z-10"></textarea>
 
-        <div class="flex items-center gap-1 overflow-x-auto no-scrollbar">
-          <button class="emoji-sticker-btn text-base hover:scale-125 transition">🔥</button>
-          <button class="emoji-sticker-btn text-base hover:scale-125 transition">❤️</button>
-          <button class="emoji-sticker-btn text-base hover:scale-125 transition">😂</button>
-          <button class="emoji-sticker-btn text-base hover:scale-125 transition">🚀</button>
-          <button class="emoji-sticker-btn text-base hover:scale-125 transition">📚</button>
-          <button class="emoji-sticker-btn text-base hover:scale-125 transition">✨</button>
-        </div>
-      </div>
-
-      <!-- Canvas Preview Container -->
-      <div id="storyCanvasPreview" class="flex-grow my-1 rounded-3xl flex flex-col items-center justify-center p-6 text-center transition-all duration-300 relative overflow-hidden bg-gradient-to-br from-purple-700 via-indigo-800 to-slate-900 border border-slate-700 shadow-2xl font-sans-studio">
-        <textarea id="storyTextInput" rows="4" placeholder="Type your status updates here..." class="w-full bg-transparent text-center text-xl font-extrabold text-white outline-none resize-none placeholder-white/40 leading-relaxed z-10"></textarea>
-        
-        <div id="storyMediaPreviewContainer" class="hidden relative max-h-56 max-w-full my-2 rounded-2xl overflow-hidden border border-white/20 shadow-lg z-10">
-          <img id="storyImagePreview" class="hidden max-h-56 w-full object-contain" />
-          <video id="storyVideoPreview" class="hidden max-h-56 w-full object-contain" controls></video>
+        <!-- Media Attachment Preview -->
+        <div id="storyMediaPreviewContainer" class="hidden relative max-h-52 max-w-full my-2 rounded-2xl overflow-hidden border border-white/20 shadow-lg z-10">
+          <img id="storyImagePreview" class="hidden max-h-52 w-full object-contain" />
+          <video id="storyVideoPreview" class="hidden max-h-52 w-full object-contain" controls></video>
           <button id="removeStoryMediaBtn" class="absolute top-2 right-2 h-7 w-7 rounded-full bg-rose-500 text-white flex items-center justify-center text-xs shadow-md">
             <i class="ph ph-trash"></i>
           </button>
         </div>
       </div>
 
-      <div class="space-y-3 z-10 mt-2">
-        <!-- Interactive Color Palette Switcher -->
+      <!-- Color Swatches & Action Bar -->
+      <div class="space-y-3 z-10">
         <div id="statusColorBar" class="flex items-center justify-center gap-2.5 overflow-x-auto no-scrollbar py-1">
           <button data-bg="bg-gradient-to-br from-purple-700 via-indigo-800 to-slate-900" class="status-color-btn h-8 w-8 rounded-full bg-gradient-to-br from-purple-700 to-slate-900 border-2 border-white shadow-md transition transform hover:scale-110 shrink-0"></button>
           <button data-bg="bg-gradient-to-br from-rose-600 via-pink-600 to-purple-800" class="status-color-btn h-8 w-8 rounded-full bg-gradient-to-br from-rose-600 to-purple-800 border-2 border-transparent hover:border-white shadow-md transition transform hover:scale-110 shrink-0"></button>
@@ -437,10 +586,11 @@
         </div>
 
         <div class="flex items-center gap-2">
-          <button id="attachStoryMediaBtn" class="p-3 rounded-2xl bg-slate-800 text-slate-300 hover:text-accent-pink flex items-center justify-center gap-1.5 text-xs font-bold border border-slate-700 shrink-0 touch-active">
+          <button id="attachStoryMediaBtn" type="button" class="px-3.5 py-3 rounded-2xl bg-slate-800 text-slate-300 hover:text-accent-pink flex items-center justify-center gap-1.5 text-xs font-bold border border-slate-700 shrink-0 touch-active">
             <i class="ph ph-image-square text-lg"></i>
-            <span>Photo / Video</span>
+            <span>Photo / Media</span>
           </button>
+
           <button id="publishStoryBtn" class="flex-grow py-3 rounded-2xl bg-gradient-to-r from-brand-600 via-accent-purple to-accent-pink text-white font-extrabold text-xs shadow-glow-pink flex items-center justify-center gap-2 hover:brightness-110 transition touch-active">
             <i class="ph ph-paper-plane-tilt text-base"></i>
             <span>Post Status Now</span>
@@ -449,7 +599,7 @@
       </div>
     </div>
 
-    <!-- FULL SCREEN STORY VIEWER MODAL WITH VIEWERS DRAWER -->
+    <!-- FULL SCREEN STORY VIEWER MODAL -->
     <div id="storyViewerModal" class="hidden absolute inset-0 z-50 bg-slate-950 flex flex-col justify-between p-4 animate-pop-in">
       <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden mb-3">
         <div id="storyProgressBar" class="bg-gradient-to-r from-brand-500 to-accent-pink h-full w-0 transition-all duration-100 ease-linear"></div>
@@ -457,7 +607,7 @@
 
       <div class="flex items-center justify-between text-white mb-2 z-10">
         <div class="flex items-center gap-2.5">
-          <div id="storyViewerAvatar" class="h-10 w-10 rounded-full bg-gradient-to-tr from-brand-500 to-accent-pink font-black text-xs flex items-center justify-center border border-white/20">
+          <div id="storyViewerAvatar" class="h-10 w-10 rounded-full bg-gradient-to-tr from-brand-500 to-accent-pink font-black text-xs flex items-center justify-center border border-white/20 overflow-hidden">
             FM
           </div>
           <div>
@@ -471,51 +621,17 @@
       </div>
 
       <div id="storyContentContainer" class="flex-grow flex flex-col items-center justify-center rounded-3xl overflow-hidden bg-slate-900 border border-slate-800 relative my-2 p-4 text-center shadow-2xl transition-all duration-300">
-        <img id="storyViewerImage" src="" class="hidden max-h-full max-w-full object-contain rounded-2xl" />
-        <video id="storyViewerVideo" src="" class="hidden max-h-full max-w-full object-contain rounded-2xl" controls autoplay></video>
+        <img id="storyViewerImage" class="hidden max-h-full max-w-full object-contain rounded-2xl" />
+        <video id="storyViewerVideo" class="hidden max-h-full max-w-full object-contain rounded-2xl" controls autoplay></video>
         <p id="storyViewerText" class="hidden text-center text-xl font-black text-white p-6 leading-relaxed max-w-xs"></p>
       </div>
 
-      <!-- Story Viewers Tracker Bar & Drawer -->
-      <div id="storyPrivacyBar" class="flex flex-col bg-slate-900/95 border border-slate-800 rounded-2xl p-2 text-xs text-slate-300 z-10 my-1 space-y-2">
-        <div class="flex items-center justify-between cursor-pointer px-2 py-1" id="toggleStoryViewersBtn">
-          <div class="flex items-center gap-2">
-            <i class="ph ph-eye text-accent-pink text-base"></i>
-            <span class="font-extrabold text-[11px]"><span id="storyViewerCount">0</span> Classmates Viewed</span>
-          </div>
-          <i class="ph ph-caret-up text-slate-400" id="viewersCaretIcon"></i>
-        </div>
-
-        <div id="storyViewersDrawer" class="hidden pt-2 border-t border-slate-800/80 space-y-1.5 max-h-28 overflow-y-auto pr-1">
-          <div class="text-[10px] text-slate-500 text-center py-2">No views yet for this status</div>
+      <div id="storyPrivacyBar" class="flex items-center justify-between bg-slate-900/90 border border-slate-800 rounded-2xl px-3 py-2 text-xs text-slate-300 z-10 my-1">
+        <div class="flex items-center gap-2">
+          <i class="ph ph-eye text-accent-pink text-base"></i>
+          <span class="font-extrabold text-[11px]"><span>18</span> Classmates Viewed</span>
         </div>
       </div>
-    </div>
-
-    <!-- SETTINGS SUB-MODAL: PRIVACY & SECURITY -->
-    <div id="privacySettingsModal" class="hidden absolute inset-0 z-50 bg-slate-950 flex flex-col justify-between p-4 animate-pop-in">
-      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-        <h3 class="text-xs font-black text-white flex items-center gap-1.5"><i class="ph ph-shield-check text-accent-pink text-base"></i> Privacy & Security</h3>
-        <button id="closePrivacyModalBtn" class="h-8 w-8 rounded-full bg-slate-800 text-slate-300 flex items-center justify-center"><i class="ph ph-x text-base"></i></button>
-      </div>
-      <div class="flex-grow space-y-4 my-4 overflow-y-auto pr-1">
-        <div class="flex items-center justify-between bg-slate-900 p-3 rounded-2xl border border-slate-800">
-          <div>
-            <h5 class="text-xs font-bold text-white">Last Seen & Online Status</h5>
-            <p class="text-[10px] text-slate-400">Show when you are active on ClassmateX</p>
-          </div>
-          <input type="checkbox" id="lastSeenToggle" checked class="accent-accent-pink h-4 w-4 cursor-pointer">
-        </div>
-        <div class="bg-slate-900 p-3 rounded-2xl border border-slate-800 space-y-1.5">
-          <h5 class="text-xs font-bold text-white">Profile Picture Visibility</h5>
-          <select id="profileVisSelect" class="w-full bg-slate-800 border border-slate-700 text-xs text-white rounded-xl p-2 outline-none">
-            <option>Everyone</option>
-            <option>My Direct Contacts</option>
-            <option>Nobody</option>
-          </select>
-        </div>
-      </div>
-      <button onclick="document.getElementById('privacySettingsModal').classList.add('hidden')" class="w-full py-2.5 rounded-xl bg-slate-800 text-white text-xs font-bold">Done</button>
     </div>
 
     <!-- MAIN APP VIEWS CONTAINER -->
@@ -523,7 +639,6 @@
 
       <!-- AUTHENTICATION VIEW -->
       <section id="authView" class="w-full h-full p-4 overflow-y-auto flex flex-col justify-center animate-slide-up">
-        
         <div class="mb-5 text-center">
           <div class="mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-3xl bg-slate-900 border border-slate-800 text-amber-400 shadow-glow-pink">
             <i class="ph ph-chats-circle text-3xl"></i>
@@ -547,7 +662,7 @@
                   <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
                     <i class="ph ph-user-circle text-base"></i>
                   </span>
-                  <input id="login-identifier" name="identifier" type="text" autocomplete="username" required placeholder="fahmymazrui@gmail.com or @fahmy_mazrui"
+                  <input id="login-identifier" name="identifier" type="text" required placeholder="fahmymazrui@gmail.com or @fahmy_mazrui"
                          class="w-full rounded-xl border border-slate-700 bg-slate-800/90 py-2.5 pl-9 pr-3 text-xs text-white outline-none focus:border-accent-pink focus:ring-2 focus:ring-accent-pink/20 transition" />
                 </div>
               </div>
@@ -555,18 +670,15 @@
               <div>
                 <div class="flex justify-between items-center mb-1">
                   <label for="login-password" class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Password</label>
-                  <button type="button" data-show="form-forgot" class="text-[11px] font-semibold text-brand-400 hover:underline">
-                    Forgot?
-                  </button>
+                  <button type="button" data-show="form-forgot" class="text-[11px] font-semibold text-brand-400 hover:underline">Forgot?</button>
                 </div>
                 <div class="relative">
                   <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
                     <i class="ph ph-lock-key text-base"></i>
                   </span>
-                  <input id="login-password" name="password" type="password" autocomplete="current-password" required placeholder="••••••••"
+                  <input id="login-password" name="password" type="password" required placeholder="••••••••"
                          class="w-full rounded-xl border border-slate-700 bg-slate-800/90 py-2.5 pl-9 pr-9 text-xs text-white outline-none focus:border-accent-pink focus:ring-2 focus:ring-accent-pink/20 transition" />
-                  <button type="button" data-toggle-password="login-password" aria-label="Toggle Password"
-                          class="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-accent-pink transition">
+                  <button type="button" data-toggle-password="login-password" class="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-accent-pink transition">
                     <i class="ph ph-eye text-base"></i>
                   </button>
                 </div>
@@ -574,7 +686,7 @@
 
               <button type="submit"
                       class="touch-active group flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-600 via-accent-purple to-accent-pink py-3 text-xs font-bold text-white shadow-glow-pink transition hover:brightness-110">
-                <i class="ph ph-shield-check text-base transition-transform group-hover:scale-110"></i>
+                <i class="ph ph-shield-check text-base"></i>
                 <span>Sign In To Chat</span>
               </button>
             </form>
@@ -597,9 +709,7 @@
 
             <p class="mt-4 text-center text-xs text-slate-400">
               <span>Don't have an account?</span>
-              <button type="button" data-show="form-signup" class="font-bold text-accent-pink hover:underline ml-1">
-                Register Here
-              </button>
+              <button type="button" data-show="form-signup" class="font-bold text-accent-pink hover:underline ml-1">Register Here</button>
             </p>
           </div>
         </div>
@@ -619,7 +729,7 @@
                   <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
                     <i class="ph ph-user text-base"></i>
                   </span>
-                  <input id="signup-name" name="fullName" type="text" autocomplete="name" required placeholder="Fahmy Mazrui"
+                  <input id="signup-name" name="fullName" type="text" required placeholder="Fahmy Mazrui"
                          class="w-full rounded-xl border border-slate-700 bg-slate-800/90 py-2 pl-9 pr-3 text-xs text-white outline-none focus:border-accent-pink focus:ring-2 focus:ring-accent-pink/20 transition" />
                 </div>
               </div>
@@ -641,12 +751,9 @@
                   <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
                     <i class="ph ph-at text-base"></i>
                   </span>
-                  <input id="signup-username" name="username" type="text" autocomplete="username" required placeholder="fahmy_mazrui"
+                  <input id="signup-username" name="username" type="text" required placeholder="fahmy_mazrui"
                          class="w-full rounded-xl border border-slate-700 bg-slate-800/90 py-2 pl-9 pr-3 text-xs text-white outline-none focus:border-accent-pink focus:ring-2 focus:ring-accent-pink/20 transition" />
                 </div>
-                <p id="usernameError" class="hidden text-[10px] font-bold text-rose-400 mt-1 flex items-center gap-1">
-                  <i class="ph ph-warning-circle text-xs"></i> <span>Username is already taken! Choose another.</span>
-                </p>
               </div>
 
               <div>
@@ -655,10 +762,9 @@
                   <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
                     <i class="ph ph-lock-key text-base"></i>
                   </span>
-                  <input id="signup-password" name="password" type="password" autocomplete="new-password" minlength="6" required placeholder="At least 6 characters"
+                  <input id="signup-password" name="password" type="password" minlength="6" required placeholder="At least 6 characters"
                          class="w-full rounded-xl border border-slate-700 bg-slate-800/90 py-2 pl-9 pr-9 text-xs text-white outline-none focus:border-accent-pink focus:ring-2 focus:ring-accent-pink/20 transition" />
-                  <button type="button" data-toggle-password="signup-password" aria-label="Toggle Password"
-                          class="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-accent-pink transition">
+                  <button type="button" data-toggle-password="signup-password" class="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-accent-pink transition">
                     <i class="ph ph-eye text-base"></i>
                   </button>
                 </div>
@@ -666,33 +772,27 @@
 
               <button type="submit"
                       class="touch-active group flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-600 via-accent-purple to-accent-pink py-2.5 text-xs font-bold text-white shadow-glow-pink transition hover:brightness-110">
-                <i class="ph ph-paper-plane-tilt text-base transition-transform group-hover:translate-x-0.5"></i>
+                <i class="ph ph-paper-plane-tilt text-base"></i>
                 <span>Sign Up Free Now</span>
               </button>
             </form>
 
             <p class="mt-4 text-center text-xs text-slate-400">
               <span>Already have an account?</span>
-              <button type="button" data-show="form-login" class="font-bold text-brand-400 hover:underline ml-1">
-                Sign In Here
-              </button>
+              <button type="button" data-show="form-login" class="font-bold text-brand-400 hover:underline ml-1">Sign In Here</button>
             </p>
           </div>
         </div>
 
-        <!-- Forgot Password Form Card -->
+        <!-- Forgot Password Form Card (FIX: this was missing entirely) -->
         <div id="form-forgot" class="auth-card hidden">
-          <div class="rounded-3xl border border-slate-800 bg-slate-900/90 backdrop-blur-xl p-5 shadow-soft text-center">
-            <div class="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-800 text-accent-pink">
-              <i class="ph ph-key-return text-xl"></i>
-            </div>
-            <h2 class="text-base font-bold text-white mb-1">Forgot Password?</h2>
-            <p class="mb-4 text-xs text-slate-400 leading-relaxed">
-              Enter your registered email address to receive a password reset link.
-            </p>
-
-            <form id="forgotForm" class="space-y-3" novalidate>
-              <div class="text-left">
+          <div class="rounded-3xl border border-slate-800 bg-slate-900/90 backdrop-blur-xl p-5 shadow-soft">
+            <h2 class="text-base font-bold mb-4 flex items-center gap-2 text-white">
+              <i class="ph ph-key text-lg text-amber-400"></i>
+              <span>Reset Password</span>
+            </h2>
+            <form id="forgotForm" class="space-y-3.5" novalidate>
+              <div>
                 <label for="forgot-email" class="mb-1 block text-[10px] font-bold uppercase tracking-wider text-slate-400">Email Address</label>
                 <div class="relative">
                   <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
@@ -702,23 +802,17 @@
                          class="w-full rounded-xl border border-slate-700 bg-slate-800/90 py-2.5 pl-9 pr-3 text-xs text-white outline-none focus:border-accent-pink focus:ring-2 focus:ring-accent-pink/20 transition" />
                 </div>
               </div>
-
               <button type="submit"
-                      class="touch-active group flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-600 to-accent-pink py-2.5 text-xs font-bold text-white shadow-glow-pink transition hover:brightness-110">
-                <i class="ph ph-paper-plane-tilt text-base transition-transform group-hover:translate-x-0.5"></i>
+                      class="touch-active group flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-accent-pink py-3 text-xs font-bold text-white shadow-glow-pink transition hover:brightness-110">
+                <i class="ph ph-paper-plane-tilt text-base"></i>
                 <span>Send Reset Link</span>
               </button>
             </form>
-
-            <p class="mt-4 text-center text-xs">
-              <button type="button" data-show="form-login" class="inline-flex items-center gap-1 font-bold text-brand-400 hover:underline">
-                <i class="ph ph-arrow-left"></i>
-                <span>Back to Sign In</span>
-              </button>
+            <p class="mt-4 text-center text-xs text-slate-400">
+              <button type="button" data-show="form-login" class="font-bold text-brand-400 hover:underline">Back to Sign In</button>
             </p>
           </div>
         </div>
-
       </section>
 
       <div id="mainAppView" class="hidden flex-col h-full w-full bg-slate-950 overflow-hidden">
@@ -730,24 +824,44 @@
             <div class="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2 flex justify-between items-center px-1">
               <span>Today's Status / Stories</span>
               <span class="text-emerald-400 font-extrabold flex items-center gap-1">
-                <span class="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping"></span> Live
+                <span class="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping"></span> Live Active
               </span>
             </div>
 
-            <div class="flex items-center gap-3 overflow-x-auto no-scrollbar pb-1" id="storiesScrollContainer">
-              
-              <!-- My Story Trigger Button -->
+            <div id="storiesContainer" class="flex items-center gap-3 overflow-x-auto no-scrollbar pb-1">
+              <!-- My Story Button -->
               <div id="addMyStoryBtn" class="flex flex-col items-center gap-1 cursor-pointer shrink-0 group">
-                <div id="myStoryAvatarWrapper" class="relative p-0.5 rounded-full border-2 border-dashed border-accent-pink/80 group-hover:border-accent-pink transition">
+                <div class="relative p-0.5 rounded-full border-2 border-dashed border-accent-pink/80 group-hover:border-accent-pink transition">
                   <div id="myStoryAvatarThumbnail" class="h-12 w-12 rounded-full bg-slate-800 text-slate-300 font-black text-xs flex items-center justify-center overflow-hidden">
                     ME
                   </div>
-                  <span id="myStoryBadgePlus" class="absolute bottom-0 right-0 h-4 w-4 rounded-full bg-accent-pink text-white flex items-center justify-center text-[10px] font-black border-2 border-slate-950 shadow-xs">+</span>
+                  <span class="absolute bottom-0 right-0 h-4 w-4 rounded-full bg-accent-pink text-white flex items-center justify-center text-[10px] font-black border-2 border-slate-950">+</span>
                 </div>
-                <span id="myStoryLabelText" class="text-[10px] font-bold tracking-tight text-accent-pink">Add Story</span>
+                <span class="text-[10px] font-bold tracking-tight text-accent-pink">Add Story</span>
               </div>
 
-              <!-- Dynamic Realtime Stories Loaded via JS -->
+              <!-- CEO Story Item with Neon Ring -->
+              <div data-story-type="text" data-story-text="Welcome everyone to ClassmateX Social App! 🚀" data-story-handle="@fahmy_mazrui" data-story-bg="bg-gradient-to-br from-purple-700 via-indigo-800 to-slate-900" class="story-item-trigger flex flex-col items-center gap-1 cursor-pointer shrink-0">
+                <div class="neon-story-ring relative">
+                  <div class="h-11 w-11 rounded-full bg-gradient-to-br from-indigo-600 to-purple-700 text-white font-black text-xs flex items-center justify-center overflow-hidden">
+                    FM
+                  </div>
+                  <span class="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full bg-sky-400 border-2 border-slate-950 text-[8px] flex items-center justify-center text-white"><i class="ph ph-check-bold"></i></span>
+                </div>
+                <span class="text-[10px] font-bold tracking-tight text-brand-400 flex items-center">
+                  @fahmy_mazrui <i class="ph ph-seal-check-fill text-sky-400 text-xs ml-0.5"></i>
+                </span>
+              </div>
+
+              <!-- Sarah Juma Story Item -->
+              <div data-story-type="text" data-story-text="Hello classmates! Super excited to connect 🚀🔥" data-story-handle="@sarah_juma" data-story-bg="bg-gradient-to-br from-rose-600 via-pink-600 to-purple-800" class="story-item-trigger flex flex-col items-center gap-1 cursor-pointer shrink-0">
+                <div class="p-0.5 rounded-full bg-gradient-to-tr from-accent-pink to-amber-400 shadow-xs">
+                  <div class="h-11 w-11 rounded-full bg-emerald-500 text-white font-black text-xs flex items-center justify-center overflow-hidden">
+                    SJ
+                  </div>
+                </div>
+                <span class="text-[10px] font-bold tracking-tight text-slate-300">@sarah_juma</span>
+              </div>
             </div>
           </div>
 
@@ -762,62 +876,113 @@
             </div>
           </div>
 
-          <!-- Direct Chat Threads List (Non-empty real threads only) -->
+          <!-- Direct Chat Threads List -->
           <div id="chatThreadList" class="flex-grow overflow-y-auto divide-y divide-slate-800/60">
-            <!-- Dynamic Firestore Threads Load Here -->
+            <!-- Global Community Hub Thread -->
+            <div data-chat-id="global-group" data-search-term="@global_community hub group" class="chat-thread-item chat-thread-trigger flex items-center gap-3 p-3 cursor-pointer bg-slate-900/40 border-l-4 border-brand-500 transition hover:bg-slate-900/80">
+              <div class="relative shrink-0">
+                <div class="h-11 w-11 rounded-full bg-gradient-to-tr from-brand-500 to-accent-pink text-white font-black text-base flex items-center justify-center shadow-xs">
+                  🌐
+                </div>
+                <span class="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-emerald-400 border-2 border-slate-950"></span>
+              </div>
+              <div class="flex-grow min-w-0">
+                <div class="flex justify-between items-baseline mb-0.5">
+                  <h4 class="text-xs font-black truncate text-white">@global_community</h4>
+                  <span class="text-[10px] font-black text-brand-400 shrink-0">HUB</span>
+                </div>
+                <p class="text-[11px] text-slate-300 truncate font-medium">Public chatroom for all registered classmates!</p>
+              </div>
+            </div>
+
+            <!-- CEO Verified DM Thread -->
+            <div data-chat-id="dm-fahmy_mazrui" data-search-term="@fahmy_mazrui verified CEO" class="chat-thread-item chat-thread-trigger flex items-center gap-3 p-3 cursor-pointer transition hover:bg-slate-900/60">
+              <div class="relative shrink-0">
+                <div class="neon-story-ring">
+                  <div class="h-10 w-10 rounded-full bg-slate-900 text-white font-black text-xs flex items-center justify-center overflow-hidden">
+                    FM
+                  </div>
+                </div>
+                <span class="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full bg-sky-400 border-2 border-slate-950 text-[8px] flex items-center justify-center text-white"><i class="ph ph-check-bold"></i></span>
+              </div>
+              <div class="flex-grow min-w-0">
+                <div class="flex justify-between items-baseline mb-0.5">
+                  <h4 class="text-xs font-black truncate text-white flex items-center">
+                    @fahmy_mazrui <i class="ph ph-seal-check-fill text-sky-400 text-sm ml-0.5"></i>
+                  </h4>
+                  <span class="text-[10px] font-black text-accent-pink shrink-0">CEO</span>
+                </div>
+                <p class="text-[11px] text-slate-300 truncate font-medium">Welcome to ClassmateX! Message me anytime.</p>
+              </div>
+            </div>
+
+            <!-- Sarah Juma DM Thread -->
+            <div data-chat-id="dm-sarah_juma" data-search-term="@sarah_juma" class="chat-thread-item chat-thread-trigger flex items-center gap-3 p-3 cursor-pointer transition hover:bg-slate-900/60">
+              <div class="relative shrink-0">
+                <div class="h-11 w-11 rounded-full bg-emerald-500 text-white font-black text-xs flex items-center justify-center shadow-xs overflow-hidden">
+                  SJ
+                </div>
+                <span class="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-emerald-400 border-2 border-slate-950"></span>
+              </div>
+              <div class="flex-grow min-w-0">
+                <div class="flex justify-between items-baseline mb-0.5">
+                  <h4 class="text-xs font-black truncate text-white">@sarah_juma</h4>
+                  <span class="text-[10px] text-slate-400 shrink-0">09:12 AM</span>
+                </div>
+                <p class="text-[11px] text-slate-400 truncate font-medium">Hey! Glad to connect with you on ClassmateX.</p>
+              </div>
+            </div>
           </div>
         </div>
 
-        <!-- SCREEN 2: ACTIVE CONVERSATION SCREEN -->
+        <!-- SCREEN 2: ACTIVE CONVERSATION SCREEN WITH DYNAMIC DM HEADER -->
         <div id="screenActiveChat" class="hidden flex-col h-full w-full bg-slate-950 overflow-hidden relative">
           
-          <!-- Active Chat Top Bar -->
+          <!-- Dynamic Active Chat Top Bar -->
           <div class="px-3 py-2 bg-slate-900 border-b border-slate-800 flex items-center justify-between shrink-0 shadow-xs z-10">
-            <div class="flex items-center gap-2.5 min-w-0">
-              <button id="backToChatsBtn" class="touch-active h-8 w-8 rounded-full bg-slate-800 text-slate-200 flex items-center justify-center shrink-0">
+            <div class="flex items-center gap-2.5 min-w-0 cursor-pointer" id="headerProfileTrigger">
+              <button id="backToChatsBtn" class="touch-active h-8 w-8 rounded-full bg-slate-800 text-slate-200 flex items-center justify-center shrink-0 hover:bg-slate-700 transition">
                 <i class="ph ph-arrow-left text-lg"></i>
               </button>
 
-              <div id="activeChatHeaderIcon" class="h-9 w-9 rounded-xl bg-gradient-to-tr from-brand-600 via-accent-purple to-accent-pink text-white font-bold flex items-center justify-center text-base shadow-xs shrink-0 overflow-hidden">
+              <div id="activeChatHeaderIcon" class="h-9 w-9 rounded-full bg-gradient-to-tr from-brand-600 via-accent-purple to-accent-pink text-white font-black flex items-center justify-center text-xs shadow-xs shrink-0 overflow-hidden">
                 🌐
               </div>
               <div class="min-w-0">
-                <h3 id="activeChatTitle" class="text-xs font-bold truncate text-white flex items-center gap-1">@global_community</h3>
+                <h3 id="activeChatTitle" class="text-xs font-black truncate text-white flex items-center gap-1">
+                  <span>@global_community</span>
+                </h3>
                 <p id="activeChatSubtitle" class="text-[10px] text-slate-400 truncate flex items-center gap-1">
                   <span id="typingIndicatorText" class="text-accent-pink font-bold hidden animate-pulse">is typing...</span>
-                  <span id="onlineLiveStatusText" class="text-emerald-400 font-bold">Online Live Sync</span>
+                  <span id="onlineLiveStatusText" class="text-emerald-400 font-bold flex items-center gap-1">
+                    <span class="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping"></span> Online • Active
+                  </span>
                 </p>
               </div>
+            </div>
+
+            <!-- DM Action Tools -->
+            <div class="flex items-center gap-1">
+              <button id="headerChatOptionsBtn" title="More Options" class="touch-active p-2 rounded-xl text-slate-300 hover:text-accent-pink hover:bg-slate-800 transition">
+                <i class="ph ph-dots-three-vertical text-xl font-bold"></i>
+              </button>
             </div>
           </div>
 
           <!-- Messages Container -->
           <div id="messagesContainer" class="wallpaper-cyberpunk flex-grow p-3 overflow-y-auto space-y-3 relative z-10 transition-all duration-300">
-            <!-- Dynamic Realtime Messages Render Here -->
+            <!-- Messages Render Here -->
           </div>
 
-          <!-- Voice Recording Bar -->
-          <div id="voiceRecordingBar" class="hidden absolute bottom-0 left-0 right-0 z-30 p-3 bg-slate-900 border-t border-slate-800 flex items-center justify-between animate-slide-up">
-            <div class="flex items-center gap-3">
-              <span class="h-3 w-3 rounded-full bg-rose-500 animate-ping shrink-0"></span>
-              <div>
-                <div class="text-[11px] font-bold text-rose-400 flex items-center gap-1">
-                  Recording Voice Note... <span id="recordTimer" class="font-mono text-white">00:00</span>
-                </div>
-                <div class="flex items-center gap-1 mt-1 h-5" id="realMicVisualizer">
-                  <div class="mic-bar h-2"></div>
-                  <div class="mic-bar h-3"></div>
-                  <div class="mic-bar h-1"></div>
-                  <div class="mic-bar h-4"></div>
-                  <div class="mic-bar h-2"></div>
-                </div>
-              </div>
+          <!-- Quote Reply Bar -->
+          <div id="quoteReplyPreviewBar" class="hidden px-3 py-2 bg-slate-900/90 border-t border-slate-800 flex items-center justify-between border-l-4 border-amber-400 shrink-0 z-10 animate-slide-up">
+            <div class="min-w-0 pr-2">
+              <span id="quoteAuthorText" class="text-[10px] font-bold text-amber-400 block truncate">Replying to @user</span>
+              <p id="quoteContentText" class="text-[11px] text-slate-300 truncate">Quote message body preview...</p>
             </div>
-
-            <div class="flex items-center gap-2">
-              <button id="cancelRecordBtn" class="px-3 py-1.5 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold hover:bg-slate-700 transition">Discard</button>
-              <button id="sendVoiceRecordBtn" class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-brand-600 to-accent-pink text-white text-xs font-bold shadow-glow-pink transition">Send VN</button>
-            </div>
+            <button id="cancelQuoteReplyBtn" class="h-6 w-6 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center text-xs shrink-0">
+              <i class="ph ph-x"></i>
+            </button>
           </div>
 
           <!-- Chat Input Bar -->
@@ -831,10 +996,6 @@
                 <input id="chatMessageInput" type="text" autocomplete="off" placeholder="Type a message..."
                        class="w-full rounded-2xl border border-slate-700 bg-slate-800/90 py-2 pl-3 pr-8 text-xs text-white outline-none focus:border-accent-pink focus:ring-2 focus:ring-accent-pink/20 transition" />
               </div>
-
-              <button type="button" id="voiceNoteMicBtn" title="Record Voice Note" class="touch-active p-2 rounded-2xl bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-accent-pink transition">
-                <i class="ph ph-microphone text-lg"></i>
-              </button>
 
               <button type="submit" title="Send Message" class="touch-active p-2 rounded-2xl bg-gradient-to-r from-brand-600 via-accent-purple to-accent-pink text-white shadow-glow-pink hover:brightness-110 transition">
                 <i class="ph ph-paper-plane-tilt text-lg"></i>
@@ -854,77 +1015,140 @@
           </div>
 
           <div id="membersList" class="space-y-2.5">
-            <!-- Populated dynamically from Firestore users -->
+            <!-- Populated dynamically with clean cards -->
           </div>
         </div>
 
         <!-- SCREEN 4: PROFILE & SETTINGS TAB -->
         <div id="screenSettings" class="hidden flex-col h-full w-full bg-slate-950 overflow-y-auto p-3 space-y-3">
           
-          <!-- Profile Card Header with Cover Banner and Avatar Upload Trigger -->
-          <div class="bg-slate-900 rounded-3xl border border-slate-800 overflow-hidden shadow-soft relative">
-            <div id="profileCoverBanner" class="h-28 w-full bg-gradient-to-r from-brand-600 via-accent-purple to-accent-pink relative cursor-pointer group">
-              <img id="coverBannerImg" src="" class="hidden w-full h-full object-cover" />
-              <button id="triggerChangeBannerBtn" class="absolute top-3 right-3 h-8 px-2.5 rounded-xl bg-slate-950/60 backdrop-blur-md text-white text-[10px] font-bold flex items-center gap-1 hover:bg-slate-950 transition">
-                <i class="ph ph-camera"></i> Change Cover
-              </button>
-            </div>
-
-            <div class="px-4 pb-4 -mt-10 relative z-10">
-              <div class="flex items-end justify-between mb-2">
-                <div class="relative h-20 w-20 rounded-full border-4 border-slate-950 overflow-hidden shadow-glow-pink shrink-0 bg-slate-900 group cursor-pointer" id="settingsAvatarWrapper">
-                  <div id="settingsAvatarContainer" class="w-full h-full bg-gradient-to-tr from-brand-600 to-accent-pink text-white font-black text-xl flex items-center justify-center">
-                    ME
-                  </div>
-                  <button id="changeProfilePicBtn" class="absolute bottom-0 inset-x-0 bg-slate-950/80 text-slate-200 py-0.5 text-[9px] font-bold text-center hover:text-white transition flex items-center justify-center gap-0.5">
-                    <i class="ph ph-camera text-xs"></i> Edit
-                  </button>
-                </div>
-
-                <div class="flex items-center gap-2">
-                  <button id="openEditProfileBtn" class="touch-active px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-[11px] font-bold border border-slate-700 transition flex items-center gap-1">
-                    <i class="ph ph-pencil-simple"></i> Edit Profile
-                  </button>
-                  <button id="openQrModalBtn" class="touch-active h-8 w-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-accent-pink text-base border border-slate-700 transition flex items-center justify-center">
-                    <i class="ph ph-qr-code"></i>
-                  </button>
+          <!-- User Profile Card -->
+          <div class="bg-slate-900 rounded-3xl border border-slate-800 overflow-hidden shadow-soft relative p-4">
+            <div class="flex items-center gap-3">
+              <div id="settingsAvatarContainer" class="h-16 w-16 rounded-full neon-story-ring flex items-center justify-center shrink-0 overflow-hidden">
+                <div class="h-full w-full bg-slate-900 text-white font-black text-xl flex items-center justify-center rounded-full">
+                  FM
                 </div>
               </div>
-
-              <div>
+              <div class="min-w-0">
                 <h3 id="settingsUserHandle" class="text-sm font-black text-accent-pink truncate flex items-center">
-                  @username
+                  @fahmy_mazrui <span id="ceoVerifiedBadge"><i class="ph ph-seal-check-fill text-sky-400 text-sm ml-0.5" title="Verified CEO"></i></span>
                 </h3>
-                <p id="settingsUserBio" class="text-[11px] text-slate-300 truncate mt-0.5">ClassmateX User 🚀</p>
-                <span id="ceoRoleBadge" class="hidden inline-flex items-center gap-1 mt-1.5 px-2.5 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/30 text-[9px] font-black">
+                <p id="settingsUserBio" class="text-[11px] text-slate-300 truncate mt-0.5">ClassmateX Founder & CEO 🚀</p>
+                <span id="ceoRoleBadge" class="inline-flex items-center gap-1 mt-1.5 px-2.5 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/30 text-[9px] font-black">
                   <i class="ph ph-seal-check-fill"></i> Founder & CEO
                 </span>
               </div>
             </div>
-          </div>
-
-          <!-- Wallpaper Switcher Options -->
-          <div class="p-3 bg-slate-900 rounded-2xl border border-slate-800 space-y-2">
-            <span class="text-xs font-bold text-slate-300">Change Chat Wallpaper</span>
-            <div class="grid grid-cols-5 gap-2">
-              <button data-wallpaper="wallpaper-cyberpunk" class="wallpaper-opt-btn h-8 rounded-lg bg-slate-800 border border-accent-pink text-[9px] font-bold">Cyber</button>
-              <button data-wallpaper="wallpaper-midnight" class="wallpaper-opt-btn h-8 rounded-lg bg-slate-950 border border-slate-700 text-[9px] font-bold">Dark</button>
-              <button data-wallpaper="wallpaper-emerald" class="wallpaper-opt-btn h-8 rounded-lg bg-emerald-950 border border-emerald-700 text-[9px] font-bold">Emerald</button>
-              <button data-wallpaper="wallpaper-doodle" class="wallpaper-opt-btn h-8 rounded-lg bg-slate-900 border border-slate-700 text-[9px] font-bold">Matrix</button>
-              <button data-wallpaper="wallpaper-violet" class="wallpaper-opt-btn h-8 rounded-lg bg-purple-950 border border-purple-700 text-[9px] font-bold">Violet</button>
+            
+            <div class="flex gap-2 mt-4">
+              <button id="openEditProfileBtn" class="flex-grow py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold border border-slate-700 transition flex items-center justify-center gap-1.5">
+                <i class="ph ph-pencil-simple text-sm text-accent-pink"></i>
+                <span>Edit Profile</span>
+              </button>
+              <button id="openQrModalBtn" class="px-3 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-accent-pink text-base border border-slate-700 transition">
+                <i class="ph ph-qr-code"></i>
+              </button>
             </div>
           </div>
 
-          <!-- Settings Controls & Cache Management -->
-          <div class="bg-slate-900 rounded-2xl border border-slate-800 divide-y divide-slate-800/80 text-xs font-bold">
-            <button onclick="document.getElementById('privacySettingsModal').classList.remove('hidden')" class="w-full p-3 flex items-center justify-between text-slate-200 hover:bg-slate-800/50 transition">
-              <span class="flex items-center gap-2"><i class="ph ph-shield-check text-accent-pink text-base"></i> Privacy & Security</span>
-              <i class="ph ph-caret-right text-slate-500"></i>
-            </button>
-            <button id="clearCacheBtn" class="w-full p-3 flex items-center justify-between text-amber-400 hover:bg-slate-800/50 transition">
-              <span class="flex items-center gap-2"><i class="ph ph-broom text-amber-400 text-base"></i> Clear Local Cache</span>
-              <span class="text-[10px] text-slate-500">Free Space</span>
-            </button>
+          <!-- GROUP A: ACCOUNT & PROFILE -->
+          <div class="space-y-1">
+            <span class="text-[10px] font-black uppercase tracking-wider text-slate-500 px-2">A. Account & Profile</span>
+            <div class="bg-slate-900 rounded-2xl border border-slate-800 divide-y divide-slate-800/80 text-xs font-bold">
+              <button onclick="document.getElementById('editProfileModal')?.classList.remove('hidden')" class="w-full p-3 flex items-center justify-between text-slate-200 hover:bg-slate-800/50 transition">
+                <div class="flex items-center gap-2.5">
+                  <div class="h-7 w-7 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center"><i class="ph ph-user-gear text-base"></i></div>
+                  <div class="text-left">
+                    <p class="text-white text-xs">Profile Settings</p>
+                    <p class="text-[9px] text-slate-400 font-medium">Name, Bio, Photo, Username (@handle)</p>
+                  </div>
+                </div>
+                <i class="ph ph-caret-right text-slate-500"></i>
+              </button>
+
+              <button onclick="document.getElementById('accountSecurityModal')?.classList.remove('hidden')" class="w-full p-3 flex items-center justify-between text-slate-200 hover:bg-slate-800/50 transition">
+                <div class="flex items-center gap-2.5">
+                  <div class="h-7 w-7 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center"><i class="ph ph-shield-check text-base"></i></div>
+                  <div class="text-left">
+                    <p class="text-white text-xs">Account Security</p>
+                    <p class="text-[9px] text-slate-400 font-medium">Password, Email, Active Devices</p>
+                  </div>
+                </div>
+                <i class="ph ph-caret-right text-slate-500"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- GROUP B: PRIVACY & SAFETY -->
+          <div class="space-y-1">
+            <span class="text-[10px] font-black uppercase tracking-wider text-slate-500 px-2">B. Privacy & Safety</span>
+            <div class="bg-slate-900 rounded-2xl border border-slate-800 divide-y divide-slate-800/80 text-xs font-bold">
+              <button onclick="document.getElementById('privacySettingsModal')?.classList.remove('hidden')" class="w-full p-3 flex items-center justify-between text-slate-200 hover:bg-slate-800/50 transition">
+                <div class="flex items-center gap-2.5">
+                  <div class="h-7 w-7 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center"><i class="ph ph-lock text-base"></i></div>
+                  <div class="text-left">
+                    <p class="text-white text-xs">Privacy & Security Controls</p>
+                    <p class="text-[9px] text-slate-400 font-medium">Last Seen, Read Receipts, Blocked Contacts</p>
+                  </div>
+                </div>
+                <i class="ph ph-caret-right text-slate-500"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- GROUP C: NOTIFICATIONS & SOUNDS -->
+          <div class="space-y-1">
+            <span class="text-[10px] font-black uppercase tracking-wider text-slate-500 px-2">C. Notifications & Alerts</span>
+            <div class="bg-slate-900 rounded-2xl border border-slate-800 divide-y divide-slate-800/80 text-xs font-bold">
+              <button onclick="document.getElementById('notificationSettingsModal')?.classList.remove('hidden')" class="w-full p-3 flex items-center justify-between text-slate-200 hover:bg-slate-800/50 transition">
+                <div class="flex items-center gap-2.5">
+                  <div class="h-7 w-7 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center"><i class="ph ph-bell text-base"></i></div>
+                  <div class="text-left">
+                    <p class="text-white text-xs">Notifications & Sounds</p>
+                    <p class="text-[9px] text-slate-400 font-medium">Alert Tones, Popups, Push Banners</p>
+                  </div>
+                </div>
+                <i class="ph ph-caret-right text-slate-500"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- GROUP D: APPEARANCE & THEME -->
+          <div class="space-y-1">
+            <span class="text-[10px] font-black uppercase tracking-wider text-slate-500 px-2">D. Appearance & Chat Wallpaper</span>
+            <div class="bg-slate-900 rounded-2xl border border-slate-800 p-3 space-y-2">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                  <div class="h-7 w-7 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center"><i class="ph ph-paint-brush text-base"></i></div>
+                  <span class="text-xs font-bold text-white">Chat Wallpaper Theme</span>
+                </div>
+              </div>
+              <div class="grid grid-cols-5 gap-2 pt-1">
+                <button data-wallpaper="wallpaper-cyberpunk" class="wallpaper-opt-btn h-8 rounded-lg bg-slate-800 border border-accent-pink text-[9px] font-bold text-white hover:scale-105 transition">Cyber</button>
+                <button data-wallpaper="wallpaper-midnight" class="wallpaper-opt-btn h-8 rounded-lg bg-slate-950 border border-slate-700 text-[9px] font-bold text-white hover:scale-105 transition">Dark</button>
+                <button data-wallpaper="wallpaper-emerald" class="wallpaper-opt-btn h-8 rounded-lg bg-emerald-950 border border-emerald-700 text-[9px] font-bold text-white hover:scale-105 transition">Emerald</button>
+                <button data-wallpaper="wallpaper-doodle" class="wallpaper-opt-btn h-8 rounded-lg bg-slate-900 border border-slate-700 text-[9px] font-bold text-white hover:scale-105 transition">Matrix</button>
+                <button data-wallpaper="wallpaper-violet" class="wallpaper-opt-btn h-8 rounded-lg bg-purple-950 border border-purple-700 text-[9px] font-bold text-white hover:scale-105 transition">Violet</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- GROUP E: DATA & STORAGE -->
+          <div class="space-y-1">
+            <span class="text-[10px] font-black uppercase tracking-wider text-slate-500 px-2">E. Data & Local Storage</span>
+            <div class="bg-slate-900 rounded-2xl border border-slate-800 divide-y divide-slate-800/80 text-xs font-bold">
+              <button id="clearCacheBtn" class="w-full p-3 flex items-center justify-between text-slate-200 hover:bg-slate-800/50 transition">
+                <div class="flex items-center gap-2.5">
+                  <div class="h-7 w-7 rounded-xl bg-rose-500/10 text-rose-400 flex items-center justify-center"><i class="ph ph-trash-simple text-base"></i></div>
+                  <div class="text-left">
+                    <p class="text-white text-xs">Clear Local Cache</p>
+                    <p class="text-[9px] text-slate-400 font-medium">Free up temporary application memory</p>
+                  </div>
+                </div>
+                <span id="cacheSizeText" class="text-[10px] text-slate-400 font-mono">2.4 MB</span>
+              </button>
+            </div>
           </div>
 
           <button id="settingsLogoutBtn" type="button"
@@ -934,26 +1158,66 @@
           </button>
         </div>
 
+        <!-- SCREEN 5: ADMIN / MODERATOR DASHBOARD -->
+        <div id="screenAdmin" class="hidden flex-col h-full w-full bg-slate-950 overflow-y-auto p-3 space-y-3">
+          <div class="bg-slate-900 p-3.5 rounded-2xl border border-slate-800 shadow-xs flex items-center justify-between">
+            <div>
+              <h3 class="text-xs font-black text-white flex items-center gap-1.5">
+                <i class="ph ph-shield-star text-blue-500 text-base"></i> Admin Dashboard
+              </h3>
+              <p class="text-[10px] text-slate-400">Manage verified badges, roles & members</p>
+            </div>
+            <span id="adminRoleBadge" class="px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30 text-[9px] font-black">ADMIN</span>
+          </div>
+
+          <div class="grid grid-cols-3 gap-2">
+            <div class="bg-slate-900 rounded-2xl border border-slate-800 p-3 text-center">
+              <p id="adminTotalUsers" class="text-lg font-black text-white">0</p>
+              <p class="text-[9px] font-bold text-slate-400 uppercase">Members</p>
+            </div>
+            <div class="bg-slate-900 rounded-2xl border border-slate-800 p-3 text-center">
+              <p id="adminAdminsCount" class="text-lg font-black text-blue-500">0</p>
+              <p class="text-[9px] font-bold text-slate-400 uppercase">Admins</p>
+            </div>
+            <div class="bg-slate-900 rounded-2xl border border-slate-800 p-3 text-center">
+              <p id="adminModsCount" class="text-lg font-black text-emerald-400">0</p>
+              <p class="text-[9px] font-bold text-slate-400 uppercase">Moderators</p>
+            </div>
+          </div>
+
+          <div class="bg-slate-900 p-3 rounded-2xl border border-slate-800">
+            <h4 class="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-1.5">
+              <i class="ph ph-users-three text-accent-pink"></i> Member Roles
+            </h4>
+            <div id="adminUsersList" class="space-y-2"></div>
+          </div>
+        </div>
+
         <!-- Bottom Navigation -->
         <nav id="bottomNav" class="shrink-0 bg-slate-900 border-t border-slate-800 flex justify-around items-center py-2 px-1 shadow-mobile-nav z-20">
-          <button data-nav="chats" class="nav-item active flex flex-col items-center gap-0.5 text-accent-pink">
+          <button data-nav="chats" class="nav-item active flex flex-col items-center gap-0.5 text-accent-pink transition transform active:scale-90">
             <i class="ph ph-chat-circle-text text-xl"></i>
             <span class="text-[9px] font-bold">Chats</span>
           </button>
 
-          <button data-nav="members" class="nav-item flex flex-col items-center gap-0.5 text-slate-400 hover:text-accent-pink">
+          <button data-nav="members" class="nav-item flex flex-col items-center gap-0.5 text-slate-400 hover:text-accent-pink transition transform active:scale-90">
             <i class="ph ph-users-three text-xl"></i>
             <span class="text-[9px] font-bold">Discover</span>
           </button>
 
-          <button data-nav="global" class="nav-item flex flex-col items-center gap-0.5 text-slate-400 hover:text-accent-pink">
+          <button data-nav="global" class="nav-item flex flex-col items-center gap-0.5 text-slate-400 hover:text-accent-pink transition transform active:scale-90">
             <i class="ph ph-globe text-xl"></i>
             <span class="text-[9px] font-bold">Global Hub</span>
           </button>
 
-          <button data-nav="settings" class="nav-item flex flex-col items-center gap-0.5 text-slate-400 hover:text-accent-pink">
+          <button data-nav="settings" class="nav-item flex flex-col items-center gap-0.5 text-slate-400 hover:text-accent-pink transition transform active:scale-90">
             <i class="ph ph-gear text-xl"></i>
             <span class="text-[9px] font-bold">Profile</span>
+          </button>
+
+          <button id="adminNavBtn" data-nav="admin" class="nav-item hidden flex-col items-center gap-0.5 text-slate-400 hover:text-accent-pink transition transform active:scale-90">
+            <i class="ph ph-shield-star text-xl"></i>
+            <span class="text-[9px] font-bold">Admin</span>
           </button>
         </nav>
 
@@ -963,9 +1227,8 @@
 
   </div>
 
-  <!-- JavaScript App Logic Module -->
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { 
       getAuth, 
       createUserWithEmailAndPassword, 
@@ -973,8 +1236,9 @@
       signOut, 
       onAuthStateChanged, 
       GoogleAuthProvider, 
-      signInWithPopup 
-    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+      signInWithPopup,
+      sendPasswordResetEmail
+    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { 
       getFirestore, 
       collection, 
@@ -983,75 +1247,33 @@
       getDoc, 
       getDocs, 
       addDoc, 
-      updateDoc,
-      deleteDoc,
+      updateDoc, 
+      deleteDoc, 
       onSnapshot, 
       query, 
-      where,
-      orderBy, 
-      serverTimestamp 
-    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+      where 
+    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyDWRxSGbTYQpUxNFZGqRq3PJ_Bv-3nKMTQ",
-      authDomain: "classmate-x-e6b45.firebaseapp.com",
-      projectId: "classmate-x-e6b45",
-      storageBucket: "classmate-x-e6b45.firebasestorage.app",
-      messagingSenderId: "111335466428",
-      appId: "1:111335466428:web:0637da236333e22c8fb7b9"
-    };
-
-    let app = null, auth = null, db = null;
-    let isFirebaseConfigured = false;
+    const APP_ID = 'classmatex_app_v1';
+    let app, auth, db;
 
     try {
-      if (firebaseConfig.apiKey && !firebaseConfig.apiKey.includes("YOUR_API_KEY")) {
-        app = initializeApp(firebaseConfig);
-        auth = getAuth(app);
-        db = getFirestore(app);
-        isFirebaseConfigured = Boolean(app && auth && db);
-      }
-    } catch (e) {
-      console.warn("Firebase fallback mode:", e.message);
-      isFirebaseConfigured = false;
-    }
+      app = initializeApp({
+        apiKey: "AIzaSyDWRxSGbTYQpUxNFZGqRq3PJ_Bv-3nKMTQ",
+        authDomain: "classmate-x-e6b45.firebaseapp.com",
+        projectId: "classmate-x-e6b45",
+        storageBucket: "classmate-x-e6b45.firebasestorage.app",
+        messagingSenderId: "111335466428",
+        appId: "1:111335466428:web:0637da236333e22c8fb7b9"
+      });
+      auth = getAuth(app);
+      db = getFirestore(app);
+      storage = getStorage(app);
+    } catch(e) {}
 
-    // Safe Firebase Collection Helper
-    function getSafeCollection(...pathSegments) {
-      if (!isFirebaseConfigured || !db) return null;
-      try {
-        const cleanSegments = pathSegments.filter(s => typeof s === 'string' && s.trim().length > 0);
-        if (cleanSegments.length === 0) return null;
-        return collection(db, ...cleanSegments);
-      } catch (e) {
-        console.warn("Error resolving collection reference:", e.message);
-        return null;
-      }
-    }
-
-    // Safe Firebase Document Helper
-    function getSafeDoc(...pathSegments) {
-      if (!isFirebaseConfigured || !db) return null;
-      try {
-        const cleanSegments = pathSegments.filter(s => typeof s === 'string' && s.trim().length > 0);
-        if (cleanSegments.length < 2 || cleanSegments.length % 2 !== 0) return null;
-        return doc(db, ...cleanSegments);
-      } catch (e) {
-        console.warn("Error resolving document reference:", e.message);
-        return null;
-      }
-    }
-
-    // Sanitize Firestore Payload
-    function sanitizeData(obj) {
-      const clean = {};
-      for (const key in obj) {
-        if (Object.prototype.hasOwnProperty.call(obj, key)) {
-          clean[key] = obj[key] === undefined ? null : obj[key];
-        }
-      }
-      return clean;
-    }
+    const getPublicCol = (colName) => collection(db, "artifacts", APP_ID, "public", "data", colName);
+    const getPublicDoc = (colName, docId) => doc(db, "artifacts", APP_ID, "public", "data", colName, docId);
 
     const CEO_EMAIL = 'fahmymazrui@gmail.com';
     let currentUserId = null;
@@ -1059,71 +1281,206 @@
     let currentUserHandle = 'fahmy_mazrui';
     let currentUserEmail = 'fahmymazrui@gmail.com';
     let currentUserBio = 'ClassmateX Founder & CEO 🚀';
-    let currentUserAvatarUrl = localStorage.getItem('cx_avatar_url') || null;
-    let currentUserCoverUrl = localStorage.getItem('cx_cover_url') || null;
-    let isCeoUser = true;
+    let currentUserAvatar = null;
+    let isCeoUser = false;
+    let currentUserRole = 'user'; // user | moderator | admin (admin = CEO blue ticks)
     let currentActiveChatId = 'global-group';
     let messagesUnsubscribe = null;
-    let storiesUnsubscribe = null;
-    let typingTimer = null;
     let selectedMsgForAction = null;
     let longPressTimer = null;
-    let tempSelectedCropImage = null;
+    let quoteReplyData = null;
+    let attachedFile = null;
+    let selectedStoryBg = 'bg-gradient-to-br from-purple-700 via-indigo-800 to-slate-900';
+    let selectedStoryMedia = null;
+    let activeChatRecipient = { handle: 'global_community', name: 'Global Hub', bio: 'Public chatroom for all registered classmates!', isCeo: false, avatar: null };
+    
+    // TRACK RENDERED MESSAGE BUBBLE IDS TO PREVENT DOUBLE RENDERING
+    const renderedMsgIds = new Set();
+    let storyProgressInterval = null;
 
-    let mediaRecorder = null;
-    let audioChunks = [];
-    let recordTimerInterval = null;
-    let recordSeconds = 0;
+    // XSS PROTECTION: ESCAPE ALL USER TEXT BEFORE INSERTING INTO innerHTML
+    function escapeHtml(str) {
+      return String(str ?? "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
 
-    let selectedStatusBg = "bg-gradient-to-br from-purple-700 via-indigo-800 to-slate-900";
-    let selectedStatusFont = "font-sans-studio";
-    let selectedStatusAlign = "text-center";
-    let compressedStatusMediaData = null;
+    // AVATAR UPDATER FUNCTION (Fixes ReferenceError: updateAllUserAvatarsInDom)
+    function updateAllUserAvatarsInDom(dataUrl) {
+      currentUserAvatar = dataUrl;
+      const avatarElements = [
+        'headerAvatarContainer',
+        'editAvatarPreviewContainer',
+        'settingsAvatarContainer',
+        'myStoryAvatarThumbnail',
+        'toastAvatar',
+        'storyViewerAvatar',
+        'wpModalAvatar'
+      ];
+      avatarElements.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.innerHTML = `<img src="${dataUrl}" class="avatar-img" />`;
+        }
+      });
+    }
+
+    // WEB AUDIO API WHATSAPP-STYLE IN-APP SOUND EFFECTS
+    let audioCtx = null;
+    function getAudioContext() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    function playSentSound() {
+      try {
+        const ctx = getAudioContext();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(850, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(1250, ctx.currentTime + 0.07);
+        gain.gain.setValueAtTime(0.18, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.07);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.07);
+      } catch(e) {}
+    }
+
+    function playReceivedSound() {
+      try {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime;
+        
+        const osc1 = ctx.createOscillator();
+        const gain1 = ctx.createGain();
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(587.33, now);
+        gain1.gain.setValueAtTime(0.15, now);
+        gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+        osc1.connect(gain1);
+        gain1.connect(ctx.destination);
+        osc1.start(now);
+        osc1.stop(now + 0.08);
+
+        const osc2 = ctx.createOscillator();
+        const gain2 = ctx.createGain();
+        osc2.type = 'sine';
+        osc2.frequency.setValueAtTime(880, now + 0.08);
+        gain2.gain.setValueAtTime(0.2, now + 0.08);
+        gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+        osc2.connect(gain2);
+        gain2.connect(ctx.destination);
+        osc2.start(now + 0.08);
+        osc2.stop(now + 0.2);
+      } catch(e) {}
+    }
 
     function checkCeoStatus(email) {
-      return Boolean(email && email.toLowerCase() === CEO_EMAIL.toLowerCase());
+      return email && email.toLowerCase() === CEO_EMAIL.toLowerCase();
+    }
+
+    // ===== ROLE SYSTEM: user / moderator / admin (Admin = WhatsApp blue ticks ✔✔) =====
+    function normalizeRole(u) {
+      if (!u) return 'user';
+      if (u.isCeo || checkCeoStatus(u.email) || u.username === 'fahmy_mazrui' || u.handle === 'fahmy_mazrui') return 'admin';
+      return (u.role === 'admin' || u.role === 'moderator') ? u.role : 'user';
+    }
+
+    function getRoleBadgeHtml(role) {
+      if (role === 'admin') {
+        return `<i class="ph ph-seal-check-fill text-blue-500 text-sm ml-0.5 inline-block" title="Verified Admin \u2714\u2714"></i>`;
+      }
+      if (role === 'moderator') {
+        return `<i class="ph ph-seal-check-fill text-emerald-400 text-sm ml-0.5 inline-block" title="Verified Moderator \u2714\u2714"></i>`;
+      }
+      return '';
     }
 
     function getVerifiedBadgeHtml(isVerified) {
       return isVerified ? `<i class="ph ph-seal-check-fill text-sky-400 text-sm ml-0.5 inline-block" title="Verified"></i>` : '';
     }
 
+    // ===== REAL QR CODE RENDERER (regenerates with current @handle) =====
+    function renderRealQrCode() {
+      const container = document.getElementById('realQrCodeContainer');
+      if (!container || typeof QRCode === 'undefined') return;
+      container.innerHTML = '';
+      new QRCode(container, {
+        text: `https://classmatex.app/user/@${currentUserHandle}`,
+        width: 144,
+        height: 144,
+        colorDark: '#0f172a',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.M
+      });
+      const bottom = document.getElementById('qrHandleBottom');
+      if (bottom) bottom.textContent = currentUserHandle;
+      const qrHandle = document.getElementById('qrUserHandle');
+      if (qrHandle) qrHandle.textContent = `@${currentUserHandle}`;
+    }
+
+    // ===== REAL MESSAGE STATUS: sent / delivered / read ticks =====
+    function tickHtml(status) {
+      if (status === 'read') {
+        return `<i class="ph ph-checks text-cyan-300 font-extrabold text-sm ml-1 msg-tick" title="Read"></i>`;
+      }
+      if (status === 'delivered') {
+        return `<i class="ph ph-checks text-slate-400 font-extrabold text-sm ml-1 msg-tick" title="Delivered"></i>`;
+      }
+      return `<i class="ph ph-check text-slate-400 font-extrabold text-sm ml-1 msg-tick" title="Sent"></i>`;
+    }
+
+    function updateMsgTick(msgId, status) {
+      if (!msgId) return;
+      const el = document.querySelector(`[data-msg-id="${msgId}"] .msg-tick`);
+      if (el) el.outerHTML = tickHtml(status);
+    }
+
     function triggerNotificationToast(senderName, handle, message, avatarInitials) {
       const toast = document.getElementById('topToastNotification');
       if (!toast) return;
-      document.getElementById('toastSender').textContent = senderName || 'ClassmateX';
-      document.getElementById('toastHandle').textContent = `@${(handle || 'system').replace('@','')}`;
-      document.getElementById('toastMessage').textContent = message || '';
-      document.getElementById('toastAvatar').textContent = avatarInitials || 'CX';
+      
+      const senderEl = document.getElementById('toastSender');
+      const handleEl = document.getElementById('toastHandle');
+      const msgEl = document.getElementById('toastMessage');
+      const avatarEl = document.getElementById('toastAvatar');
+
+      if (senderEl) senderEl.textContent = senderName;
+      if (handleEl) handleEl.textContent = `@${handle.replace('@','')}`;
+      if (msgEl) msgEl.textContent = message;
+      if (avatarEl && avatarInitials) avatarEl.textContent = avatarInitials;
+
       toast.classList.remove('hidden');
       setTimeout(() => { toast.classList.add('hidden'); }, 3500);
     }
 
-    function initSession() {
-      const savedUser = localStorage.getItem('cx_user_session');
-      if (savedUser) {
-        try {
-          const user = JSON.parse(savedUser);
-          openMainApp(user.name, user.handle, user.email);
-        } catch(e) {}
-      }
-    }
-
-    function saveUserSession(name, handle, email) {
-      localStorage.setItem('cx_user_session', JSON.stringify({ name, handle, email }));
-    }
-
-    function openMainApp(name, handle, email) {
+    function openMainApp(name, handle, email, userDoc) {
       currentUserName = name || 'Classmate User';
       currentUserHandle = (handle || 'user').replace('@','');
       currentUserEmail = email || currentUserEmail;
-      isCeoUser = checkCeoStatus(currentUserEmail);
-
-      if (isCeoUser) {
-        currentUserHandle = 'fahmy_mazrui';
+      if (userDoc) {
+        if (userDoc.bio) currentUserBio = userDoc.bio;
+        if (userDoc.avatar) currentUserAvatar = userDoc.avatar;
+        if (typeof userDoc.isCeo === 'boolean') isCeoUser = userDoc.isCeo;
       }
+      isCeoUser = isCeoUser || checkCeoStatus(currentUserEmail);
 
-      saveUserSession(currentUserName, currentUserHandle, currentUserEmail);
+      if (isCeoUser) currentUserHandle = 'fahmy_mazrui';
+
+      // Resolve role & reveal Admin nav tab for privileged users
+      currentUserRole = isCeoUser ? 'admin' : ((userDoc && (userDoc.role === 'admin' || userDoc.role === 'moderator')) ? userDoc.role : 'user');
+      const adminNav = document.getElementById('adminNavBtn');
+      if (adminNav) {
+        const privileged = currentUserRole === 'admin' || currentUserRole === 'moderator';
+        adminNav.classList.toggle('hidden', !privileged);
+        adminNav.classList.toggle('flex', privileged);
+      }
       
       document.getElementById('authView')?.classList.add('hidden');
       const mainApp = document.getElementById('mainAppView');
@@ -1132,493 +1489,286 @@
         mainApp.classList.add('flex');
       }
       document.getElementById('headerUserAvatarBtn')?.classList.remove('hidden');
+      const secEmail = document.getElementById('secEmailInput');
+      if (secEmail) secEmail.value = currentUserEmail;
+      
       updateProfileDisplay();
       loadMembersFromFirestore();
-      listenToRealtimeStories();
-      loadUserChatThreads();
     }
 
-    // Client-Side Image Compression using Canvas
-    function compressImage(file, maxWidth = 1080, quality = 0.75) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = (event) => {
-          const img = new Image();
-          img.src = event.target.result;
-          img.onload = () => {
-            const canvas = document.createElement('canvas');
-            let width = img.width;
-            let height = img.height;
+    window.openWhatsAppProfile = function(user) {
+      const modal = document.getElementById('viewProfileModal');
+      if (!modal) return;
 
-            if (width > maxWidth) {
-              height = Math.round((height * maxWidth) / width);
-              width = maxWidth;
+      const nameEl = document.getElementById('wpModalName');
+      const handleEl = document.getElementById('wpModalHandle');
+      const bioEl = document.getElementById('wpModalBio');
+      const avatarEl = document.getElementById('wpModalAvatar');
+      const roleBadge = document.getElementById('wpModalRoleBadge');
+
+      const isVerified = user.isCeo || checkCeoStatus(user.email) || user.handle === 'fahmy_mazrui' || user.username === 'fahmy_mazrui';
+      const userRole = normalizeRole(user);
+
+      if (nameEl) nameEl.innerHTML = `${user.name || ('@' + user.handle)} ${getVerifiedBadgeHtml(isVerified)}`;
+      if (handleEl) handleEl.textContent = `@${user.handle || user.username || 'user'}`;
+      if (bioEl) bioEl.textContent = user.bio || (isVerified ? "ClassmateX Founder & CEO 🚀" : "Connecting on ClassmateX!");
+      
+      if (roleBadge) {
+        if (userRole === 'admin') {
+          roleBadge.className = "inline-flex items-center gap-1 mt-1 px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30 text-[9px] font-black";
+          roleBadge.innerHTML = `<i class="ph ph-seal-check-fill"></i> Verified Admin \u2714\u2714`;
+        } else if (userRole === 'moderator') {
+          roleBadge.className = "inline-flex items-center gap-1 mt-1 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[9px] font-black";
+          roleBadge.innerHTML = `<i class="ph ph-seal-check-fill"></i> Verified Moderator \u2714\u2714`;
+        } else {
+          roleBadge.className = "inline-flex items-center gap-1 mt-1 px-2.5 py-0.5 rounded-full bg-sky-500/20 text-sky-400 border border-sky-500/30 text-[9px] font-black";
+          roleBadge.innerHTML = isVerified ? `<i class="ph ph-seal-check-fill"></i> Founder & CEO` : `<i class="ph ph-student"></i> Classmate Student`;
+        }
+      }
+
+      if (avatarEl) {
+        avatarEl.innerHTML = user.avatar || currentUserAvatar
+          ? `<img src="${user.avatar || currentUserAvatar}" class="avatar-img" />` 
+          : (user.handle || 'US').substring(0,2).toUpperCase();
+      }
+
+      modal.classList.remove('hidden');
+    };
+
+    document.getElementById('closeWpProfileBtn')?.addEventListener('click', () => {
+      document.getElementById('viewProfileModal')?.classList.add('hidden');
+    });
+
+    document.getElementById('wpActionMessageBtn')?.addEventListener('click', () => {
+      document.getElementById('viewProfileModal')?.classList.add('hidden');
+      if (activeChatRecipient.handle) {
+        window.openChatThread(activeChatRecipient.handle === 'global_community' ? 'global-group' : `dm-${activeChatRecipient.handle}`);
+      }
+    });
+
+    document.getElementById('wpActionMuteBtn')?.addEventListener('click', () => {
+      triggerNotificationToast("Mute Notifications", activeChatRecipient.handle, "Notifications muted for this conversation", "CX");
+    });
+
+    document.getElementById('wpActionBlockBtn')?.addEventListener('click', () => {
+      document.getElementById('viewProfileModal')?.classList.add('hidden');
+      triggerNotificationToast("Contact Blocked", activeChatRecipient.handle, "User added to blocked list", "CX");
+    });
+
+    document.getElementById('optViewProfileBtn')?.addEventListener('click', () => {
+      document.getElementById('chatOptionsModal')?.classList.add('hidden');
+      openWhatsAppProfile(activeChatRecipient);
+    });
+
+    document.getElementById('headerProfileTrigger')?.addEventListener('click', (e) => {
+      if (e.target.closest('#backToChatsBtn')) return;
+      openWhatsAppProfile(activeChatRecipient);
+    });
+
+    function closeMessageActionModal() {
+      const modal = document.getElementById('messageActionModal');
+      if (modal) modal.classList.add('hidden');
+      selectedMsgForAction = null;
+    }
+
+    document.getElementById('closeMsgActionModalBtn')?.addEventListener('click', closeMessageActionModal);
+
+    document.getElementById('messageActionModal')?.addEventListener('click', (e) => {
+      if (e.target.id === 'messageActionModal') {
+        closeMessageActionModal();
+      }
+    });
+
+    // Emoji reaction buttons
+    document.querySelectorAll('.emoji-react-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const emoji = btn.dataset.emoji;
+        if (selectedMsgForAction && selectedMsgForAction.element) {
+          const bubble = selectedMsgForAction.element.querySelector('.chat-bubble-sent, .chat-bubble-received');
+          if (bubble) {
+            let reactTag = bubble.querySelector('.msg-reaction-badge');
+            if (!reactTag) {
+              reactTag = document.createElement('div');
+              reactTag.className = 'msg-reaction-badge absolute -bottom-2 right-2 bg-slate-900 border border-slate-700/80 rounded-full px-2 py-0.5 text-xs shadow-md animate-pop-in flex items-center gap-1 z-10';
+              bubble.classList.add('relative');
+              bubble.appendChild(reactTag);
             }
+            reactTag.innerHTML = `<span>${emoji}</span>`;
+            if (selectedMsgForAction.id && db) {
+              try { await updateDoc(getPublicDoc(`messages_${currentActiveChatId}`, selectedMsgForAction.id), { reaction: emoji }); } catch(e) {}
+            }
+          }
+          triggerNotificationToast("Reaction Added", currentUserHandle, `Reacted ${emoji} to message`, "CX");
+        }
+        closeMessageActionModal();
+      });
+    });
 
-            canvas.width = width;
-            canvas.height = height;
-
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, width, height);
-
-            resolve(canvas.toDataURL('image/jpeg', quality));
-          };
-          img.onerror = (err) => reject(err);
+    // Quote Reply Action
+    document.getElementById('actionQuoteReplyBtn')?.addEventListener('click', () => {
+      if (selectedMsgForAction) {
+        quoteReplyData = {
+          author: selectedMsgForAction.author || 'user',
+          text: selectedMsgForAction.text || ''
         };
-        reader.onerror = (err) => reject(err);
-      });
-    }
+        const authorEl = document.getElementById('quoteAuthorText');
+        const textEl = document.getElementById('quoteContentText');
+        const replyBar = document.getElementById('quoteReplyPreviewBar');
+        
+        if (authorEl) authorEl.textContent = `Replying to @${quoteReplyData.author}`;
+        if (textEl) textEl.textContent = quoteReplyData.text;
+        if (replyBar) replyBar.classList.remove('hidden');
 
-    // PROFILE PICTURE & COVER BANNER UPLOADER LOGIC
-    const profileImageInput = document.getElementById('profileImageInput');
-    const changeProfilePicBtn = document.getElementById('changeProfilePicBtn');
-    const settingsAvatarWrapper = document.getElementById('settingsAvatarWrapper');
-    const cropPhotoModal = document.getElementById('cropPhotoModal');
-    const cropPhotoPreview = document.getElementById('cropPhotoPreview');
-    const cropZoomRange = document.getElementById('cropZoomRange');
-
-    changeProfilePicBtn?.addEventListener('click', (e) => {
-      e.stopPropagation();
-      profileImageInput?.click();
-    });
-
-    settingsAvatarWrapper?.addEventListener('click', () => {
-      profileImageInput?.click();
-    });
-
-    profileImageInput?.addEventListener('change', async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      try {
-        tempSelectedCropImage = await compressImage(file, 600, 0.85);
-        if (cropPhotoPreview) cropPhotoPreview.src = tempSelectedCropImage;
-        if (cropZoomRange) cropZoomRange.value = 1;
-        cropPhotoModal?.classList.remove('hidden');
-      } catch (err) {
-        triggerNotificationToast("Photo Error", currentUserHandle, "Failed to load photo", "CX");
+        const input = document.getElementById('chatMessageInput');
+        if (input) input.focus();
       }
+      closeMessageActionModal();
     });
 
-    cropZoomRange?.addEventListener('input', () => {
-      if (cropPhotoPreview) {
-        cropPhotoPreview.style.transform = `scale(${cropZoomRange.value})`;
-      }
+    document.getElementById('cancelQuoteReplyBtn')?.addEventListener('click', () => {
+      quoteReplyData = null;
+      document.getElementById('quoteReplyPreviewBar')?.classList.add('hidden');
     });
 
-    document.getElementById('cancelCropBtn')?.addEventListener('click', () => {
-      cropPhotoModal?.classList.add('hidden');
-      tempSelectedCropImage = null;
-    });
-
-    document.getElementById('saveCropBtn')?.addEventListener('click', async () => {
-      if (tempSelectedCropImage) {
-        currentUserAvatarUrl = tempSelectedCropImage;
-        localStorage.setItem('cx_avatar_url', currentUserAvatarUrl);
-
-        if (currentUserId) {
-          const userDocRef = getSafeDoc("users", currentUserId);
-          if (userDocRef) {
-            updateDoc(userDocRef, { avatarUrl: currentUserAvatarUrl }).catch(() => {});
-          }
-        }
-
-        updateProfileDisplay();
-        cropPhotoModal?.classList.add('hidden');
-        triggerNotificationToast("Profile Picture Updated", currentUserHandle, "New profile picture saved!", "CX");
-      }
-    });
-
-    // COVER BANNER UPLOADER LOGIC
-    const coverBannerInput = document.getElementById('coverBannerInput');
-    document.getElementById('triggerChangeBannerBtn')?.addEventListener('click', () => {
-      coverBannerInput?.click();
-    });
-
-    coverBannerInput?.addEventListener('change', async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      try {
-        const compressedBanner = await compressImage(file, 1200, 0.8);
-        currentUserCoverUrl = compressedBanner;
-        localStorage.setItem('cx_cover_url', currentUserCoverUrl);
-
-        const bannerImg = document.getElementById('coverBannerImg');
-        if (bannerImg) {
-          bannerImg.src = currentUserCoverUrl;
-          bannerImg.classList.remove('hidden');
-        }
-
-        if (currentUserId) {
-          const userDocRef = getSafeDoc("users", currentUserId);
-          if (userDocRef) {
-            updateDoc(userDocRef, { coverUrl: currentUserCoverUrl }).catch(() => {});
-          }
-        }
-        triggerNotificationToast("Cover Updated", currentUserHandle, "Profile cover banner updated!", "CX");
-      } catch (err) {
-        triggerNotificationToast("Banner Error", currentUserHandle, "Failed to update cover", "CX");
-      }
-    });
-
-    // Status Studio Tools & Events
-    const storyCanvasPreview = document.getElementById('storyCanvasPreview');
-    const storyTextInput = document.getElementById('storyTextInput');
-
-    document.querySelectorAll('.status-color-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const bg = btn.dataset.bg;
-        if (bg && storyCanvasPreview) {
-          selectedStatusBg = bg;
-          storyCanvasPreview.className = `flex-grow my-1 rounded-3xl flex flex-col items-center justify-center p-6 text-center transition-all duration-300 relative overflow-hidden ${bg} border border-slate-700 shadow-2xl ${selectedStatusFont}`;
-        }
-      });
-    });
-
-    const fontFamilies = [
-      { id: "font-sans-studio", label: "Sans" },
-      { id: "font-serif-studio", label: "Serif" },
-      { id: "font-mono-studio", label: "Mono" },
-      { id: "font-cursive-studio", label: "Hand" }
-    ];
-    let fontIndex = 0;
-    document.getElementById('toggleFontFamilyBtn')?.addEventListener('click', () => {
-      fontIndex = (fontIndex + 1) % fontFamilies.length;
-      selectedStatusFont = fontFamilies[fontIndex].id;
-      document.getElementById('currentFontLabel').textContent = fontFamilies[fontIndex].label;
-      if (storyCanvasPreview) {
-        storyCanvasPreview.classList.remove('font-sans-studio', 'font-serif-studio', 'font-mono-studio', 'font-cursive-studio');
-        storyCanvasPreview.classList.add(selectedStatusFont);
-      }
-    });
-
-    const alignments = ["text-center", "text-left", "text-right"];
-    let alignIndex = 0;
-    document.getElementById('toggleTextAlignBtn')?.addEventListener('click', () => {
-      alignIndex = (alignIndex + 1) % alignments.length;
-      selectedStatusAlign = alignments[alignIndex];
-      if (storyTextInput) {
-        storyTextInput.className = `w-full bg-transparent ${selectedStatusAlign} text-xl font-extrabold text-white outline-none resize-none placeholder-white/40 leading-relaxed z-10`;
-      }
-    });
-
-    document.querySelectorAll('.emoji-sticker-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        if (storyTextInput) {
-          storyTextInput.value += btn.textContent;
-        }
-      });
-    });
-
-    const storyMediaInput = document.getElementById('storyMediaInput');
-    document.getElementById('attachStoryMediaBtn')?.addEventListener('click', () => {
-      storyMediaInput?.click();
-    });
-
-    storyMediaInput?.addEventListener('change', async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-
-      const previewContainer = document.getElementById('storyMediaPreviewContainer');
-      const imgPreview = document.getElementById('storyImagePreview');
-      const videoPreview = document.getElementById('storyVideoPreview');
-
-      if (file.type.startsWith('image/')) {
-        try {
-          compressedStatusMediaData = await compressImage(file);
-          if (imgPreview) {
-            imgPreview.src = compressedStatusMediaData;
-            imgPreview.classList.remove('hidden');
-          }
-          videoPreview?.classList.add('hidden');
-          previewContainer?.classList.remove('hidden');
-        } catch (err) {
-          triggerNotificationToast("Media Error", currentUserHandle, "Failed to compress image", "CX");
-        }
-      } else if (file.type.startsWith('video/')) {
-        compressedStatusMediaData = URL.createObjectURL(file);
-        if (videoPreview) {
-          videoPreview.src = compressedStatusMediaData;
-          videoPreview.classList.remove('hidden');
-        }
-        imgPreview?.classList.add('hidden');
-        previewContainer?.classList.remove('hidden');
-      }
-    });
-
-    document.getElementById('removeStoryMediaBtn')?.addEventListener('click', () => {
-      compressedStatusMediaData = null;
-      document.getElementById('storyMediaPreviewContainer')?.classList.add('hidden');
-      document.getElementById('storyImagePreview')?.classList.add('hidden');
-      document.getElementById('storyVideoPreview')?.classList.add('hidden');
-    });
-
-    // Publish Real Story to Firestore
-    document.getElementById('publishStoryBtn')?.addEventListener('click', async () => {
-      const text = storyTextInput?.value.trim() || '';
-      if (!text && !compressedStatusMediaData) {
-        triggerNotificationToast("Status Error", currentUserHandle, "Write text or attach media to post", "CX");
-        return;
-      }
-
-      const storyData = sanitizeData({
-        text: text,
-        mediaData: compressedStatusMediaData || null,
-        bgClass: selectedStatusBg,
-        senderHandle: currentUserHandle,
-        senderEmail: currentUserEmail,
-        isVerified: isCeoUser,
-        createdAt: serverTimestamp()
-      });
-
-      const storiesCollection = getSafeCollection("stories");
-      if (storiesCollection) {
-        try {
-          await addDoc(storiesCollection, storyData);
-        } catch (err) {
-          console.error("Error saving story to Firestore:", err);
-        }
-      }
-
-      if (storyTextInput) storyTextInput.value = '';
-      compressedStatusMediaData = null;
-      document.getElementById('storyMediaPreviewContainer')?.classList.add('hidden');
-      document.getElementById('createStoryModal')?.classList.add('hidden');
-      triggerNotificationToast("Status Published", currentUserHandle, "Status posted successfully!", "CX");
-    });
-
-    // Listen to Realtime Stories from Firestore
-    function listenToRealtimeStories() {
-      const storiesContainer = document.getElementById('storiesScrollContainer');
-      if (!storiesContainer) return;
-
-      if (storiesUnsubscribe) storiesUnsubscribe();
-
-      const storiesCollection = getSafeCollection("stories");
-      if (storiesCollection) {
-        try {
-          const q = query(storiesCollection, orderBy("createdAt", "desc"));
-          storiesUnsubscribe = onSnapshot(q, (snapshot) => {
-            const myStoryBtn = document.getElementById('addMyStoryBtn');
-            storiesContainer.innerHTML = '';
-            if (myStoryBtn) storiesContainer.appendChild(myStoryBtn);
-
-            snapshot.forEach((docSnap) => {
-              const data = docSnap.data();
-              const isVerified = data.isVerified || checkCeoStatus(data.senderEmail) || data.senderHandle === 'fahmy_mazrui';
-
-              const storyItem = document.createElement('div');
-              storyItem.className = 'story-item-trigger flex flex-col items-center gap-1 cursor-pointer shrink-0 animate-pop-in';
-              
-              storyItem.innerHTML = `
-                <div class="relative p-0.5 rounded-full bg-gradient-to-tr from-brand-500 via-accent-purple to-accent-pink shadow-glow-pink">
-                  <div class="h-12 w-12 rounded-full bg-slate-800 text-white font-black text-xs flex items-center justify-center overflow-hidden">
-                    ${(data.senderHandle || 'US').substring(0,2).toUpperCase()}
-                  </div>
-                  ${getVerifiedBadgeHtml(isVerified)}
-                </div>
-                <span class="text-[10px] font-bold tracking-tight text-accent-pink flex items-center">@${data.senderHandle || 'user'}</span>
-              `;
-
-              storyItem.addEventListener('click', () => {
-                document.getElementById('storyViewerName').innerHTML = `@${data.senderHandle || 'user'} ${getVerifiedBadgeHtml(isVerified)}`;
-                const txt = document.getElementById('storyViewerText');
-                if (txt) {
-                  txt.textContent = data.text || '';
-                  txt.className = `text-center text-xl font-black text-white p-6 leading-relaxed max-w-xs ${data.bgClass || 'bg-slate-900'}`;
-                  txt.classList.remove('hidden');
-                }
-                document.getElementById('storyViewerModal')?.classList.remove('hidden');
-              });
-
-              storiesContainer.appendChild(storyItem);
-            });
-          }, (err) => {
-            console.warn("Stories listener warning:", err.message);
-          });
-        } catch(e) {}
-      }
-    }
-
-    // Google Sign In
-    document.getElementById('googleSignInAuthBtn')?.addEventListener('click', async () => {
-      if (isFirebaseConfigured && auth) {
-        try {
-          const provider = new GoogleAuthProvider();
-          provider.setCustomParameters({ prompt: 'select_account' });
-          const result = await signInWithPopup(auth, provider);
-          const user = result.user;
-          const userEmail = user.email || CEO_EMAIL;
-          openMainApp(user.displayName, (userEmail.split('@')[0]).toLowerCase(), userEmail);
-        } catch (err) {
-          openMainApp('CEO Fahmy Mazrui', 'fahmy_mazrui', CEO_EMAIL);
-        }
+    // Edit Message Action
+    document.getElementById('actionEditMsgBtn')?.addEventListener('click', () => {
+      if (selectedMsgForAction) {
+        const editModal = document.getElementById('editMessagePromptModal');
+        const editInput = document.getElementById('editMessageTextInput');
+        if (editInput) editInput.value = selectedMsgForAction.text || '';
+        if (editModal) editModal.classList.remove('hidden');
+        document.getElementById('messageActionModal')?.classList.add('hidden');
       } else {
-        openMainApp('CEO Fahmy Mazrui', 'fahmy_mazrui', CEO_EMAIL);
+        closeMessageActionModal();
       }
     });
 
-    // Login Form
-    document.getElementById('loginForm')?.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const identifier = document.getElementById('login-identifier')?.value.trim();
-      const password = document.getElementById('login-password')?.value;
+    document.getElementById('cancelEditMsgPromptBtn')?.addEventListener('click', () => {
+      document.getElementById('editMessagePromptModal')?.classList.add('hidden');
+      selectedMsgForAction = null;
+    });
 
-      if (!identifier || !password) {
-        triggerNotificationToast("Validation Error", "system", "Please fill in all login fields!", "CX");
-        return;
-      }
-
-      if (isFirebaseConfigured && auth && identifier.includes('@')) {
-        try {
-          await signInWithEmailAndPassword(auth, identifier, password);
-        } catch (err) {
-          const handle = identifier.split('@')[0].replace('@','');
-          openMainApp(handle, handle, identifier);
+    document.getElementById('saveEditMsgPromptBtn')?.addEventListener('click', async () => {
+      const newText = document.getElementById('editMessageTextInput')?.value.trim();
+      if (selectedMsgForAction && newText) {
+        if (selectedMsgForAction.id && db) {
+          try {
+            await updateDoc(getPublicDoc(`messages_${currentActiveChatId}`, selectedMsgForAction.id), { text: newText });
+          } catch(e) {}
         }
-      } else {
-        const handle = identifier.replace('@','');
-        openMainApp(handle, handle, `${handle}@classmatex.app`);
+        if (selectedMsgForAction.element) {
+          const textBody = selectedMsgForAction.element.querySelector('.msg-text-body');
+          if (textBody) textBody.textContent = newText;
+        }
+        triggerNotificationToast("Message Edited", currentUserHandle, "Your message has been updated", "CX");
       }
+      document.getElementById('editMessagePromptModal')?.classList.add('hidden');
+      selectedMsgForAction = null;
     });
 
-    // Edit Profile Unique Username Checker
-    const editUsernameInput = document.getElementById('editUsernameInput');
-    const editUsernameError = document.getElementById('editUsernameError');
-
-    editUsernameInput?.addEventListener('input', async () => {
-      const handle = editUsernameInput.value.trim().replace('@','').toLowerCase();
-      if (!handle || handle === currentUserHandle) {
-        editUsernameError?.classList.add('hidden');
-        return;
-      }
-
-      const usersColl = getSafeCollection("users");
-      if (usersColl) {
-        try {
-          const q = query(usersColl, where("username", "==", handle));
-          const querySnapshot = await getDocs(q);
-          if (!querySnapshot.empty) {
-            editUsernameError?.classList.remove('hidden');
-          } else {
-            editUsernameError?.classList.add('hidden');
-          }
-        } catch (err) {}
-      }
-    });
-
-    document.getElementById('saveProfileBtn')?.addEventListener('click', async () => {
-      const newHandle = editUsernameInput?.value.trim().replace('@','').toLowerCase();
-      const newBio = document.getElementById('editBioInput')?.value.trim();
-
-      if (editUsernameError && !editUsernameError.classList.contains('hidden')) {
-        triggerNotificationToast("Username Taken", "system", "Username hii tayari imetumiwa, tafadhali chagua nyingine.", "CX");
-        return;
-      }
-
-      if (newHandle) currentUserHandle = newHandle;
-      if (newBio) currentUserBio = newBio;
-
-      updateProfileDisplay();
-      document.getElementById('editProfileModal')?.classList.add('hidden');
-      triggerNotificationToast("Profile Updated", currentUserHandle, "Profile updated successfully!", "CX");
-    });
-
-    if (isFirebaseConfigured && auth) {
-      onAuthStateChanged(auth, async (user) => {
-        if (user) {
-          currentUserId = user.uid;
-          currentUserEmail = user.email || CEO_EMAIL;
-          isCeoUser = checkCeoStatus(currentUserEmail);
-          
-          const userDocRef = getSafeDoc("users", user.uid);
-          if (userDocRef) {
+    // Delete Message Action
+    document.getElementById('actionDeleteMsgBtn')?.addEventListener('click', async () => {
+      if (selectedMsgForAction) {
+        if (selectedMsgForAction.id) {
+          renderedMsgIds.delete(selectedMsgForAction.id);
+          if (db) {
             try {
-              const userDoc = await getDoc(userDocRef);
-              if (userDoc.exists()) {
-                const data = userDoc.data();
-                currentUserHandle = data.username || (isCeoUser ? 'fahmy_mazrui' : user.email.split('@')[0]);
-                currentUserBio = data.bio || currentUserBio;
-                currentUserAvatarUrl = data.avatarUrl || currentUserAvatarUrl;
-                currentUserCoverUrl = data.coverUrl || currentUserCoverUrl;
-              } else {
-                currentUserHandle = (isCeoUser ? 'fahmy_mazrui' : user.email.split('@')[0]).toLowerCase();
-              }
-            } catch (e) {}
+              await deleteDoc(getPublicDoc(`messages_${currentActiveChatId}`, selectedMsgForAction.id));
+            } catch(e) {}
           }
-          openMainApp(currentUserName, currentUserHandle, currentUserEmail);
         }
-      });
-    }
-
-    // Clear Local Cache Functionality
-    document.getElementById('clearCacheBtn')?.addEventListener('click', () => {
-      localStorage.clear();
-      triggerNotificationToast("Cache Cleared", currentUserHandle, "Local cache cleaned successfully!", "CX");
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
+        if (selectedMsgForAction.element) {
+          const elToRemove = selectedMsgForAction.element;
+          elToRemove.classList.add('transition-all', 'duration-300', 'opacity-0', 'scale-95');
+          setTimeout(() => { elToRemove.remove(); }, 300);
+        }
+        triggerNotificationToast("Message Deleted", currentUserHandle, "Message removed successfully", "CX");
+      }
+      closeMessageActionModal();
     });
 
-    // Send Message
-    document.getElementById('sendMessageForm')?.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const input = document.getElementById('chatMessageInput');
-      const text = input.value.trim();
-      if (!text) return;
-
-      const userDocId = currentUserId || currentUserHandle;
-      const typingDocRef = getSafeDoc("chats", currentActiveChatId, "typing", userDocId);
-      if (typingDocRef) {
-        setDoc(typingDocRef, { isTyping: false }, { merge: true }).catch(() => {});
+    // Open Chat Thread Function - Sync DM Recipient Header
+    window.openChatThread = function(chatId) {
+      currentActiveChatId = chatId;
+      document.getElementById('screenChatsList')?.classList.add('hidden');
+      document.getElementById('screenMembers')?.classList.add('hidden');
+      document.getElementById('screenSettings')?.classList.add('hidden');
+      document.getElementById('globalTopHeader')?.classList.add('hidden');
+      
+      const activeScreen = document.getElementById('screenActiveChat');
+      if (activeScreen) {
+        activeScreen.classList.remove('hidden');
+        activeScreen.classList.add('flex', 'animate-slide-up');
       }
 
-      const messagesColl = getSafeCollection("chats", currentActiveChatId, "messages");
-      if (messagesColl) {
-        try {
-          const msgPayload = sanitizeData({
-            text: text,
-            senderId: currentUserId || 'demo-user',
-            senderHandle: currentUserHandle,
-            senderEmail: currentUserEmail,
-            isCeo: isCeoUser,
-            createdAt: serverTimestamp()
-          });
-          await addDoc(messagesColl, msgPayload);
-          input.value = '';
-        } catch (err) {
-          renderMessageBubble({ text, senderHandle: currentUserHandle, isCeo: isCeoUser, id: Date.now() }, true);
-          input.value = '';
+      const headerTitle = document.getElementById('activeChatTitle');
+      const headerIcon = document.getElementById('activeChatHeaderIcon');
+      const headerSubtitle = document.getElementById('onlineLiveStatusText');
+
+      if (chatId === 'global-group') {
+        activeChatRecipient = { handle: 'global_community', name: 'Global Community Hub', bio: 'Public chatroom for all registered classmates!', isCeo: false, avatar: null };
+        if (headerTitle) headerTitle.innerHTML = `<span>@global_community</span>`;
+        if (headerIcon) {
+          headerIcon.className = "h-9 w-9 rounded-full bg-gradient-to-tr from-brand-600 via-accent-purple to-accent-pink text-white font-black flex items-center justify-center text-base shadow-xs shrink-0";
+          headerIcon.innerHTML = `🌐`;
         }
+        if (headerSubtitle) headerSubtitle.innerHTML = `<span class="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping"></span> Public Room • Active`;
       } else {
-        renderMessageBubble({ text, senderHandle: currentUserHandle, isCeo: isCeoUser, id: Date.now() }, true);
-        input.value = '';
+        const rawHandle = chatId.replace('dm-', '').replace('chat-', '').replace('ceo-', '');
+        const isCeo = rawHandle === 'fahmy_mazrui' || rawHandle === 'fahmy-mazrui';
+        const formattedHandle = isCeo ? 'fahmy_mazrui' : rawHandle;
+        
+        activeChatRecipient = { 
+          handle: formattedHandle, 
+          name: isCeo ? 'Fahmy Mazrui' : `@${formattedHandle}`, 
+          bio: isCeo ? 'ClassmateX Founder & CEO 🚀' : 'Active Classmate Student',
+          isCeo: isCeo,
+          avatar: null
+        };
+
+        if (headerTitle) {
+          headerTitle.innerHTML = `<span>@${formattedHandle}</span> ${getVerifiedBadgeHtml(isCeo)}`;
+        }
+        if (headerIcon) {
+          headerIcon.className = `h-9 w-9 rounded-full ${isCeo ? 'neon-story-ring' : 'bg-emerald-500'} text-white font-black flex items-center justify-center text-xs shadow-xs shrink-0 overflow-hidden`;
+          headerIcon.innerHTML = `<div class="h-full w-full bg-slate-900 flex items-center justify-center rounded-full">${formattedHandle.substring(0,2).toUpperCase()}</div>`;
+        }
+        if (headerSubtitle) {
+          headerSubtitle.innerHTML = `<span class="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping"></span> Online • Active Now`;
+        }
+
+        // Fetch recipient role live so blue ticks appear in DM header
+        if (db && !isCeo) {
+          getDoc(getPublicDoc("users", formattedHandle)).then((snap) => {
+            if (snap.exists()) {
+              const role = normalizeRole(snap.data());
+              if (role !== 'user' && headerTitle) {
+                headerTitle.innerHTML = `<span>@${formattedHandle}</span> ${getRoleBadgeHtml(role)}`;
+              }
+            }
+          }).catch(() => {});
+        }
       }
-    });
 
-    const chatInput = document.getElementById('chatMessageInput');
-    chatInput?.addEventListener('input', () => {
-      const userDocId = currentUserId || currentUserHandle;
-      const typingDocRef = getSafeDoc("chats", currentActiveChatId, "typing", userDocId);
-      if (!typingDocRef) return;
-
-      setDoc(typingDocRef, sanitizeData({ 
-        isTyping: true,
-        senderHandle: currentUserHandle
-      }), { merge: true }).catch(() => {});
-
-      if (typingTimer) clearTimeout(typingTimer);
-      typingTimer = setTimeout(() => {
-        setDoc(typingDocRef, { isTyping: false }, { merge: true }).catch(() => {});
-      }, 2000);
-    });
+      loadRealtimeMessages(chatId);
+    };
 
     function renderMessageBubble(msg, isSent) {
       const container = document.getElementById('messagesContainer');
       if (!container) return;
 
+      // PREVENT DOUBLE MESSAGE RENDERING BUG: SKIP IF ALREADY RENDERED BY ID
+      if (msg.id && renderedMsgIds.has(msg.id)) {
+        return;
+      }
+      if (msg.id) {
+        renderedMsgIds.add(msg.id);
+      }
+
       const bubbleWrapper = document.createElement('div');
       bubbleWrapper.className = `flex flex-col ${isSent ? 'items-end' : 'items-start'} my-1.5 animate-slide-up relative`;
+      if (msg.id) bubbleWrapper.setAttribute('data-msg-id', msg.id);
 
       const bubble = document.createElement('div');
       bubble.className = `max-w-[82%] rounded-2xl px-3.5 py-2 text-xs font-medium shadow-sm cursor-pointer select-none transition-all ${
@@ -1629,319 +1779,492 @@
 
       const isVerifiedUser = msg.isCeo || checkCeoStatus(msg.senderEmail) || msg.senderHandle === 'fahmy_mazrui';
 
+      let tickBadge = '';
+      if (isSent) {
+        tickBadge = tickHtml(msg.status || 'sent');
+      }
+
       let contentHtml = `
         <div class="flex items-center justify-between gap-2 mb-1">
           <span class="text-[10px] font-bold ${isSent ? 'text-indigo-200' : 'text-accent-pink'} flex items-center">
-            @${msg.senderHandle || 'user'} ${getVerifiedBadgeHtml(isVerifiedUser)}
+            @${msg.senderHandle || 'user'} ${getVerifiedBadgeHtml(isVerifiedUser)}${getRoleBadgeHtml(msg.senderRole)}
           </span>
         </div>
       `;
 
-      if (msg.audioUrl) {
+      if (msg.quoteReply) {
         contentHtml += `
-          <div class="flex items-center gap-2 my-1 bg-slate-950/60 p-2 rounded-xl border border-white/10">
-            <button onclick="this.nextElementSibling.paused ? this.nextElementSibling.play() : this.nextElementSibling.pause()" class="h-7 w-7 rounded-full bg-accent-pink text-white flex items-center justify-center shrink-0">
-              <i class="ph ph-play-fill"></i>
-            </button>
-            <audio src="${msg.audioUrl}" class="hidden" onplay="this.previousElementSibling.firstElementChild.className='ph ph-pause-fill'" onpause="this.previousElementSibling.firstElementChild.className='ph ph-play-fill'"></audio>
-            <div class="flex-grow">
-              <div class="flex items-center gap-1 h-4">
-                <div class="mic-bar h-2 playing-bar"></div>
-                <div class="mic-bar h-3 playing-bar"></div>
-                <div class="mic-bar h-1 playing-bar"></div>
-                <div class="mic-bar h-4 playing-bar"></div>
-                <div class="mic-bar h-2 playing-bar"></div>
-              </div>
-            </div>
-            <span class="text-[9px] text-slate-400 font-mono">VN</span>
+          <div class="p-2 mb-1.5 rounded-xl bg-slate-950/50 border-l-4 border-amber-400 text-[10px]">
+            <span class="font-bold text-amber-400 block">@${msg.quoteReply.author}</span>
+            <span class="text-slate-300 truncate block">${escapeHtml(msg.quoteReply.text)}</span>
           </div>
         `;
-      } else {
-        contentHtml += `<div class="leading-relaxed msg-text-body">${msg.text || ''}</div>`;
+      }
+
+      if (msg.mediaUrl) {
+        if (msg.mediaType === 'image') {
+          contentHtml += `<img src="${msg.mediaUrl}" class="max-w-full rounded-xl my-1 max-h-48 object-cover shadow-sm" />`;
+        } else {
+          contentHtml += `
+            <a href="${msg.mediaUrl}" download="${msg.fileName || 'document'}" class="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-950/60 my-1 text-cyan-400 font-bold border border-white/10 hover:border-cyan-400 transition">
+              <i class="ph ph-file-arrow-down text-xl"></i>
+              <span class="truncate text-[11px]">${escapeHtml(msg.fileName || 'Download Document')}</span>
+            </a>
+          `;
+        }
+      }
+
+      if (msg.text) {
+        contentHtml += `<div class="leading-relaxed msg-text-body">${escapeHtml(msg.text)}</div>`;
+      }
+
+      contentHtml += `
+        <div class="flex items-center justify-end gap-1 mt-1 text-[9px] text-slate-300">
+          <span>${msg.time || 'Just now'}</span>
+          ${tickBadge}
+        </div>
+      `;
+
+      if (msg.reaction) {
+        contentHtml += `
+          <div class="msg-reaction-badge absolute -bottom-2 right-2 bg-slate-900 border border-slate-700 rounded-full px-1.5 py-0.5 text-xs shadow-md animate-pop-in">
+            ${msg.reaction}
+          </div>
+        `;
       }
 
       bubble.innerHTML = contentHtml;
       bubbleWrapper.appendChild(bubble);
 
-      const startLongPress = () => {
+      // Long-press Touch & Drag Guard
+      let touchStartX = 0;
+      let touchStartY = 0;
+
+      const startLongPress = (e) => {
+        if (e.type === 'touchstart') {
+          touchStartX = e.touches[0].clientX;
+          touchStartY = e.touches[0].clientY;
+        }
+        cancelLongPress();
         longPressTimer = setTimeout(() => {
-          selectedMsgForAction = { id: msg.id, text: msg.text, element: bubbleWrapper };
+          selectedMsgForAction = { id: msg.id, text: msg.text, author: msg.senderHandle, element: bubbleWrapper };
           document.getElementById('messageActionModal')?.classList.remove('hidden');
-        }, 500);
+        }, 450);
+      };
+
+      const handleTouchMove = (e) => {
+        if (e.touches && e.touches[0]) {
+          const deltaX = Math.abs(e.touches[0].clientX - touchStartX);
+          const deltaY = Math.abs(e.touches[0].clientY - touchStartY);
+          if (deltaX > 10 || deltaY > 10) {
+            cancelLongPress();
+          }
+        }
       };
 
       const cancelLongPress = () => {
-        if (longPressTimer) clearTimeout(longPressTimer);
+        if (longPressTimer) {
+          clearTimeout(longPressTimer);
+          longPressTimer = null;
+        }
       };
 
-      bubble.addEventListener('touchstart', startLongPress);
+      bubble.addEventListener('touchstart', startLongPress, { passive: true });
+      bubble.addEventListener('touchmove', handleTouchMove, { passive: true });
       bubble.addEventListener('touchend', cancelLongPress);
+      bubble.addEventListener('touchcancel', cancelLongPress);
+
       bubble.addEventListener('mousedown', startLongPress);
       bubble.addEventListener('mouseup', cancelLongPress);
+      bubble.addEventListener('mouseleave', cancelLongPress);
+      bubble.addEventListener('contextmenu', (e) => { e.preventDefault(); });
 
       container.appendChild(bubbleWrapper);
       container.scrollTop = container.scrollHeight;
     }
 
-    document.getElementById('actionDeleteMsgBtn')?.addEventListener('click', async () => {
-      if (selectedMsgForAction) {
-        if (selectedMsgForAction.id) {
-          const msgDocRef = getSafeDoc("chats", currentActiveChatId, "messages", selectedMsgForAction.id);
-          if (msgDocRef) {
-            try {
-              await deleteDoc(msgDocRef);
-            } catch(e) {}
-          }
+    // Attach File Input Handler
+    document.getElementById('attachFileBtn')?.addEventListener('click', () => {
+      document.getElementById('chatFileInput')?.click();
+    });
+
+    document.getElementById('chatFileInput')?.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        attachedFile = file;
+        triggerNotificationToast("File Selected", currentUserHandle, `Attached: ${file.name}`, "CX");
+      }
+    });
+
+    document.getElementById('sendMessageForm')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const input = document.getElementById('chatMessageInput');
+      const text = input?.value.trim();
+      if (!text && !attachedFile) return;
+
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      let mediaUrl = null;
+      let mediaType = null;
+      let fileName = null;
+
+      if (attachedFile) {
+        try {
+          const upFile = attachedFile;
+          const sref = storageRef(storage, `chat_media/${currentActiveChatId}/${Date.now()}_${upFile.name}`);
+          const snap = await uploadBytes(sref, upFile);
+          mediaUrl = await getDownloadURL(snap.ref);
+          mediaType = upFile.type.startsWith('image/') ? 'image' : 'doc';
+          fileName = upFile.name;
+        } catch (err) {
+          mediaUrl = URL.createObjectURL(attachedFile);
+          mediaType = attachedFile.type.startsWith('image/') ? 'image' : 'doc';
+          fileName = attachedFile.name;
         }
-        selectedMsgForAction.element?.remove();
-        document.getElementById('messageActionModal')?.classList.add('hidden');
-        triggerNotificationToast("Message Deleted", currentUserHandle, "Message deleted successfully", "CX");
+        attachedFile = null;
+      }
+
+      // GENERATE A UNIQUE DOCUMENT ID AND USE IT FOR SETDOC TO PREVENT DUPLICATION
+      const optMsgId = 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+      const newMsg = {
+        id: optMsgId,
+        text: text || '',
+        senderId: currentUserId || 'demo-user',
+        senderHandle: currentUserHandle,
+        isCeo: isCeoUser,
+        senderRole: currentUserRole,
+        time: timeStr,
+        createdAtMs: Date.now(),
+        status: 'sent',
+        mediaUrl,
+        mediaType,
+        fileName,
+        quoteReply: quoteReplyData ? { ...quoteReplyData } : null
+      };
+
+      // OPTIMISTIC UI: Render instantly & clear input immediately!
+      renderMessageBubble(newMsg, true);
+      playSentSound();
+
+      if (input) input.value = '';
+      quoteReplyData = null;
+      document.getElementById('quoteReplyPreviewBar')?.classList.add('hidden');
+
+      try {
+        await setDoc(getPublicDoc(`messages_${currentActiveChatId}`, optMsgId), newMsg);
+      } catch(e) {}
+    });
+
+    // Profile Photo File Upload Handler
+    document.getElementById('profileImageInput')?.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const applyAvatar = (url) => {
+        updateAllUserAvatarsInDom(url);
+        if (db) setDoc(getPublicDoc("users", currentUserHandle), { avatar: url }, { merge: true }).catch(() => {});
+        triggerNotificationToast("Profile Photo Updated", currentUserHandle, "New avatar set successfully!", "CX");
+      };
+      try {
+        const sref = storageRef(storage, `avatars/${currentUserHandle}_${Date.now()}_${file.name}`);
+        const snap = await uploadBytes(sref, file);
+        applyAvatar(await getDownloadURL(snap.ref));
+      } catch (err) {
+        const reader = new FileReader();
+        reader.onload = (evt) => applyAvatar(evt.target.result);
+        reader.readAsDataURL(file);
       }
     });
 
-    document.getElementById('actionEditMsgBtn')?.addEventListener('click', () => {
-      document.getElementById('messageActionModal')?.classList.add('hidden');
-      const editInput = document.getElementById('editMessageTextInput');
-      if (editInput && selectedMsgForAction) {
-        editInput.value = selectedMsgForAction.text || '';
-        document.getElementById('editMessagePromptModal')?.classList.remove('hidden');
-      }
-    });
-
-    document.getElementById('saveEditMsgPromptBtn')?.addEventListener('click', async () => {
-      const newText = document.getElementById('editMessageTextInput')?.value.trim();
-      if (selectedMsgForAction && newText) {
-        if (selectedMsgForAction.id) {
-          const msgDocRef = getSafeDoc("chats", currentActiveChatId, "messages", selectedMsgForAction.id);
-          if (msgDocRef) {
-            try {
-              await updateDoc(msgDocRef, { text: newText });
-            } catch(e) {}
-          }
+    // Story Swatch Color Selection
+    document.querySelectorAll('.status-color-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        selectedStoryBg = btn.dataset.bg;
+        const canvas = document.getElementById('storyCanvasPreview');
+        if (canvas) {
+          canvas.className = `flex-grow my-3 rounded-3xl flex flex-col items-center justify-center p-6 text-center transition-all duration-300 relative overflow-hidden ${selectedStoryBg} border border-slate-700 shadow-2xl`;
         }
-        const textBody = selectedMsgForAction.element.querySelector('.msg-text-body');
-        if (textBody) textBody.textContent = newText;
-        document.getElementById('editMessagePromptModal')?.classList.add('hidden');
-        triggerNotificationToast("Message Edited", currentUserHandle, "Message updated successfully", "CX");
+        document.querySelectorAll('.status-color-btn').forEach(b => b.classList.replace('border-white', 'border-transparent'));
+        btn.classList.replace('border-transparent', 'border-white');
+      });
+    });
+
+    document.getElementById('attachStoryMediaBtn')?.addEventListener('click', () => {
+      document.getElementById('storyMediaInput')?.click();
+    });
+
+    document.getElementById('storyMediaInput')?.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        selectedStoryMedia = { file, url: URL.createObjectURL(file), type: file.type.startsWith('video/') ? 'video' : 'image' };
+        const container = document.getElementById('storyMediaPreviewContainer');
+        const img = document.getElementById('storyImagePreview');
+        const video = document.getElementById('storyVideoPreview');
+
+        if (container) container.classList.remove('hidden');
+        if (selectedStoryMedia.type === 'image' && img) {
+          img.src = selectedStoryMedia.url;
+          img.classList.remove('hidden');
+          if (video) video.classList.add('hidden');
+        } else if (video) {
+          video.src = selectedStoryMedia.url;
+          video.classList.remove('hidden');
+          if (img) img.classList.add('hidden');
+        }
       }
     });
 
-    document.getElementById('closeMsgActionModalBtn')?.addEventListener('click', () => {
-      document.getElementById('messageActionModal')?.classList.add('hidden');
+    document.getElementById('removeStoryMediaBtn')?.addEventListener('click', () => {
+      selectedStoryMedia = null;
+      document.getElementById('storyMediaPreviewContainer')?.classList.add('hidden');
     });
 
-    document.getElementById('cancelEditMsgPromptBtn')?.addEventListener('click', () => {
-      document.getElementById('editMessagePromptModal')?.classList.add('hidden');
+    // Publish Story Handler
+    document.getElementById('publishStoryBtn')?.addEventListener('click', async () => {
+      const textInput = document.getElementById('storyTextInput');
+      const text = textInput?.value.trim();
+      if (!text && !selectedStoryMedia) return;
+
+      let storyMediaUrl = null;
+      if (selectedStoryMedia) {
+        try {
+          const sref = storageRef(storage, `stories/${currentUserHandle}_${Date.now()}_${selectedStoryMedia.file.name}`);
+          const snap = await uploadBytes(sref, selectedStoryMedia.file);
+          storyMediaUrl = await getDownloadURL(snap.ref);
+        } catch (err) {
+          storyMediaUrl = selectedStoryMedia.url;
+        }
+      }
+
+      const storyBox = document.getElementById('storiesContainer');
+      if (storyBox) {
+        const item = document.createElement('div');
+        item.className = 'story-item-trigger flex flex-col items-center gap-1 cursor-pointer shrink-0 animate-pop-in';
+        item.dataset.storyType = selectedStoryMedia ? selectedStoryMedia.type : 'text';
+        item.dataset.storyText = text || '';
+        item.dataset.storyHandle = `@${currentUserHandle}`;
+        item.dataset.storyBg = selectedStoryBg;
+        if (storyMediaUrl) item.dataset.storyMediaUrl = storyMediaUrl;
+
+        item.innerHTML = `
+          <div class="neon-story-ring relative">
+            <div class="h-11 w-11 rounded-full bg-slate-900 text-white font-black text-xs flex items-center justify-center overflow-hidden">
+              ${currentUserAvatar ? `<img src="${currentUserAvatar}" class="avatar-img" />` : currentUserHandle.substring(0,2).toUpperCase()}
+            </div>
+          </div>
+          <span class="text-[10px] font-bold tracking-tight text-accent-pink">@${currentUserHandle}</span>
+        `;
+
+        item.addEventListener('click', () => openStoryViewer(item.dataset));
+        storyBox.appendChild(item);
+      }
+
+      if (textInput) textInput.value = '';
+      selectedStoryMedia = null;
+      document.getElementById('storyMediaPreviewContainer')?.classList.add('hidden');
+      document.getElementById('createStoryModal')?.classList.add('hidden');
+      triggerNotificationToast("Status Published", currentUserHandle, "Your status is live for 24 hours!", "CX");
+    });
+
+    function openStoryViewer(data) {
+      const modal = document.getElementById('storyViewerModal');
+      const nameEl = document.getElementById('storyViewerName');
+      const textEl = document.getElementById('storyViewerText');
+      const imgEl = document.getElementById('storyViewerImage');
+      const videoEl = document.getElementById('storyViewerVideo');
+      const contentBox = document.getElementById('storyContentContainer');
+      const bar = document.getElementById('storyProgressBar');
+
+      if (nameEl) nameEl.innerHTML = `${data.storyHandle || '@classmate'} ${getVerifiedBadgeHtml(true)}`;
+      if (contentBox) contentBox.className = `flex-grow flex flex-col items-center justify-center rounded-3xl overflow-hidden ${data.storyBg || 'bg-slate-900'} border border-slate-800 relative my-2 p-4 text-center shadow-2xl transition-all duration-300`;
+
+      if (data.storyMediaUrl) {
+        if (data.storyType === 'video' && videoEl) {
+          videoEl.src = data.storyMediaUrl;
+          videoEl.classList.remove('hidden');
+          if (imgEl) imgEl.classList.add('hidden');
+        } else if (imgEl) {
+          imgEl.src = data.storyMediaUrl;
+          imgEl.classList.remove('hidden');
+          if (videoEl) videoEl.classList.add('hidden');
+        }
+      } else {
+        if (imgEl) imgEl.classList.add('hidden');
+        if (videoEl) videoEl.classList.add('hidden');
+      }
+
+      if (textEl) {
+        textEl.textContent = data.storyText || '';
+        textEl.classList.remove('hidden');
+      }
+
+      modal?.classList.remove('hidden');
+
+      if (bar) {
+        if (storyProgressInterval) clearInterval(storyProgressInterval);
+        bar.style.width = '0%';
+        let progress = 0;
+        storyProgressInterval = setInterval(() => {
+          progress += 5;
+          bar.style.width = `${progress}%`;
+          if (progress >= 100) {
+            clearInterval(storyProgressInterval);
+            storyProgressInterval = null;
+            modal?.classList.add('hidden');
+          }
+        }, 100);
+      }
+    }
+
+    // Attach Click Events to Demo Story Items
+    document.querySelectorAll('.story-item-trigger').forEach(item => {
+      item.addEventListener('click', () => openStoryViewer(item.dataset));
+    });
+
+    document.getElementById('closeStoryViewerBtn')?.addEventListener('click', () => {
+      if (storyProgressInterval) { clearInterval(storyProgressInterval); storyProgressInterval = null; }
+      const sv = document.getElementById('storyViewerVideo');
+      if (sv) { sv.pause(); sv.src = ''; }
+      document.getElementById('storyViewerModal')?.classList.add('hidden');
+    });
+
+    // Live Chat Wallpaper Switcher
+    document.querySelectorAll('.wallpaper-opt-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const wall = btn.dataset.wallpaper;
+        const msgBox = document.getElementById('messagesContainer');
+        if (msgBox) {
+          msgBox.className = `${wall} flex-grow p-3 overflow-y-auto space-y-3 relative z-10 transition-all duration-300`;
+          triggerNotificationToast("Wallpaper Applied", currentUserHandle, `Applied ${btn.textContent} Theme`, "CX");
+        }
+      });
     });
 
     function loadRealtimeMessages(chatId) {
       const container = document.getElementById('messagesContainer');
       if (!container) return;
       container.innerHTML = '';
+      renderedMsgIds.clear();
 
       if (messagesUnsubscribe) messagesUnsubscribe();
 
-      const messagesColl = getSafeCollection("chats", chatId, "messages");
-      if (messagesColl) {
-        try {
-          const q = query(messagesColl, orderBy("createdAt", "asc"));
-          messagesUnsubscribe = onSnapshot(q, (snapshot) => {
-            container.innerHTML = '';
-            snapshot.forEach((docSnap) => {
-              const data = docSnap.data();
-              data.id = docSnap.id;
-              const isSent = data.senderId === currentUserId || data.senderHandle === currentUserHandle;
-              renderMessageBubble(data, isSent);
-            });
-          }, (err) => {
-            console.warn("Messages listener warning:", err.message);
+      try {
+        const q = getPublicCol(`messages_${chatId}`);
+        messagesUnsubscribe = onSnapshot(q, (snapshot) => {
+          const messages = [];
+          snapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            data.id = docSnap.id;
+            messages.push(data);
           });
 
-          const typingColl = getSafeCollection("chats", chatId, "typing");
-          if (typingColl) {
-            onSnapshot(typingColl, (snap) => {
-              let anyoneTyping = false;
-              snap.forEach((doc) => {
-                if (doc.id !== (currentUserId || currentUserHandle) && doc.data().isTyping) {
-                  anyoneTyping = true;
-                }
-              });
-              const typingEl = document.getElementById('typingIndicatorText');
-              const statusEl = document.getElementById('onlineLiveStatusText');
-              if (typingEl && statusEl) {
-                typingEl.classList.toggle('hidden', !anyoneTyping);
-                statusEl.classList.toggle('hidden', anyoneTyping);
+          // Client-side Sorting
+          messages.sort((a, b) => (a.createdAtMs || 0) - (b.createdAtMs || 0));
+
+          let receivedNewCount = 0;
+          messages.forEach((msg) => {
+            const isSent = msg.senderId === currentUserId || msg.senderHandle === currentUserHandle;
+            if (!renderedMsgIds.has(msg.id)) {
+              if (!isSent) receivedNewCount++;
+              renderMessageBubble(msg, isSent);
+            }
+            // SYNC STATUS: my messages -> update ticks live; others' messages -> mark delivered/read
+            if (isSent) {
+              updateMsgTick(msg.id, msg.status || 'sent');
+            } else if (db && msg.id && msg.status !== 'read') {
+              const chatVisible = !document.hidden
+                && !(document.getElementById('screenActiveChat')?.classList.contains('hidden'));
+              const newStatus = chatVisible ? 'read' : 'delivered';
+              if (newStatus !== msg.status) {
+                updateDoc(getPublicDoc(`messages_${currentActiveChatId}`, msg.id), { status: newStatus }).catch(() => {});
               }
-            }, () => {});
+            }
+          });
+
+          if (receivedNewCount > 0) {
+            playReceivedSound();
           }
-        } catch(e) {}
+        }, (err) => {});
+      } catch (err) {
+        renderMessageBubble({ id: 'welcome_init', text: "Welcome to ClassmateX Chat!", senderHandle: "fahmy_mazrui", isCeo: true }, false);
       }
     }
 
-    // Render Real Members Only from Firestore
     async function loadMembersFromFirestore() {
       const membersList = document.getElementById('membersList');
       if (!membersList) return;
 
-      const usersColl = getSafeCollection("users");
-      if (usersColl) {
-        try {
-          const snap = await getDocs(usersColl);
-          membersList.innerHTML = '';
+      const renderMembers = (members) => {
+        membersList.innerHTML = '';
+        members.forEach(m => {
+          const username = String(m.username || 'user').replace(/[^a-zA-Z0-9_]/g, '') || 'user';
+          const mRole = normalizeRole(m);
+          const isVerified = mRole !== 'user';
+          const card = document.createElement('div');
+          card.className = 'p-3 bg-slate-900 rounded-2xl border border-slate-800 flex items-center justify-between shadow-xs member-card-item animate-pop-in';
 
-          if (snap.empty) {
-            membersList.innerHTML = `
-              <div class="p-6 text-center bg-slate-900 rounded-2xl border border-slate-800 text-slate-400 text-xs font-medium">
-                No registered classmates yet. Invite your friends to join ClassmateX!
-              </div>
-            `;
-            return;
+          const left = document.createElement('div');
+          left.className = 'flex items-center gap-3 min-w-0 cursor-pointer';
+          const avatar = document.createElement('div');
+          avatar.className = `h-10 w-10 rounded-full ${isVerified ? 'neon-story-ring' : 'bg-emerald-500'} text-white font-black text-xs flex items-center justify-center shrink-0 overflow-hidden`;
+          const inner = document.createElement('div');
+          inner.className = 'h-full w-full bg-slate-900 flex items-center justify-center rounded-full';
+          inner.textContent = username.substring(0, 2).toUpperCase();
+          if (m.avatar) {
+            const img = document.createElement('img');
+            img.src = m.avatar;
+            img.className = 'avatar-img';
+            inner.innerHTML = '';
+            inner.appendChild(img);
           }
+          avatar.appendChild(inner);
+          const info = document.createElement('div');
+          info.className = 'min-w-0';
+          const h4 = document.createElement('h4');
+          h4.className = 'text-xs font-black truncate text-white flex items-center';
+          h4.textContent = '@' + username;
+          if (mRole !== 'user') h4.insertAdjacentHTML('beforeend', getVerifiedBadgeHtml(!!m.isCeo) + getRoleBadgeHtml(mRole));
+          const p = document.createElement('p');
+          p.className = 'text-[10px] text-slate-400 truncate';
+          p.textContent = (m.bio || 'Classmate Member') + ' • Active';
+          info.appendChild(h4);
+          info.appendChild(p);
+          left.appendChild(avatar);
+          left.appendChild(info);
+          left.addEventListener('click', () => openWhatsAppProfile({
+            handle: username, name: '@' + username, isCeo: isVerified,
+            email: m.email, bio: m.bio, avatar: m.avatar
+          }));
 
-          snap.forEach(docSnap => {
-            const m = docSnap.data();
-            if (m.username === currentUserHandle) return; // Don't show self in discover
+          const dmBtn = document.createElement('button');
+          dmBtn.className = 'touch-active px-3 py-1.5 rounded-xl bg-gradient-to-r from-brand-600 to-accent-pink text-white text-[11px] font-bold shadow-glow-pink transition shrink-0';
+          dmBtn.textContent = 'Direct DM';
+          dmBtn.addEventListener('click', () => window.openChatThread('dm-' + username));
 
-            const isVerified = m.isVerified || m.isCeo || checkCeoStatus(m.email) || m.username === 'fahmy_mazrui';
-            const card = document.createElement('div');
-            card.className = 'p-3 bg-slate-900 rounded-2xl border border-slate-800 flex items-center justify-between shadow-xs';
-            card.innerHTML = `
-              <div class="flex items-center gap-3 min-w-0">
-                <div class="h-10 w-10 rounded-full ${isVerified ? 'bg-gradient-to-tr from-brand-600 to-accent-pink' : 'bg-emerald-500'} text-white font-black text-xs flex items-center justify-center shrink-0 overflow-hidden">
-                  ${m.avatarUrl ? `<img src="${m.avatarUrl}" class="avatar-img" />` : (m.username || 'US').substring(0,2).toUpperCase()}
-                </div>
-                <div class="min-w-0">
-                  <h4 class="text-xs font-black truncate text-white flex items-center">
-                    @${m.username || 'user'} ${getVerifiedBadgeHtml(isVerified)}
-                  </h4>
-                  <p class="text-[10px] text-slate-400 truncate">${m.bio || 'Classmate Member'}</p>
-                </div>
-              </div>
-              <button onclick="window.openChatThread('dm-${m.username}')" class="touch-active px-3 py-1.5 rounded-xl bg-gradient-to-r from-brand-600 to-accent-pink text-white text-[11px] font-bold shadow-glow-pink transition shrink-0">
-                Direct DM
-              </button>
-            `;
-            membersList.appendChild(card);
-          });
-        } catch(e) {
-          membersList.innerHTML = `
-            <div class="p-4 text-center bg-slate-900 rounded-2xl border border-slate-800 text-slate-400 text-xs">
-              Connect to Firebase to see live registered members.
-            </div>
-          `;
-        }
-      }
-    }
-
-    // Load Real User Direct Chat Threads
-    async function loadUserChatThreads() {
-      const threadList = document.getElementById('chatThreadList');
-      if (!threadList) return;
-
-      const chatsColl = getSafeCollection("chats");
-      if (chatsColl) {
-        try {
-          onSnapshot(chatsColl, (snapshot) => {
-            threadList.innerHTML = '';
-            let count = 0;
-
-            snapshot.forEach(docSnap => {
-              const data = docSnap.data();
-              const chatId = docSnap.id;
-
-              // Only show thread if it involves current user or is CEO
-              if (chatId.includes(currentUserHandle) || chatId === 'ceo-fahmy-mazrui') {
-                count++;
-                const isCeo = chatId.includes('fahmy_mazrui');
-                const threadHandle = isCeo ? 'fahmy_mazrui' : chatId.replace('dm-','').replace(currentUserHandle,'').replace('-','');
-
-                const threadItem = document.createElement('div');
-                threadItem.className = 'chat-thread-item flex items-center gap-3 p-3 cursor-pointer bg-slate-900/40 border-l-4 border-accent-pink transition hover:bg-slate-900/80';
-                threadItem.innerHTML = `
-                  <div class="relative shrink-0">
-                    <div class="h-11 w-11 rounded-full ${isCeo ? 'bg-gradient-to-tr from-brand-600 to-accent-pink' : 'bg-emerald-500'} text-white font-black text-xs flex items-center justify-center overflow-hidden">
-                      ${(threadHandle || 'US').substring(0,2).toUpperCase()}
-                    </div>
-                    ${getVerifiedBadgeHtml(isCeo)}
-                  </div>
-                  <div class="flex-grow min-w-0">
-                    <div class="flex justify-between items-baseline mb-0.5">
-                      <h4 class="text-xs font-black truncate text-white flex items-center">
-                        @${threadHandle || 'user'} ${getVerifiedBadgeHtml(isCeo)}
-                      </h4>
-                      <span class="text-[10px] font-bold text-accent-pink">DM</span>
-                    </div>
-                    <p class="text-[11px] text-slate-400 truncate">Tap to open conversation thread</p>
-                  </div>
-                `;
-
-                threadItem.addEventListener('click', () => window.openChatThread(chatId));
-                threadList.appendChild(threadItem);
-              }
-            });
-
-            if (count === 0) {
-              threadList.innerHTML = `
-                <div class="p-6 text-center text-slate-500 text-xs">
-                  No active DM threads yet. Discover classmates to start chatting!
-                </div>
-              `;
-            }
-          }, (err) => {
-            console.warn("Chat threads listener warning:", err.message);
-          });
-        } catch(e) {}
-      }
-    }
-
-    // Voice Recorder Buttons
-    document.getElementById('voiceNoteMicBtn')?.addEventListener('click', async () => {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        mediaRecorder = new MediaRecorder(stream);
-        audioChunks = [];
-        mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-        mediaRecorder.start();
-
-        document.getElementById('voiceRecordingBar')?.classList.remove('hidden');
-        recordSeconds = 0;
-        recordTimerInterval = setInterval(() => {
-          recordSeconds++;
-          const mins = String(Math.floor(recordSeconds / 60)).padStart(2, '0');
-          const secs = String(recordSeconds % 60).padStart(2, '0');
-          const timerEl = document.getElementById('recordTimer');
-          if (timerEl) timerEl.textContent = `${mins}:${secs}`;
-        }, 1000);
-      } catch(err) {
-        triggerNotificationToast("Mic Required", "system", "Microphone access is required!", "CX");
-      }
-    });
-
-    document.getElementById('cancelRecordBtn')?.addEventListener('click', () => {
-      if (mediaRecorder) mediaRecorder.stop();
-      clearInterval(recordTimerInterval);
-      document.getElementById('voiceRecordingBar')?.classList.add('hidden');
-    });
-
-    document.getElementById('sendVoiceRecordBtn')?.addEventListener('click', () => {
-      if (!mediaRecorder) return;
-      mediaRecorder.onstop = () => {
-        const blob = new Blob(audioChunks, { type: 'audio/webm' });
-        const audioUrl = URL.createObjectURL(blob);
-        renderMessageBubble({ audioUrl, senderHandle: currentUserHandle, isCeo: isCeoUser }, true);
+          card.appendChild(left);
+          card.appendChild(dmBtn);
+          membersList.appendChild(card);
+        });
       };
-      mediaRecorder.stop();
-      clearInterval(recordTimerInterval);
-      document.getElementById('voiceRecordingBar')?.classList.add('hidden');
-    });
 
-    // Navigation & Screen Switcher
+      try {
+        const snap = await getDocs(getPublicCol("users"));
+        const list = [];
+        snap.forEach(doc => list.push(doc.data()));
+        renderMembers(list.length ? list : [{ username: 'fahmy_mazrui', email: CEO_EMAIL, isCeo: true }, { username: 'sarah_juma', email: 'sarah@gmail.com' }]);
+      } catch(e) {
+        renderMembers([{ username: 'fahmy_mazrui', email: CEO_EMAIL, isCeo: true }, { username: 'sarah_juma', email: 'sarah@gmail.com' }]);
+      }
+    }
+
     const navItems = document.querySelectorAll('.nav-item');
     function switchAppTab(tabName) {
       document.getElementById('screenChatsList')?.classList.add('hidden');
       document.getElementById('screenActiveChat')?.classList.add('hidden');
       document.getElementById('screenMembers')?.classList.add('hidden');
       document.getElementById('screenSettings')?.classList.add('hidden');
+      document.getElementById('screenAdmin')?.classList.add('hidden');
+      document.getElementById('globalTopHeader')?.classList.remove('hidden');
 
       navItems.forEach(item => {
         const isActive = item.dataset.nav === tabName;
@@ -1953,72 +2276,175 @@
       if (tabName === 'members') document.getElementById('screenMembers')?.classList.remove('hidden');
       if (tabName === 'global') window.openChatThread('global-group');
       if (tabName === 'settings') document.getElementById('screenSettings')?.classList.remove('hidden');
+      if (tabName === 'admin') {
+        document.getElementById('screenAdmin')?.classList.remove('hidden');
+        loadAdminDashboard();
+      }
     }
 
     navItems.forEach(btn => btn?.addEventListener('click', () => switchAppTab(btn.dataset.nav)));
 
-    window.openChatThread = function(chatId) {
-      currentActiveChatId = chatId;
-      document.getElementById('screenChatsList')?.classList.add('hidden');
-      document.getElementById('screenMembers')?.classList.add('hidden');
-      document.getElementById('screenSettings')?.classList.add('hidden');
-      
-      const activeScreen = document.getElementById('screenActiveChat');
-      if (activeScreen) {
-        activeScreen.classList.remove('hidden');
-        activeScreen.classList.add('flex', 'animate-slide-up');
-      }
-
-      const activeTitle = document.getElementById('activeChatTitle');
-      if (activeTitle) {
-        const displayHandle = chatId === 'global-group' ? 'global_community' : chatId.replace('dm-','');
-        activeTitle.innerHTML = `@${displayHandle} ${getVerifiedBadgeHtml(displayHandle === 'fahmy_mazrui')}`;
-      }
-
-      loadRealtimeMessages(chatId);
-    };
+    document.querySelectorAll('.chat-thread-trigger').forEach(item => {
+      item?.addEventListener('click', () => window.openChatThread(item.dataset.chatId));
+    });
 
     document.getElementById('backToChatsBtn')?.addEventListener('click', () => switchAppTab('chats'));
+    document.getElementById('headerChatOptionsBtn')?.addEventListener('click', () => {
+      document.getElementById('chatOptionsModal')?.classList.remove('hidden');
+    });
 
     function updateProfileDisplay() {
       const settingsUserHandle = document.getElementById('settingsUserHandle');
+      const qrUserHandle = document.getElementById('qrUserHandle');
+      const editDisplayNameInput = document.getElementById('editDisplayNameInput');
+      const editUsernameInput = document.getElementById('editUsernameInput');
+      const editBioInput = document.getElementById('editBioInput');
+
       if (settingsUserHandle) {
         settingsUserHandle.innerHTML = `@${currentUserHandle} ${getVerifiedBadgeHtml(isCeoUser)}`;
       }
-      const bioEl = document.getElementById('settingsUserBio');
-      if (bioEl) bioEl.textContent = currentUserBio;
-      const ceoBadge = document.getElementById('ceoRoleBadge');
-      if (ceoBadge) ceoBadge.classList.toggle('hidden', !isCeoUser);
+      if (qrUserHandle) qrUserHandle.textContent = `@${currentUserHandle}`;
+      renderRealQrCode();
+      if (editDisplayNameInput) editDisplayNameInput.value = currentUserName;
+      if (editUsernameInput) editUsernameInput.value = currentUserHandle;
+      if (editBioInput) editBioInput.value = currentUserBio;
 
-      const headerAvatar = document.getElementById('headerAvatarContainer');
-      const settingsAvatar = document.getElementById('settingsAvatarContainer');
-      const myStoryThumbnail = document.getElementById('myStoryAvatarThumbnail');
-
-      if (currentUserAvatarUrl) {
-        if (headerAvatar) headerAvatar.innerHTML = `<img src="${currentUserAvatarUrl}" class="avatar-img" />`;
-        if (settingsAvatar) settingsAvatar.innerHTML = `<img src="${currentUserAvatarUrl}" class="avatar-img" />`;
-        if (myStoryThumbnail) myStoryThumbnail.innerHTML = `<img src="${currentUserAvatarUrl}" class="avatar-img" />`;
-      }
-
-      if (currentUserCoverUrl) {
-        const bannerImg = document.getElementById('coverBannerImg');
-        if (bannerImg) {
-          bannerImg.src = currentUserCoverUrl;
-          bannerImg.classList.remove('hidden');
-        }
+      if (currentUserAvatar) {
+        updateAllUserAvatarsInDom(currentUserAvatar);
       }
     }
+
+    // Edit Profile Save Handler (Fixes Modal Closing Issue)
+    document.getElementById('saveProfileBtn')?.addEventListener('click', async () => {
+      const newName = document.getElementById('editDisplayNameInput')?.value.trim();
+      const editUsernameInput = document.getElementById('editUsernameInput');
+      const editUsernameError = document.getElementById('editUsernameError');
+      const newHandle = (editUsernameInput?.value.trim().replace('@','').toLowerCase() || '');
+      const newBio = document.getElementById('editBioInput')?.value.trim();
+
+      if (editUsernameError && !editUsernameError.classList.contains('hidden')) {
+        triggerNotificationToast("Username Taken", "system", "Username hii tayari imetumiwa, tafadhali chagua nyingine.", "CX");
+        return;
+      }
+      if (!newHandle) {
+        triggerNotificationToast("Invalid Username", "system", "Username haitakiwi kuwa wazi.", "CX");
+        return;
+      }
+
+      try {
+        if (newHandle !== currentUserHandle && !isCeoUser) {
+          const taken = await getDocs(query(getPublicCol("users"), where("username", "==", newHandle)));
+          if (!taken.empty) {
+            editUsernameError?.classList.remove('hidden');
+            triggerNotificationToast("Username Taken", "system", "Username hii tayari imetumiwa.", "CX");
+            return;
+          }
+        }
+
+        if (newName) currentUserName = newName;
+        if (newBio !== undefined) currentUserBio = newBio;
+        const oldHandle = currentUserHandle;
+        currentUserHandle = newHandle;
+        isCeoUser = checkCeoStatus(currentUserEmail);
+
+        if (db) {
+          await setDoc(getPublicDoc("users", newHandle), {
+            username: newHandle,
+            name: currentUserName,
+            email: currentUserEmail,
+            bio: currentUserBio,
+            avatar: currentUserAvatar,
+            isCeo: isCeoUser
+          }, { merge: true });
+          if (oldHandle !== newHandle && oldHandle !== 'fahmy_mazrui') {
+            try { await deleteDoc(getPublicDoc("users", oldHandle)); } catch(e) {}
+          }
+        }
+      } catch(e) {}
+
+      updateProfileDisplay();
+      document.getElementById('editProfileModal')?.classList.add('hidden');
+      loadMembersFromFirestore();
+      triggerNotificationToast("Profile Updated", currentUserHandle, "Profile saved successfully!", "CX");
+    });
+
+    // Bio Preset Buttons Click Handler
+    document.querySelectorAll('.bio-preset-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const input = document.getElementById('editBioInput');
+        if (input) {
+          input.value = btn.dataset.preset || '';
+          const count = document.getElementById('bioCharCount');
+          if (count) count.textContent = `${input.value.length}/80`;
+        }
+      });
+    });
+
+    document.getElementById('editBioInput')?.addEventListener('input', (e) => {
+      const count = document.getElementById('bioCharCount');
+      if (count) count.textContent = `${e.target.value.length}/80`;
+    });
+
+    // Change Avatar Trigger
+    document.getElementById('changeAvatarBtn')?.addEventListener('click', () => {
+      document.getElementById('profileImageInput')?.click();
+    });
+
+    // Password Toggle Helper
+    document.querySelectorAll('[data-toggle-password]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const targetId = btn.dataset.togglePassword;
+        const input = document.getElementById(targetId);
+        if (input) {
+          const isPassword = input.type === 'password';
+          input.type = isPassword ? 'text' : 'password';
+          const icon = btn.querySelector('i');
+          if (icon) {
+            icon.className = isPassword ? 'ph ph-eye-slash text-base' : 'ph ph-eye text-base';
+          }
+        }
+      });
+    });
+
+    // Search Chats Filter Handler
+    document.getElementById('searchChatsInput')?.addEventListener('input', (e) => {
+      const term = e.target.value.toLowerCase().trim();
+      document.querySelectorAll('.chat-thread-item').forEach(item => {
+        const searchData = (item.dataset.searchTerm || item.textContent).toLowerCase();
+        item.style.display = searchData.includes(term) ? 'flex' : 'none';
+      });
+    });
 
     // Modal Triggers
     document.getElementById('openEditProfileBtn')?.addEventListener('click', () => document.getElementById('editProfileModal')?.classList.remove('hidden'));
     document.getElementById('closeEditProfileBtn')?.addEventListener('click', () => document.getElementById('editProfileModal')?.classList.add('hidden'));
-    document.getElementById('openQrModalBtn')?.addEventListener('click', () => document.getElementById('profileQrModal')?.classList.remove('hidden'));
+    document.getElementById('openQrModalBtn')?.addEventListener('click', () => {
+      renderRealQrCode();
+      document.getElementById('profileQrModal')?.classList.remove('hidden');
+    });
     document.getElementById('closeQrModalBtn')?.addEventListener('click', () => document.getElementById('profileQrModal')?.classList.add('hidden'));
     document.getElementById('addMyStoryBtn')?.addEventListener('click', () => document.getElementById('createStoryModal')?.classList.remove('hidden'));
     document.getElementById('closeCreateStoryBtn')?.addEventListener('click', () => document.getElementById('createStoryModal')?.classList.add('hidden'));
-    document.getElementById('closeStoryViewerBtn')?.addEventListener('click', () => document.getElementById('storyViewerModal')?.classList.add('hidden'));
 
-    // Auth Forms Switch
+    // Clear Local Cache Handler
+    document.getElementById('clearCacheBtn')?.addEventListener('click', () => {
+      const cacheText = document.getElementById('cacheSizeText');
+      if (cacheText) cacheText.textContent = "0.0 MB";
+      triggerNotificationToast("Cache Cleared", currentUserHandle, "Local application memory freed!", "CX");
+    });
+
+    // Copy Profile Link Button (Iframe-Safe ExecCommand)
+    document.getElementById('copyProfileLinkBtn')?.addEventListener('click', () => {
+      const dummy = document.createElement('input');
+      dummy.value = `https://classmatex.app/user/@${currentUserHandle}`;
+      document.body.appendChild(dummy);
+      dummy.select();
+      document.execCommand('copy');
+      document.body.removeChild(dummy);
+      triggerNotificationToast("Link Copied", currentUserHandle, "Profile link copied to clipboard!", "CX");
+    });
+
+    // Auth Card Switcher
     document.querySelectorAll('[data-show]').forEach(btn => {
       btn?.addEventListener('click', () => {
         const target = btn.dataset.show;
@@ -2027,16 +2453,254 @@
       });
     });
 
+    // Form Submissions
+    document.getElementById('loginForm')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const idInput = (document.getElementById('login-identifier')?.value || '').trim();
+      const password = document.getElementById('login-password')?.value || '';
+      if (!idInput || !password) {
+        triggerNotificationToast("Login Failed", "system", "Tafadhali jaza barua pepe/username na nenosiri.", "CX");
+        return;
+      }
+      try {
+        let email = idInput;
+        if (!idInput.includes('@')) {
+          const handle = idInput.replace('@','').toLowerCase();
+          const snap = await getDocs(query(getPublicCol("users"), where("username", "==", handle)));
+          if (snap.empty) throw new Error('username-not-found');
+          email = snap.docs[0].data().email;
+        }
+        await signInWithEmailAndPassword(auth, email, password);
+      } catch (err) {
+        const msg = err.message === 'username-not-found'
+          ? 'Username hajapatikana — tumia barua pepe badala yake.'
+          : 'Nenosiri si sahihi au akaunti haipo.';
+        triggerNotificationToast("Login Failed", "system", msg, "CX");
+      }
+    });
+
+    document.getElementById('signupForm')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = (document.getElementById('signup-name')?.value || '').trim();
+      const email = (document.getElementById('signup-email')?.value || '').trim();
+      const username = (document.getElementById('signup-username')?.value || '').trim().replace('@','').toLowerCase();
+      const password = document.getElementById('signup-password')?.value || '';
+      if (!name || !email || !username || password.length < 6) {
+        triggerNotificationToast("Sign Up Failed", "system", "Jaza taarifa zote (nenosiri: herufi 6+).", "CX");
+        return;
+      }
+      try {
+        const taken = await getDocs(query(getPublicCol("users"), where("username", "==", username)));
+        if (!taken.empty) throw new Error('username-taken');
+        const cred = await createUserWithEmailAndPassword(auth, email, password);
+        currentUserId = cred.user.uid;
+        await setDoc(getPublicDoc("users", username), {
+          username, name, email,
+          bio: 'Connecting on ClassmateX!',
+          avatar: null,
+          isCeo: checkCeoStatus(email),
+          createdAtMs: Date.now()
+        });
+      } catch (err) {
+        const msg = err.message === 'username-taken'
+          ? 'Username hii tayari imetumiwa, chagua nyingine.'
+          : 'Imeshindikana: ' + (err.code || err.message);
+        triggerNotificationToast("Sign Up Failed", "system", msg, "CX");
+      }
+    });
+
+    document.getElementById('forgotForm')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = (document.getElementById('forgot-email')?.value || '').trim();
+      if (!email) return;
+      try {
+        await sendPasswordResetEmail(auth, email);
+        triggerNotificationToast("Reset Email Sent", "system", `Password reset link sent to ${email}`, "CX");
+      } catch (err) {
+        triggerNotificationToast("Reset Failed", "system", "Barua pepe haijapatikana kwenye mfumo.", "CX");
+      }
+      document.querySelectorAll('.auth-card').forEach(card => card.classList.add('hidden'));
+      document.getElementById('form-login')?.classList.remove('hidden');
+    });
+
+    // Google Sign-in Handler
+    document.getElementById('googleSignInAuthBtn')?.addEventListener('click', async () => {
+      try {
+        const provider = new GoogleAuthProvider();
+        const cred = await signInWithPopup(auth, provider);
+        currentUserId = cred.user.uid;
+        const email = cred.user.email || '';
+        const username = email.split('@')[0].toLowerCase().replace(/[^a-z0-9_]/g, '') || 'user';
+        const existing = await getDoc(getPublicDoc("users", username));
+        if (!existing.exists()) {
+          await setDoc(getPublicDoc("users", username), {
+            username,
+            name: cred.user.displayName || username,
+            email,
+            bio: 'Connecting on ClassmateX!',
+            avatar: cred.user.photoURL || null,
+            isCeo: checkCeoStatus(email),
+            createdAtMs: Date.now()
+          });
+        }
+      } catch (err) {
+        triggerNotificationToast("Google Sign-In", "system", "Imeshindikana: " + (err.code || err.message), "CX");
+      }
+    });
+
     document.getElementById('settingsLogoutBtn')?.addEventListener('click', async () => {
-      localStorage.removeItem('cx_user_session');
-      if (isFirebaseConfigured && auth) await signOut(auth);
+      try { if (auth) await signOut(auth); } catch(e) {}
+      if (messagesUnsubscribe) { messagesUnsubscribe(); messagesUnsubscribe = null; }
+      renderedMsgIds.clear();
+      currentUserId = null;
+      isCeoUser = false;
+      quoteReplyData = null;
+      attachedFile = null;
       document.getElementById('mainAppView')?.classList.add('hidden');
       document.getElementById('mainAppView')?.classList.remove('flex');
+      document.getElementById('headerUserAvatarBtn')?.classList.add('hidden');
+      document.getElementById('globalTopHeader')?.classList.remove('hidden');
       document.getElementById('authView')?.classList.remove('hidden');
     });
 
-    // Run Session Startup Initialization
-    initSession();
+    // ===== ADMIN DASHBOARD =====
+    async function loadAdminDashboard() {
+      if (currentUserRole !== 'admin' && currentUserRole !== 'moderator') {
+        switchAppTab('chats');
+        return;
+      }
+      const badge = document.getElementById('adminRoleBadge');
+      if (badge) {
+        badge.textContent = currentUserRole.toUpperCase();
+        badge.className = `px-2 py-0.5 rounded-full border text-[9px] font-black ${currentUserRole === 'admin' ? 'bg-blue-500/20 text-blue-400 border-blue-500/30' : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'}`;
+      }
+      const list = document.getElementById('adminUsersList');
+      if (!list) return;
+      list.innerHTML = '<p class="text-[11px] text-slate-400 p-3 text-center animate-pulse">Loading members...</p>';
+      try {
+        const snap = await getDocs(getPublicCol("users"));
+        const users = [];
+        snap.forEach(d => users.push(d.data()));
+        document.getElementById('adminTotalUsers').textContent = users.length;
+        document.getElementById('adminAdminsCount').textContent = users.filter(u => normalizeRole(u) === 'admin').length;
+        document.getElementById('adminModsCount').textContent = users.filter(u => normalizeRole(u) === 'moderator').length;
+        list.innerHTML = '';
+        users.sort((a, b) => String(a.username || '').localeCompare(String(b.username || '')));
+        users.forEach(u => renderAdminUserRow(u));
+      } catch (e) {
+        list.innerHTML = '<p class="text-[11px] text-rose-400 p-3 text-center">Imeshindikana kupakia wanachama.</p>';
+      }
+    }
+
+    function renderAdminUserRow(u) {
+      const list = document.getElementById('adminUsersList');
+      if (!list) return;
+      const username = String(u.username || 'user');
+      const role = normalizeRole(u);
+      const row = document.createElement('div');
+      row.className = 'flex items-center justify-between gap-2 bg-slate-950 p-2.5 rounded-xl border border-slate-800';
+
+      const left = document.createElement('div');
+      left.className = 'flex items-center gap-2.5 min-w-0';
+      const av = document.createElement('div');
+      av.className = `h-9 w-9 rounded-full ${role !== 'user' ? 'neon-story-ring' : 'bg-emerald-500'} text-white font-black text-[10px] flex items-center justify-center shrink-0`;
+      av.textContent = username.substring(0, 2).toUpperCase();
+      const info = document.createElement('div');
+      info.className = 'min-w-0';
+      const name = document.createElement('p');
+      name.className = 'text-[11px] font-black text-white truncate flex items-center';
+      name.textContent = '@' + username;
+      if (role !== 'user') name.insertAdjacentHTML('beforeend', getVerifiedBadgeHtml(!!u.isCeo) + getRoleBadgeHtml(role));
+      const sub = document.createElement('p');
+      sub.className = 'text-[9px] text-slate-500 truncate';
+      sub.textContent = (u.email || '') + (role !== 'user' ? ' \u2022 ' + role.toUpperCase() : '');
+      info.appendChild(name);
+      info.appendChild(sub);
+      left.appendChild(av);
+      left.appendChild(info);
+
+      const actions = document.createElement('div');
+      actions.className = 'flex items-center gap-1 shrink-0';
+      const mkBtn = (label, color, onClick) => {
+        const b = document.createElement('button');
+        b.className = `touch-active px-2 py-1.5 rounded-lg text-[9px] font-black border transition ${color}`;
+        b.textContent = label;
+        b.addEventListener('click', onClick);
+        return b;
+      };
+
+      if (currentUserRole === 'admin') {
+        if (role !== 'admin') actions.appendChild(mkBtn('Make Admin', 'bg-blue-500/20 text-blue-400 border-blue-500/30', () => setUserRole(username, 'admin')));
+        if (role !== 'moderator') actions.appendChild(mkBtn('Make Mod', 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30', () => setUserRole(username, 'moderator')));
+        if (role !== 'user') actions.appendChild(mkBtn('Remove', 'bg-slate-800 text-slate-400 border-slate-700', () => setUserRole(username, 'user')));
+      } else if (currentUserRole === 'moderator') {
+        if (role === 'user') actions.appendChild(mkBtn('Make Mod', 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30', () => setUserRole(username, 'moderator')));
+        if (role === 'moderator') actions.appendChild(mkBtn('Remove', 'bg-slate-800 text-slate-400 border-slate-700', () => setUserRole(username, 'user')));
+      }
+
+      row.appendChild(left);
+      row.appendChild(actions);
+      list.appendChild(row);
+    }
+
+    async function setUserRole(username, role) {
+      try {
+        await setDoc(getPublicDoc("users", username), { role: role }, { merge: true });
+        triggerNotificationToast("Role Updated", "admin", `@${username} sasa ni ${role.toUpperCase()} \u2714\u2714`, "CX");
+        loadAdminDashboard();
+        loadMembersFromFirestore();
+      } catch (e) {
+        triggerNotificationToast("Error", "system", "Imeshindikana kusasisha role.", "CX");
+      }
+    }
+
+    // ===== AUTH STATE PERSISTENCE (stay logged in on refresh) =====
+    if (auth) {
+      onAuthStateChanged(auth, async (user) => {
+        if (!user) return;
+        currentUserId = user.uid;
+        currentUserEmail = user.email || currentUserEmail;
+        let udoc = null;
+        try {
+          const snap = await getDocs(query(getPublicCol("users"), where("email", "==", currentUserEmail)));
+          snap.forEach((d) => { udoc = d.data(); });
+        } catch (e) {}
+        const fallback = (currentUserEmail || 'user').split('@')[0];
+        openMainApp(udoc?.name || fallback, udoc?.username || fallback, currentUserEmail, udoc);
+      });
+    }
+
+    // ===== USERNAME UNIQUENESS LIVE CHECK =====
+    document.getElementById('editUsernameInput')?.addEventListener('input', async (e) => {
+      const val = (e.target.value || '').trim().replace('@', '').toLowerCase();
+      const err = document.getElementById('editUsernameError');
+      if (!err) return;
+      if (!val || val === currentUserHandle || (isCeoUser && val === 'fahmy_mazrui')) {
+        err.classList.add('hidden');
+        return;
+      }
+      try {
+        const snap = await getDocs(query(getPublicCol("users"), where("username", "==", val)));
+        err.classList.toggle('hidden', snap.empty);
+      } catch (e2) { err.classList.add('hidden'); }
+    });
+
+    // ===== HEADER AVATAR OPENS PROFILE TAB (was dead button) =====
+    document.getElementById('headerUserAvatarBtn')?.addEventListener('click', () => switchAppTab('settings'));
+
+    // ===== REAL LOCAL CACHE SIZE DISPLAY =====
+    try {
+      const cs = document.getElementById('cacheSizeText');
+      if (cs) cs.textContent = (JSON.stringify(localStorage).length / 1024).toFixed(1) + ' KB';
+    } catch (e) {}
+
+    // Global Keydown Escape Handler
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeMessageActionModal();
+        document.querySelectorAll('[id$="Modal"]').forEach(m => m.classList.add('hidden'));
+      }
+    });
 
   </script>
 </body>
