@@ -53,6 +53,23 @@
   <!-- Real QR Code Generator Library -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
+  <!-- OneSignal Push Notifications (FREE) -->
+  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+  <script>
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(async function(OneSignal) {
+      await OneSignal.init({
+        appId: "PASTE_ONESIGNAL_APP_ID_HERE",
+        allowLocalhostAsSecureOrigin: true,
+        notifyButton: { enable: false },
+        // GitHub Pages: service worker iko kwenye subfolder (/repo/) si root
+        serviceWorkerParam: { scope: location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1) },
+        serviceWorkerPath: "OneSignalSDKWorker.js"
+      });
+      window.OneSignalReady = OneSignal;
+    });
+  </script>
+
   <!-- Inter Font -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -137,6 +154,7 @@
       background: rgba(30, 41, 59, 0.92);
       border: 1px solid rgba(255, 255, 255, 0.1);
     }
+    .msg-text-body { white-space: pre-wrap; word-break: break-word; }
   </style>
 </head>
 
@@ -231,7 +249,7 @@
         <!-- Large Avatar Circle -->
         <div class="relative -mt-12 mb-3 flex justify-center">
           <div id="wpModalAvatarRing" class="h-24 w-24 rounded-full neon-story-ring p-1 bg-slate-950 shadow-glow-pink">
-            <div id="wpModalAvatar" class="h-full w-full rounded-full bg-slate-800 text-white font-black text-2xl flex items-center justify-center overflow-hidden">
+            <div id="wpModalAvatar" class="h-full w-full rounded-full bg-slate-800 text-white font-black text-2xl flex items-center justify-center overflow-hidden cursor-pointer touch-active" title="Tazama picha kwa ukubwa">
               FM
             </div>
           </div>
@@ -244,8 +262,9 @@
               Fahmy Mazrui
             </h3>
             <p id="wpModalHandle" class="text-xs font-bold text-accent-pink">@fahmy_mazrui</p>
+            <p id="wpModalLastSeen" class="text-[9px] text-slate-400 mt-0.5 flex items-center justify-center gap-1"></p>
             <span id="wpModalRoleBadge" class="inline-flex items-center gap-1 mt-1 px-2.5 py-0.5 rounded-full bg-sky-500/20 text-sky-400 border border-sky-500/30 text-[9px] font-black">
-              <i class="ph ph-seal-check-fill"></i> Founder & CEO
+              <svg viewBox="0 0 24 24" width="14" height="14" class="inline-block shrink-0 ml-0.5" title="Verified"><path fill="#0AA5F2" d="M12 1.4l2.2 1.6 2.6-.5 1.1 2.4 2.5.9-.5 2.6L21.4 12l-1.6 2.2.5 2.6-2.5.9-1.1 2.4-2.6-.5L12 22.6l-2.2-1.6-2.6.5-1.1-2.4-2.5-.9.5-2.6L2.6 12l1.6-2.2-.5-2.6 2.5-.9 1.1-2.4 2.6.5z"/><path fill="#ffffff" d="M10.8 16l-3.3-3.3 1.4-1.4 1.9 1.9 5.1-5.1 1.4 1.4z"/></svg> Founder & CEO
             </span>
           </div>
 
@@ -404,7 +423,7 @@
           </div>
           <input type="checkbox" checked class="accent-accent-pink h-4 w-4 cursor-pointer">
         </div>
-        <button onclick="document.getElementById('blockedContactsModal')?.classList.remove('hidden')" class="w-full bg-slate-900 p-3 rounded-2xl border border-slate-800 flex items-center justify-between hover:bg-slate-800/60 transition">
+        <button id="openBlockedContactsBtn" class="w-full bg-slate-900 p-3 rounded-2xl border border-slate-800 flex items-center justify-between hover:bg-slate-800/60 transition">
           <div class="text-left">
             <h5 class="text-xs font-bold text-white">Blocked Contacts</h5>
             <p class="text-[10px] text-slate-400">Manage blocked classmate profiles</p>
@@ -421,11 +440,7 @@
         <h3 class="text-xs font-black text-white flex items-center gap-1.5"><i class="ph ph-prohibit text-rose-400 text-base"></i> Blocked Contacts</h3>
         <button onclick="document.getElementById('blockedContactsModal')?.classList.add('hidden')" class="h-8 w-8 rounded-full bg-slate-800 text-slate-300 flex items-center justify-center"><i class="ph ph-x text-base"></i></button>
       </div>
-      <div class="flex-grow my-4 flex flex-col items-center justify-center text-center p-6 text-slate-500">
-        <i class="ph ph-shield-slash text-4xl mb-2 text-slate-600"></i>
-        <h5 class="text-xs font-bold text-slate-300">No Blocked Contacts</h5>
-        <p class="text-[10px] text-slate-500 mt-1">Classmate users you block will appear here.</p>
-      </div>
+      <div id="blockedListContainer" class="flex-grow my-4 overflow-y-auto space-y-2"></div>
       <button onclick="document.getElementById('blockedContactsModal')?.classList.add('hidden')" class="w-full py-2.5 rounded-xl bg-slate-800 text-white text-xs font-bold">Back</button>
     </div>
 
@@ -634,6 +649,14 @@
       </div>
     </div>
 
+    <!-- FULLSCREEN IMAGE VIEWER (tap any avatar/image to zoom) -->
+    <div id="fullImageModal" class="hidden absolute inset-0 z-[60] bg-slate-950/98 backdrop-blur-xl flex items-center justify-center p-4 cursor-pointer">
+      <button id="closeFullImageBtn" class="absolute top-4 right-4 h-10 w-10 rounded-full bg-slate-800/90 text-white flex items-center justify-center z-10 touch-active">
+        <i class="ph ph-x text-xl"></i>
+      </button>
+      <img id="fullImageView" class="max-h-full max-w-full object-contain rounded-2xl shadow-2xl animate-pop-in" />
+    </div>
+
     <!-- MAIN APP VIEWS CONTAINER -->
     <main class="relative z-10 flex-grow h-full w-full overflow-hidden flex flex-col">
 
@@ -840,29 +863,10 @@
                 <span class="text-[10px] font-bold tracking-tight text-accent-pink">Add Story</span>
               </div>
 
-              <!-- CEO Story Item with Neon Ring -->
-              <div data-story-type="text" data-story-text="Welcome everyone to ClassmateX Social App! 🚀" data-story-handle="@fahmy_mazrui" data-story-bg="bg-gradient-to-br from-purple-700 via-indigo-800 to-slate-900" class="story-item-trigger flex flex-col items-center gap-1 cursor-pointer shrink-0">
-                <div class="neon-story-ring relative">
-                  <div class="h-11 w-11 rounded-full bg-gradient-to-br from-indigo-600 to-purple-700 text-white font-black text-xs flex items-center justify-center overflow-hidden">
-                    FM
-                  </div>
-                  <span class="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full bg-sky-400 border-2 border-slate-950 text-[8px] flex items-center justify-center text-white"><i class="ph ph-check-bold"></i></span>
-                </div>
-                <span class="text-[10px] font-bold tracking-tight text-brand-400 flex items-center">
-                  @fahmy_mazrui <i class="ph ph-seal-check-fill text-sky-400 text-xs ml-0.5"></i>
-                </span>
-              </div>
-
-              <!-- Sarah Juma Story Item -->
-              <div data-story-type="text" data-story-text="Hello classmates! Super excited to connect 🚀🔥" data-story-handle="@sarah_juma" data-story-bg="bg-gradient-to-br from-rose-600 via-pink-600 to-purple-800" class="story-item-trigger flex flex-col items-center gap-1 cursor-pointer shrink-0">
-                <div class="p-0.5 rounded-full bg-gradient-to-tr from-accent-pink to-amber-400 shadow-xs">
-                  <div class="h-11 w-11 rounded-full bg-emerald-500 text-white font-black text-xs flex items-center justify-center overflow-hidden">
-                    SJ
-                  </div>
-                </div>
-                <span class="text-[10px] font-bold tracking-tight text-slate-300">@sarah_juma</span>
-              </div>
             </div>
+          </div>
+
+          <!-- Realtime Search Input -->            </div>
           </div>
 
           <!-- Realtime Search Input -->
@@ -908,7 +912,7 @@
               <div class="flex-grow min-w-0">
                 <div class="flex justify-between items-baseline mb-0.5">
                   <h4 class="text-xs font-black truncate text-white flex items-center">
-                    @fahmy_mazrui <i class="ph ph-seal-check-fill text-sky-400 text-sm ml-0.5"></i>
+                    @fahmy_mazrui <svg viewBox="0 0 24 24" width="14" height="14" class="inline-block shrink-0 ml-0.5" title="Verified"><path fill="#0AA5F2" d="M12 1.4l2.2 1.6 2.6-.5 1.1 2.4 2.5.9-.5 2.6L21.4 12l-1.6 2.2.5 2.6-2.5.9-1.1 2.4-2.6-.5L12 22.6l-2.2-1.6-2.6.5-1.1-2.4-2.5-.9.5-2.6L2.6 12l1.6-2.2-.5-2.6 2.5-.9 1.1-2.4 2.6.5z"/><path fill="#ffffff" d="M10.8 16l-3.3-3.3 1.4-1.4 1.9 1.9 5.1-5.1 1.4 1.4z"/></svg>
                   </h4>
                   <span class="text-[10px] font-black text-accent-pink shrink-0">CEO</span>
                 </div>
@@ -1032,11 +1036,11 @@
               </div>
               <div class="min-w-0">
                 <h3 id="settingsUserHandle" class="text-sm font-black text-accent-pink truncate flex items-center">
-                  @fahmy_mazrui <span id="ceoVerifiedBadge"><i class="ph ph-seal-check-fill text-sky-400 text-sm ml-0.5" title="Verified CEO"></i></span>
+                  @fahmy_mazrui <span id="ceoVerifiedBadge"><svg viewBox="0 0 24 24" width="14" height="14" class="inline-block shrink-0 ml-0.5" title="Verified"><path fill="#0AA5F2" d="M12 1.4l2.2 1.6 2.6-.5 1.1 2.4 2.5.9-.5 2.6L21.4 12l-1.6 2.2.5 2.6-2.5.9-1.1 2.4-2.6-.5L12 22.6l-2.2-1.6-2.6.5-1.1-2.4-2.5-.9.5-2.6L2.6 12l1.6-2.2-.5-2.6 2.5-.9 1.1-2.4 2.6.5z"/><path fill="#ffffff" d="M10.8 16l-3.3-3.3 1.4-1.4 1.9 1.9 5.1-5.1 1.4 1.4z"/></svg></span>
                 </h3>
                 <p id="settingsUserBio" class="text-[11px] text-slate-300 truncate mt-0.5">ClassmateX Founder & CEO 🚀</p>
                 <span id="ceoRoleBadge" class="inline-flex items-center gap-1 mt-1.5 px-2.5 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/30 text-[9px] font-black">
-                  <i class="ph ph-seal-check-fill"></i> Founder & CEO
+                  <svg viewBox="0 0 24 24" width="14" height="14" class="inline-block shrink-0 ml-0.5" title="Verified"><path fill="#0AA5F2" d="M12 1.4l2.2 1.6 2.6-.5 1.1 2.4 2.5.9-.5 2.6L21.4 12l-1.6 2.2.5 2.6-2.5.9-1.1 2.4-2.6-.5L12 22.6l-2.2-1.6-2.6.5-1.1-2.4-2.5-.9.5-2.6L2.6 12l1.6-2.2-.5-2.6 2.5-.9 1.1-2.4 2.6.5z"/><path fill="#ffffff" d="M10.8 16l-3.3-3.3 1.4-1.4 1.9 1.9 5.1-5.1 1.4 1.4z"/></svg> Founder & CEO
                 </span>
               </div>
             </div>
@@ -1158,42 +1162,99 @@
           </button>
         </div>
 
-        <!-- SCREEN 5: ADMIN / MODERATOR DASHBOARD -->
-        <div id="screenAdmin" class="hidden flex-col h-full w-full bg-slate-950 overflow-y-auto p-3 space-y-3">
-          <div class="bg-slate-900 p-3.5 rounded-2xl border border-slate-800 shadow-xs flex items-center justify-between">
-            <div>
-              <h3 class="text-xs font-black text-white flex items-center gap-1.5">
-                <i class="ph ph-shield-star text-blue-500 text-base"></i> Admin Dashboard
-              </h3>
-              <p class="text-[10px] text-slate-400">Manage verified badges, roles & members</p>
+        <!-- SCREEN 5: ADMIN CONTROL CENTER -->
+        <div id="screenAdmin" class="hidden flex-col h-full w-full bg-slate-950 overflow-y-auto">
+          <div class="bg-gradient-to-r from-blue-600/25 via-slate-900 to-slate-900 p-4 border-b border-slate-800">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-sm font-black text-white flex items-center gap-2">
+                  <i class="ph ph-shield-star text-blue-500 text-lg"></i> Admin Control Center
+                </h3>
+                <p class="text-[10px] text-slate-400 mt-0.5">Monitor, verify & control every member</p>
+              </div>
+              <span id="adminRoleBadge" class="px-2.5 py-1 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30 text-[9px] font-black">ADMIN</span>
             </div>
-            <span id="adminRoleBadge" class="px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30 text-[9px] font-black">ADMIN</span>
-          </div>
-
-          <div class="grid grid-cols-3 gap-2">
-            <div class="bg-slate-900 rounded-2xl border border-slate-800 p-3 text-center">
-              <p id="adminTotalUsers" class="text-lg font-black text-white">0</p>
-              <p class="text-[9px] font-bold text-slate-400 uppercase">Members</p>
-            </div>
-            <div class="bg-slate-900 rounded-2xl border border-slate-800 p-3 text-center">
-              <p id="adminAdminsCount" class="text-lg font-black text-blue-500">0</p>
-              <p class="text-[9px] font-bold text-slate-400 uppercase">Admins</p>
-            </div>
-            <div class="bg-slate-900 rounded-2xl border border-slate-800 p-3 text-center">
-              <p id="adminModsCount" class="text-lg font-black text-emerald-400">0</p>
-              <p class="text-[9px] font-bold text-slate-400 uppercase">Moderators</p>
+            <div class="flex gap-1.5 mt-3">
+              <button data-admin-tab="overview" class="admin-tab-btn flex-1 py-2 rounded-xl bg-blue-600/20 text-blue-400 border border-blue-500/30 text-[10px] font-black transition">Overview</button>
+              <button data-admin-tab="members" class="admin-tab-btn flex-1 py-2 rounded-xl bg-slate-800/60 text-slate-400 border border-slate-700 text-[10px] font-black transition">Members</button>
+              <button data-admin-tab="broadcast" class="admin-tab-btn flex-1 py-2 rounded-xl bg-slate-800/60 text-slate-400 border border-slate-700 text-[10px] font-black transition">Broadcast</button>
+              <button data-admin-tab="mod" class="admin-tab-btn flex-1 py-2 rounded-xl bg-slate-800/60 text-slate-400 border border-slate-700 text-[10px] font-black transition">Moderation</button>
             </div>
           </div>
 
-          <div class="bg-slate-900 p-3 rounded-2xl border border-slate-800">
-            <h4 class="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-1.5">
-              <i class="ph ph-users-three text-accent-pink"></i> Member Roles
-            </h4>
-            <div id="adminUsersList" class="space-y-2"></div>
+          <div class="p-3 space-y-3">
+            <!-- OVERVIEW -->
+            <div id="adminTabOverview" class="space-y-3">
+              <div class="grid grid-cols-3 gap-2">
+                <div class="bg-slate-900 rounded-2xl border border-slate-800 p-3 text-center">
+                  <p id="adminTotalUsers" class="text-xl font-black text-white">0</p>
+                  <p class="text-[9px] font-bold text-slate-400 uppercase">Members</p>
+                </div>
+                <div class="bg-slate-900 rounded-2xl border border-emerald-500/30 p-3 text-center relative">
+                  <span class="absolute top-2 right-2 h-2 w-2 rounded-full bg-emerald-400 animate-ping"></span>
+                  <p id="adminOnlineCount" class="text-xl font-black text-emerald-400">0</p>
+                  <p class="text-[9px] font-bold text-slate-400 uppercase">Online</p>
+                </div>
+                <div class="bg-slate-900 rounded-2xl border border-slate-800 p-3 text-center">
+                  <p id="adminMsgsToday" class="text-xl font-black text-accent-pink">0</p>
+                  <p class="text-[9px] font-bold text-slate-400 uppercase">Msgs Today</p>
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <div class="bg-gradient-to-br from-blue-600/25 to-slate-900 rounded-2xl border border-blue-500/30 p-3 flex items-center gap-2.5">
+                  <i class="ph ph-shield-star text-blue-500 text-xl"></i>
+                  <div><p id="adminAdminsCount" class="text-base font-black text-white">0</p><p class="text-[9px] text-slate-400 font-bold">ADMINS</p></div>
+                </div>
+                <div class="bg-gradient-to-br from-emerald-600/25 to-slate-900 rounded-2xl border border-emerald-500/30 p-3 flex items-center gap-2.5">
+                  <i class="ph ph-shield-check text-emerald-400 text-xl"></i>
+                  <div><p id="adminModsCount" class="text-base font-black text-white">0</p><p class="text-[9px] text-slate-400 font-bold">MODERATORS</p></div>
+                </div>
+              </div>
+              <div class="bg-slate-900 rounded-2xl border border-slate-800 p-3">
+                <h4 class="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-1.5"><i class="ph ph-clock text-accent-pink"></i> Recent Logins</h4>
+                <div id="adminActivityFeed" class="space-y-1.5"></div>
+              </div>
+            </div>
+
+            <!-- MEMBERS -->
+            <div id="adminTabMembers" class="hidden space-y-2.5">
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400"><i class="ph ph-magnifying-glass text-base"></i></span>
+                <input id="adminMemberSearch" type="text" placeholder="Search @username or email..." class="w-full rounded-xl border border-slate-700 bg-slate-900 py-2 pl-9 pr-3 text-xs text-white outline-none focus:border-blue-500 transition" />
+              </div>
+              <div class="flex gap-1.5 overflow-x-auto no-scrollbar">
+                <button data-mfilter="all" class="mfilter-btn px-3 py-1.5 rounded-full bg-blue-600/20 text-blue-400 border border-blue-500/30 text-[9px] font-black shrink-0 transition">All</button>
+                <button data-mfilter="online" class="mfilter-btn px-3 py-1.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] font-black shrink-0 transition">Online</button>
+                <button data-mfilter="admin" class="mfilter-btn px-3 py-1.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] font-black shrink-0 transition">Admins</button>
+                <button data-mfilter="moderator" class="mfilter-btn px-3 py-1.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] font-black shrink-0 transition">Mods</button>
+                <button data-mfilter="banned" class="mfilter-btn px-3 py-1.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] font-black shrink-0 transition">Banned</button>
+              </div>
+              <div id="adminUsersList" class="space-y-2"></div>
+            </div>
+
+            <!-- BROADCAST -->
+            <div id="adminTabBroadcast" class="hidden space-y-2.5">
+              <div class="bg-gradient-to-br from-accent-pink/10 to-slate-900 rounded-2xl border border-accent-pink/30 p-3.5 space-y-2.5">
+                <h4 class="text-[10px] font-black uppercase tracking-wider text-accent-pink flex items-center gap-1.5"><i class="ph ph-megaphone"></i> Announcement Broadcast</h4>
+                <textarea id="broadcastTextInput" rows="3" placeholder="Tangazo kutoka kwa Admin... litatumwa kwenye Global Hub" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white outline-none focus:border-accent-pink resize-none"></textarea>
+                <button id="sendBroadcastBtn" class="touch-active w-full py-2.5 rounded-xl bg-gradient-to-r from-brand-600 via-accent-purple to-accent-pink text-white text-xs font-extrabold shadow-glow-pink flex items-center justify-center gap-2">
+                  <i class="ph ph-paper-plane-tilt"></i> Send To Everyone
+                </button>
+              </div>
+              <p class="text-[9px] text-slate-500 text-center">Ujumbe huu utaonekana kwenye @global_community kama tangazo la Admin</p>
+            </div>
+
+            <!-- MODERATION -->
+            <div id="adminTabMod" class="hidden space-y-2.5">
+              <div class="bg-slate-900 rounded-2xl border border-slate-800 p-3">
+                <h4 class="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-1.5"><i class="ph ph-gavel text-amber-400"></i> Global Hub — Recent Messages</h4>
+                <div id="adminModList" class="space-y-1.5"></div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <!-- Bottom Navigation -->
+        <!-- Bottom Navigation -->        <!-- Bottom Navigation -->
         <nav id="bottomNav" class="shrink-0 bg-slate-900 border-t border-slate-800 flex justify-around items-center py-2 px-1 shadow-mobile-nav z-20">
           <button data-nav="chats" class="nav-item active flex flex-col items-center gap-0.5 text-accent-pink transition transform active:scale-90">
             <i class="ph ph-chat-circle-text text-xl"></i>
@@ -1251,7 +1312,9 @@
       deleteDoc, 
       onSnapshot, 
       query, 
-      where 
+      where,
+      orderBy,
+      limit
     } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
     import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
 
@@ -1284,6 +1347,14 @@
     let currentUserAvatar = null;
     let isCeoUser = false;
     let currentUserRole = 'user'; // user | moderator | admin (admin = CEO blue ticks)
+    let adminMembersCache = [];
+    let adminFilter = 'all';
+    let presenceInterval = null;
+    let typingUnsubscribe = null;
+    let typingTimeout = null;
+    let currentSubtitleHtml = '';
+    let mutedChats = [];
+    let blockedUsers = [];
     let currentActiveChatId = 'global-group';
     let messagesUnsubscribe = null;
     let selectedMsgForAction = null;
@@ -1392,18 +1463,18 @@
       return (u.role === 'admin' || u.role === 'moderator') ? u.role : 'user';
     }
 
+    function metaBadgeSvg(color, size) {
+      return `<svg viewBox="0 0 24 24" width="${size || 14}" height="${size || 14}" class="inline-block shrink-0 ml-0.5" title="Verified"><path fill="${color}" d="M12 1.4l2.2 1.6 2.6-.5 1.1 2.4 2.5.9-.5 2.6L21.4 12l-1.6 2.2.5 2.6-2.5.9-1.1 2.4-2.6-.5L12 22.6l-2.2-1.6-2.6.5-1.1-2.4-2.5-.9.5-2.6L2.6 12l1.6-2.2-.5-2.6 2.5-.9 1.1-2.4 2.6.5z"/><path fill="#ffffff" d="M10.8 16l-3.3-3.3 1.4-1.4 1.9 1.9 5.1-5.1 1.4 1.4z"/></svg>`;
+    }
+
     function getRoleBadgeHtml(role) {
-      if (role === 'admin') {
-        return `<i class="ph ph-seal-check-fill text-blue-500 text-sm ml-0.5 inline-block" title="Verified Admin \u2714\u2714"></i>`;
-      }
-      if (role === 'moderator') {
-        return `<i class="ph ph-seal-check-fill text-emerald-400 text-sm ml-0.5 inline-block" title="Verified Moderator \u2714\u2714"></i>`;
-      }
+      if (role === 'admin') return metaBadgeSvg('#0AA5F2', 14);
+      if (role === 'moderator') return metaBadgeSvg('#10b981', 14);
       return '';
     }
 
     function getVerifiedBadgeHtml(isVerified) {
-      return isVerified ? `<i class="ph ph-seal-check-fill text-sky-400 text-sm ml-0.5 inline-block" title="Verified"></i>` : '';
+      return isVerified ? metaBadgeSvg('#0AA5F2', 14) : '';
     }
 
     // ===== REAL QR CODE RENDERER (regenerates with current @handle) =====
@@ -1481,7 +1552,41 @@
         adminNav.classList.toggle('hidden', !privileged);
         adminNav.classList.toggle('flex', privileged);
       }
-      
+
+      // ===== PRESENCE TRACKING: mark online + heartbeat every 60s + ban enforcement =====
+      if (db) {
+        setDoc(getPublicDoc("users", currentUserHandle), {
+          isOnline: true, lastLoginMs: Date.now(), lastActiveMs: Date.now()
+        }, { merge: true }).catch(() => {});
+        if (presenceInterval) clearInterval(presenceInterval);
+        presenceInterval = setInterval(async () => {
+          try {
+            await setDoc(getPublicDoc("users", currentUserHandle), { lastActiveMs: Date.now(), isOnline: true }, { merge: true });
+            const me = await getDoc(getPublicDoc("users", currentUserHandle));
+            if (me.exists() && me.data().banned === true) {
+              clearInterval(presenceInterval);
+              presenceInterval = null;
+              await signOut(auth);
+              triggerNotificationToast("Account Banned", "system", "Akaunti yako imezuiwa na Admin.", "CX");
+            }
+          } catch (e) {}
+        }, 60000);
+      }
+
+      // Load mute/block lists + real stories
+      mutedChats = Array.isArray(userDoc?.mutedChats) ? userDoc.mutedChats.slice() : [];
+      blockedUsers = Array.isArray(userDoc?.blockedUsers) ? userDoc.blockedUsers.slice() : [];
+      loadStoriesFromFirestore();
+
+      // OneSignal: link device to username for targeted push
+      try {
+        if (window.OneSignalReady) {
+          window.OneSignalReady.login(currentUserHandle).then(() => {
+            return window.OneSignalReady.User.addTag('handle', currentUserHandle);
+          }).catch(() => {});
+        }
+      } catch (e) {}
+
       document.getElementById('authView')?.classList.add('hidden');
       const mainApp = document.getElementById('mainAppView');
       if (mainApp) {
@@ -1495,6 +1600,35 @@
       updateProfileDisplay();
       loadMembersFromFirestore();
     }
+
+    // ===== FULLSCREEN IMAGE VIEWER =====
+    function openFullImage(src) {
+      if (!src) return;
+      const modal = document.getElementById('fullImageModal');
+      const img = document.getElementById('fullImageView');
+      if (!modal || !img) return;
+      img.src = src;
+      modal.classList.remove('hidden');
+    }
+    document.getElementById('closeFullImageBtn')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      document.getElementById('fullImageModal')?.classList.add('hidden');
+    });
+    document.getElementById('fullImageModal')?.addEventListener('click', () => {
+      document.getElementById('fullImageModal')?.classList.add('hidden');
+    });
+
+    // Tap avatars to zoom fullscreen
+    document.getElementById('wpModalAvatar')?.addEventListener('click', () => {
+      const img = document.querySelector('#wpModalAvatar img');
+      if (img) openFullImage(img.src);
+    });
+    ['headerAvatarContainer', 'settingsAvatarContainer', 'myStoryAvatarThumbnail', 'editAvatarPreviewContainer', 'storyViewerAvatar'].forEach(aid => {
+      document.getElementById(aid)?.addEventListener('click', () => {
+        const img = document.querySelector(`#${aid} img`);
+        if (img) openFullImage(img.src);
+      });
+    });
 
     window.openWhatsAppProfile = function(user) {
       const modal = document.getElementById('viewProfileModal');
@@ -1516,14 +1650,23 @@
       if (roleBadge) {
         if (userRole === 'admin') {
           roleBadge.className = "inline-flex items-center gap-1 mt-1 px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30 text-[9px] font-black";
-          roleBadge.innerHTML = `<i class="ph ph-seal-check-fill"></i> Verified Admin \u2714\u2714`;
+          roleBadge.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" class="inline-block shrink-0 ml-0.5" title="Verified"><path fill="#0AA5F2" d="M12 1.4l2.2 1.6 2.6-.5 1.1 2.4 2.5.9-.5 2.6L21.4 12l-1.6 2.2.5 2.6-2.5.9-1.1 2.4-2.6-.5L12 22.6l-2.2-1.6-2.6.5-1.1-2.4-2.5-.9.5-2.6L2.6 12l1.6-2.2-.5-2.6 2.5-.9 1.1-2.4 2.6.5z"/><path fill="#ffffff" d="M10.8 16l-3.3-3.3 1.4-1.4 1.9 1.9 5.1-5.1 1.4 1.4z"/></svg> Verified Admin`;
         } else if (userRole === 'moderator') {
           roleBadge.className = "inline-flex items-center gap-1 mt-1 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[9px] font-black";
-          roleBadge.innerHTML = `<i class="ph ph-seal-check-fill"></i> Verified Moderator \u2714\u2714`;
+          roleBadge.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" class="inline-block shrink-0 ml-0.5" title="Verified"><path fill="#0AA5F2" d="M12 1.4l2.2 1.6 2.6-.5 1.1 2.4 2.5.9-.5 2.6L21.4 12l-1.6 2.2.5 2.6-2.5.9-1.1 2.4-2.6-.5L12 22.6l-2.2-1.6-2.6.5-1.1-2.4-2.5-.9.5-2.6L2.6 12l1.6-2.2-.5-2.6 2.5-.9 1.1-2.4 2.6.5z"/><path fill="#ffffff" d="M10.8 16l-3.3-3.3 1.4-1.4 1.9 1.9 5.1-5.1 1.4 1.4z"/></svg> Verified Moderator`;
         } else {
           roleBadge.className = "inline-flex items-center gap-1 mt-1 px-2.5 py-0.5 rounded-full bg-sky-500/20 text-sky-400 border border-sky-500/30 text-[9px] font-black";
-          roleBadge.innerHTML = isVerified ? `<i class="ph ph-seal-check-fill"></i> Founder & CEO` : `<i class="ph ph-student"></i> Classmate Student`;
+          roleBadge.innerHTML = isVerified ? `<svg viewBox="0 0 24 24" width="14" height="14" class="inline-block shrink-0 ml-0.5" title="Verified"><path fill="#0AA5F2" d="M12 1.4l2.2 1.6 2.6-.5 1.1 2.4 2.5.9-.5 2.6L21.4 12l-1.6 2.2.5 2.6-2.5.9-1.1 2.4-2.6-.5L12 22.6l-2.2-1.6-2.6.5-1.1-2.4-2.5-.9.5-2.6L2.6 12l1.6-2.2-.5-2.6 2.5-.9 1.1-2.4 2.6.5z"/><path fill="#ffffff" d="M10.8 16l-3.3-3.3 1.4-1.4 1.9 1.9 5.1-5.1 1.4 1.4z"/></svg> Founder & CEO` : `<i class="ph ph-student"></i> Classmate Student`;
         }
+      }
+
+      const lsEl = document.getElementById('wpModalLastSeen');
+      if (lsEl) {
+        const uOnline = user.isOnline === true && (Date.now() - (user.lastActiveMs || 0) < 180000);
+        lsEl.innerHTML = uOnline
+          ? '<span class="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Online sasa'
+          : 'Last seen: ' + timeAgo(user.lastActiveMs);
+        lsEl.className = `text-[9px] mt-0.5 flex items-center justify-center gap-1 ${uOnline ? 'text-emerald-400 font-bold' : 'text-slate-400'}`;
       }
 
       if (avatarEl) {
@@ -1546,14 +1689,68 @@
       }
     });
 
-    document.getElementById('wpActionMuteBtn')?.addEventListener('click', () => {
-      triggerNotificationToast("Mute Notifications", activeChatRecipient.handle, "Notifications muted for this conversation", "CX");
+    document.getElementById('wpActionMuteBtn')?.addEventListener('click', async () => {
+      try {
+        const idx = mutedChats.indexOf(currentActiveChatId);
+        if (idx >= 0) mutedChats.splice(idx, 1); else mutedChats.push(currentActiveChatId);
+        await setDoc(getPublicDoc("users", currentUserHandle), { mutedChats: mutedChats }, { merge: true });
+        triggerNotificationToast(
+          idx >= 0 ? "Unmuted" : "Muted",
+          activeChatRecipient.handle,
+          idx >= 0 ? "Notification zimerudi kwenye chat hii" : "Notification zimezimwa kwenye chat hii",
+          "CX"
+        );
+      } catch (e) {}
     });
 
     document.getElementById('wpActionBlockBtn')?.addEventListener('click', () => {
       document.getElementById('viewProfileModal')?.classList.add('hidden');
-      triggerNotificationToast("Contact Blocked", activeChatRecipient.handle, "User added to blocked list", "CX");
+      blockUser(activeChatRecipient.handle);
     });
+
+    document.getElementById('optBlockUserBtn')?.addEventListener('click', () => {
+      document.getElementById('chatOptionsModal')?.classList.add('hidden');
+      blockUser(activeChatRecipient.handle);
+    });
+
+    async function blockUser(handleToBlock) {
+      if (!handleToBlock || handleToBlock === 'global_community') return;
+      try {
+        if (!blockedUsers.includes(handleToBlock)) blockedUsers.push(handleToBlock);
+        await setDoc(getPublicDoc("users", currentUserHandle), { blockedUsers: blockedUsers }, { merge: true });
+        triggerNotificationToast("Contact Blocked", handleToBlock, "Ujumbe wake hutaonekana kwenye DMs zako", "CX");
+        loadBlockedContactsList();
+      } catch (e) {}
+    }
+
+    async function loadBlockedContactsList() {
+      const box = document.getElementById('blockedListContainer');
+      if (!box) return;
+      if (!blockedUsers.length) {
+        box.innerHTML = '<div class="flex flex-col items-center justify-center text-center p-6 text-slate-500 h-full"><i class="ph ph-shield-slash text-4xl mb-2 text-slate-600"></i><h5 class="text-xs font-bold text-slate-300">No Blocked Contacts</h5><p class="text-[10px] text-slate-500 mt-1">Users you block will appear here.</p></div>';
+        return;
+      }
+      box.innerHTML = '';
+      blockedUsers.forEach(h => {
+        const row = document.createElement('div');
+        row.className = 'flex items-center justify-between bg-slate-900 p-2.5 rounded-xl border border-slate-800';
+        const nm = document.createElement('span');
+        nm.className = 'text-[11px] font-bold text-white';
+        nm.textContent = '@' + h;
+        const un = document.createElement('button');
+        un.className = 'touch-active px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[9px] font-black';
+        un.textContent = 'Unblock';
+        un.addEventListener('click', async () => {
+          blockedUsers = blockedUsers.filter(x => x !== h);
+          try { await setDoc(getPublicDoc("users", currentUserHandle), { blockedUsers: blockedUsers }, { merge: true }); } catch (e) {}
+          loadBlockedContactsList();
+          triggerNotificationToast("Unblocked", h, "Unaweza tena kuona ujumbe wake", "CX");
+        });
+        row.appendChild(nm);
+        row.appendChild(un);
+        box.appendChild(row);
+      });
+    }
 
     document.getElementById('optViewProfileBtn')?.addEventListener('click', () => {
       document.getElementById('chatOptionsModal')?.classList.add('hidden');
@@ -1714,6 +1911,7 @@
           headerIcon.innerHTML = `🌐`;
         }
         if (headerSubtitle) headerSubtitle.innerHTML = `<span class="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping"></span> Public Room • Active`;
+        if (headerSubtitle) currentSubtitleHtml = headerSubtitle.innerHTML;
       } else {
         const rawHandle = chatId.replace('dm-', '').replace('chat-', '').replace('ceo-', '');
         const isCeo = rawHandle === 'fahmy_mazrui' || rawHandle === 'fahmy-mazrui';
@@ -1736,15 +1934,24 @@
         }
         if (headerSubtitle) {
           headerSubtitle.innerHTML = `<span class="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping"></span> Online • Active Now`;
+          currentSubtitleHtml = headerSubtitle.innerHTML;
         }
 
-        // Fetch recipient role live so blue ticks appear in DM header
+        // Fetch recipient role + presence live for DM header
         if (db && !isCeo) {
           getDoc(getPublicDoc("users", formattedHandle)).then((snap) => {
             if (snap.exists()) {
-              const role = normalizeRole(snap.data());
+              const u = snap.data();
+              const role = normalizeRole(u);
+              activeChatRecipient.lastActiveMs = u.lastActiveMs;
+              activeChatRecipient.isOnline = u.isOnline;
               if (role !== 'user' && headerTitle) {
                 headerTitle.innerHTML = `<span>@${formattedHandle}</span> ${getRoleBadgeHtml(role)}`;
+              }
+              const online = isUserOnline(u);
+              if (headerSubtitle) {
+                headerSubtitle.innerHTML = `<span class="h-1.5 w-1.5 rounded-full ${online ? 'bg-emerald-400 animate-ping' : 'bg-slate-500'}"></span> ${online ? 'Online sasa' : 'Last seen: ' + timeAgo(u.lastActiveMs)}`;
+                currentSubtitleHtml = headerSubtitle.innerHTML;
               }
             }
           }).catch(() => {});
@@ -1834,6 +2041,14 @@
       }
 
       bubble.innerHTML = contentHtml;
+      const bubbleImg = bubble.querySelector('img');
+      if (bubbleImg) {
+        bubbleImg.classList.add('cursor-zoom-in');
+        bubbleImg.addEventListener('click', (e) => {
+          e.stopPropagation();
+          openFullImage(bubbleImg.src);
+        });
+      }
       bubbleWrapper.appendChild(bubble);
 
       // Long-press Touch & Drag Guard
@@ -1902,6 +2117,12 @@
       const text = input?.value.trim();
       if (!text && !attachedFile) return;
 
+      const dmTarget = currentActiveChatId.startsWith('dm-') ? currentActiveChatId.replace('dm-', '') : null;
+      if (dmTarget && blockedUsers.includes(dmTarget)) {
+        triggerNotificationToast("Blocked", "system", `Umemzuia @${dmTarget} — enda Profile > Blocked Contacts ku-unblock`, "CX");
+        return;
+      }
+
       const now = new Date();
       const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
@@ -1953,7 +2174,82 @@
 
       try {
         await setDoc(getPublicDoc(`messages_${currentActiveChatId}`, optMsgId), newMsg);
+        // Push notify DM recipient (heshimu mute list yake)
+        const pushTarget = currentActiveChatId.startsWith('dm-') ? currentActiveChatId.replace('dm-', '') : null;
+        if (pushTarget) {
+          try {
+            const rsnap = await getDoc(getPublicDoc("users", pushTarget));
+            const rdoc = rsnap.exists() ? rsnap.data() : null;
+            const rMuted = rdoc && Array.isArray(rdoc.mutedChats) && rdoc.mutedChats.includes(currentActiveChatId);
+            if (!rMuted) {
+              notifyPush(pushTarget, currentUserName || ('@' + currentUserHandle), text || (mediaType === 'image' ? '📷 Picha mpya' : '📎 Attachment'));
+            }
+          } catch (e) {}
+        }
       } catch(e) {}
+    });
+
+    // ===== PUSH NOTIFICATIONS (OneSignal - free tier) =====
+    // Weka credentials zako hapa (OneSignal Dashboard > Settings > Keys & IDs)
+    const ONESIGNAL_APP_ID = 'PASTE_ONESIGNAL_APP_ID_HERE';
+    const ONESIGNAL_REST_KEY = 'PASTE_ONESIGNAL_REST_API_KEY_HERE';
+
+    async function notifyPush(targetHandle, title, message) {
+      if (ONESIGNAL_REST_KEY.indexOf('PASTE') === 0) return; // bado haijawekwa
+      try {
+        await fetch('https://onesignal.com/api/v1/notifications', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json; charset=utf-8',
+            'Authorization': 'Basic ' + ONESIGNAL_REST_KEY
+          },
+          body: JSON.stringify({
+            app_id: ONESIGNAL_APP_ID,
+            filters: [{ field: 'tag', key: 'handle', relation: '=', value: targetHandle }],
+            headings: { en: title },
+            contents: { en: message.length > 120 ? message.substring(0, 120) + '...' : message },
+            url: location.href
+          })
+        });
+      } catch (e) {}
+    }
+
+    async function notifyPushAll(message, title) {
+      if (ONESIGNAL_REST_KEY.indexOf('PASTE') === 0) return;
+      try {
+        await fetch('https://onesignal.com/api/v1/notifications', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json; charset=utf-8',
+            'Authorization': 'Basic ' + ONESIGNAL_REST_KEY
+          },
+          body: JSON.stringify({
+            app_id: ONESIGNAL_APP_ID,
+            included_segments: ['Total Subscriptions'],
+            headings: { en: title || '📢 ClassmateX Announcement' },
+            contents: { en: message.length > 150 ? message.substring(0, 150) + '...' : message },
+            url: location.href
+          })
+        });
+      } catch (e) {}
+    }
+
+    // ===== REALTIME TYPING: broadcast while typing, stop after 2.5s idle =====
+    document.getElementById('chatMessageInput')?.addEventListener('input', async () => {
+      if (!db || !currentUserHandle || !currentActiveChatId) return;
+      try {
+        await setDoc(getPublicDoc(`typing_${currentActiveChatId}`, currentUserHandle), {
+          handle: currentUserHandle, typing: true, ts: Date.now()
+        }, { merge: true });
+      } catch (e) {}
+      if (typingTimeout) clearTimeout(typingTimeout);
+      typingTimeout = setTimeout(async () => {
+        try {
+          await setDoc(getPublicDoc(`typing_${currentActiveChatId}`, currentUserHandle), {
+            handle: currentUserHandle, typing: false, ts: Date.now()
+          }, { merge: true });
+        } catch (e) {}
+      }, 2500);
     });
 
     // Profile Photo File Upload Handler
@@ -2036,28 +2332,20 @@
         }
       }
 
-      const storyBox = document.getElementById('storiesContainer');
-      if (storyBox) {
-        const item = document.createElement('div');
-        item.className = 'story-item-trigger flex flex-col items-center gap-1 cursor-pointer shrink-0 animate-pop-in';
-        item.dataset.storyType = selectedStoryMedia ? selectedStoryMedia.type : 'text';
-        item.dataset.storyText = text || '';
-        item.dataset.storyHandle = `@${currentUserHandle}`;
-        item.dataset.storyBg = selectedStoryBg;
-        if (storyMediaUrl) item.dataset.storyMediaUrl = storyMediaUrl;
-
-        item.innerHTML = `
-          <div class="neon-story-ring relative">
-            <div class="h-11 w-11 rounded-full bg-slate-900 text-white font-black text-xs flex items-center justify-center overflow-hidden">
-              ${currentUserAvatar ? `<img src="${currentUserAvatar}" class="avatar-img" />` : currentUserHandle.substring(0,2).toUpperCase()}
-            </div>
-          </div>
-          <span class="text-[10px] font-bold tracking-tight text-accent-pink">@${currentUserHandle}</span>
-        `;
-
-        item.addEventListener('click', () => openStoryViewer(item.dataset));
-        storyBox.appendChild(item);
-      }
+      try {
+        const sid = 'story_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+        await setDoc(getPublicDoc("stories", sid), {
+          handle: currentUserHandle,
+          text: text || '',
+          bg: selectedStoryBg,
+          mediaType: selectedStoryMedia ? selectedStoryMedia.type : 'text',
+          mediaUrl: storyMediaUrl,
+          avatar: currentUserAvatar || null,
+          createdAtMs: Date.now(),
+          expiresAtMs: Date.now() + 24 * 3600 * 1000
+        });
+      } catch (e) {}
+      loadStoriesFromFirestore();
 
       if (textInput) textInput.value = '';
       selectedStoryMedia = null;
@@ -2065,6 +2353,64 @@
       document.getElementById('createStoryModal')?.classList.add('hidden');
       triggerNotificationToast("Status Published", currentUserHandle, "Your status is live for 24 hours!", "CX");
     });
+
+    // ===== REAL STORIES: loaded from Firestore, expire after 24h =====
+    function appendStoryItem(s) {
+      const container = document.getElementById('storiesContainer');
+      if (!container) return;
+      const item = document.createElement('div');
+      item.className = 'story-item-trigger flex flex-col items-center gap-1 cursor-pointer shrink-0 animate-pop-in';
+      item.setAttribute('data-dynamic-story', '1');
+      item.dataset.storyType = s.mediaType || 'text';
+      item.dataset.storyText = s.text || '';
+      item.dataset.storyHandle = '@' + s.handle;
+      item.dataset.storyBg = s.bg;
+      if (s.mediaUrl) item.dataset.storyMediaUrl = s.mediaUrl;
+      const isCeoStory = s.handle === 'fahmy_mazrui';
+      item.innerHTML = `
+        <div class="neon-story-ring relative">
+          <div class="h-11 w-11 rounded-full bg-slate-900 text-white font-black text-xs flex items-center justify-center overflow-hidden">
+            ${s.avatar ? `<img src="${s.avatar}" class="avatar-img" />` : String(s.handle).substring(0,2).toUpperCase()}
+          </div>
+        </div>
+        <span class="text-[10px] font-bold tracking-tight text-brand-400 flex items-center">@${s.handle}${isCeoStory ? getVerifiedBadgeHtml(true) : ''}</span>
+      `;
+      item.addEventListener('click', () => openStoryViewer(item.dataset));
+      container.appendChild(item);
+    }
+
+    async function loadStoriesFromFirestore() {
+      const container = document.getElementById('storiesContainer');
+      if (!container || !db) return;
+      container.querySelectorAll('[data-dynamic-story]').forEach(el => el.remove());
+      try {
+        // Clean up expired stories
+        const expired = await getDocs(query(getPublicCol("stories"), where("expiresAtMs", "<=", Date.now())));
+        const dels = [];
+        expired.forEach(d => dels.push(deleteDoc(getPublicDoc("stories", d.id))));
+        await Promise.allSettled(dels);
+
+        let snap = await getDocs(query(getPublicCol("stories"), where("expiresAtMs", ">", Date.now()), orderBy("expiresAtMs", "asc")));
+        // Seed welcome stories once ever (first install)
+        if (snap.empty && !localStorage.getItem('cx_seeded')) {
+          localStorage.setItem('cx_seeded', '1');
+          const seeds = [
+            { handle: 'fahmy_mazrui', text: 'Welcome everyone to ClassmateX Social App! \u{1F680}', bg: 'bg-gradient-to-br from-purple-700 via-indigo-800 to-slate-900' },
+            { handle: 'sarah_juma', text: 'Hello classmates! Super excited to connect \u{1F680}\u{1F525}', bg: 'bg-gradient-to-br from-rose-600 via-pink-600 to-purple-800' }
+          ];
+          for (const s of seeds) {
+            await setDoc(getPublicDoc("stories", 'story_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5)), {
+              handle: s.handle, text: s.text, bg: s.bg, mediaType: 'text', mediaUrl: null,
+              createdAtMs: Date.now(), expiresAtMs: Date.now() + 24 * 3600 * 1000
+            });
+          }
+          snap = await getDocs(query(getPublicCol("stories"), where("expiresAtMs", ">", Date.now()), orderBy("expiresAtMs", "asc")));
+        }
+        const stories = [];
+        snap.forEach(d => stories.push(d.data()));
+        stories.forEach(s => appendStoryItem(s));
+      } catch (e) {}
+    }
 
     function openStoryViewer(data) {
       const modal = document.getElementById('storyViewerModal');
@@ -2148,6 +2494,32 @@
 
       if (messagesUnsubscribe) messagesUnsubscribe();
 
+      // REALTIME TYPING INDICATOR listener
+      if (typingUnsubscribe) typingUnsubscribe();
+      try {
+        typingUnsubscribe = onSnapshot(getPublicCol(`typing_${chatId}`), (snap) => {
+          const typers = [];
+          snap.forEach((d) => {
+            const v = d.data();
+            if (v.handle && v.handle !== currentUserHandle && v.typing === true && (Date.now() - (v.ts || 0)) < 6000) {
+              typers.push(v.handle);
+            }
+          });
+          const tEl = document.getElementById('typingIndicatorText');
+          const sEl = document.getElementById('onlineLiveStatusText');
+          if (!tEl || !sEl) return;
+          if (typers.length) {
+            tEl.textContent = (typers.length === 1 ? `@${typers[0]}` : `${typers.length} watumiaji`) + ' inaandika...';
+            tEl.classList.remove('hidden');
+            sEl.classList.add('hidden');
+          } else {
+            tEl.classList.add('hidden');
+            sEl.classList.remove('hidden');
+            if (currentSubtitleHtml) sEl.innerHTML = currentSubtitleHtml;
+          }
+        }, () => {});
+      } catch (e) {}
+
       try {
         const q = getPublicCol(`messages_${chatId}`);
         messagesUnsubscribe = onSnapshot(q, (snapshot) => {
@@ -2164,6 +2536,7 @@
           let receivedNewCount = 0;
           messages.forEach((msg) => {
             const isSent = msg.senderId === currentUserId || msg.senderHandle === currentUserHandle;
+            if (!isSent && blockedUsers.includes(msg.senderHandle)) return; // blocked users hidden
             if (!renderedMsgIds.has(msg.id)) {
               if (!isSent) receivedNewCount++;
               renderMessageBubble(msg, isSent);
@@ -2181,7 +2554,7 @@
             }
           });
 
-          if (receivedNewCount > 0) {
+          if (receivedNewCount > 0 && !mutedChats.includes(currentActiveChatId)) {
             playReceivedSound();
           }
         }, (err) => {});
@@ -2226,7 +2599,9 @@
           if (mRole !== 'user') h4.insertAdjacentHTML('beforeend', getVerifiedBadgeHtml(!!m.isCeo) + getRoleBadgeHtml(mRole));
           const p = document.createElement('p');
           p.className = 'text-[10px] text-slate-400 truncate';
-          p.textContent = (m.bio || 'Classmate Member') + ' • Active';
+          const mOnline = isUserOnline(m);
+        p.textContent = (m.bio || 'Classmate Member') + ' • ' + (mOnline ? 'Online sasa' : 'Last seen ' + timeAgo(m.lastActiveMs));
+        if (mOnline) { p.classList.remove('text-slate-400'); p.classList.add('text-emerald-400'); }
           info.appendChild(h4);
           info.appendChild(p);
           left.appendChild(avatar);
@@ -2549,6 +2924,10 @@
     });
 
     document.getElementById('settingsLogoutBtn')?.addEventListener('click', async () => {
+      if (presenceInterval) { clearInterval(presenceInterval); presenceInterval = null; }
+      if (db && currentUserHandle) {
+        setDoc(getPublicDoc("users", currentUserHandle), { isOnline: false }, { merge: true }).catch(() => {});
+      }
       try { if (auth) await signOut(auth); } catch(e) {}
       if (messagesUnsubscribe) { messagesUnsubscribe(); messagesUnsubscribe = null; }
       renderedMsgIds.clear();
@@ -2563,7 +2942,22 @@
       document.getElementById('authView')?.classList.remove('hidden');
     });
 
-    // ===== ADMIN DASHBOARD =====
+    // ===== ADMIN CONTROL CENTER =====
+    function timeAgo(ms) {
+      if (!ms) return 'Hajawahi kuingia';
+      const diff = Date.now() - ms;
+      const m = Math.floor(diff / 60000);
+      if (m < 1) return 'Sasa hivi';
+      if (m < 60) return m + ' min ago';
+      const h = Math.floor(m / 60);
+      if (h < 24) return h + ' hr ago';
+      return Math.floor(h / 24) + ' days ago';
+    }
+
+    function isUserOnline(u) {
+      return u.isOnline === true && (Date.now() - (u.lastActiveMs || 0) < 180000);
+    }
+
     async function loadAdminDashboard() {
       if (currentUserRole !== 'admin' && currentUserRole !== 'moderator') {
         switchAppTab('chats');
@@ -2572,7 +2966,7 @@
       const badge = document.getElementById('adminRoleBadge');
       if (badge) {
         badge.textContent = currentUserRole.toUpperCase();
-        badge.className = `px-2 py-0.5 rounded-full border text-[9px] font-black ${currentUserRole === 'admin' ? 'bg-blue-500/20 text-blue-400 border-blue-500/30' : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'}`;
+        badge.className = `px-2.5 py-1 rounded-full border text-[9px] font-black ${currentUserRole === 'admin' ? 'bg-blue-500/20 text-blue-400 border-blue-500/30' : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'}`;
       }
       const list = document.getElementById('adminUsersList');
       if (!list) return;
@@ -2580,16 +2974,50 @@
       try {
         const snap = await getDocs(getPublicCol("users"));
         const users = [];
-        snap.forEach(d => users.push(d.data()));
-        document.getElementById('adminTotalUsers').textContent = users.length;
-        document.getElementById('adminAdminsCount').textContent = users.filter(u => normalizeRole(u) === 'admin').length;
-        document.getElementById('adminModsCount').textContent = users.filter(u => normalizeRole(u) === 'moderator').length;
-        list.innerHTML = '';
-        users.sort((a, b) => String(a.username || '').localeCompare(String(b.username || '')));
-        users.forEach(u => renderAdminUserRow(u));
+        snap.forEach(d => { const v = d.data(); v._id = d.id; users.push(v); });
+        adminMembersCache = users;
+        renderAdminStats(users);
+        renderAdminMembers();
+        renderActivityFeed(users);
+        loadModerationFeed();
       } catch (e) {
         list.innerHTML = '<p class="text-[11px] text-rose-400 p-3 text-center">Imeshindikana kupakia wanachama.</p>';
       }
+    }
+
+    async function renderAdminStats(users) {
+      document.getElementById('adminTotalUsers').textContent = users.length;
+      document.getElementById('adminOnlineCount').textContent = users.filter(isUserOnline).length;
+      document.getElementById('adminAdminsCount').textContent = users.filter(u => normalizeRole(u) === 'admin').length;
+      document.getElementById('adminModsCount').textContent = users.filter(u => normalizeRole(u) === 'moderator').length;
+      try {
+        const start = new Date();
+        start.setHours(0, 0, 0, 0);
+        const qs = await getDocs(query(getPublicCol("messages_global-group"), where("createdAtMs", ">=", start.getTime())));
+        document.getElementById('adminMsgsToday').textContent = qs.size;
+      } catch (e) {
+        document.getElementById('adminMsgsToday').textContent = '\u2014';
+      }
+    }
+
+    function renderAdminMembers() {
+      const list = document.getElementById('adminUsersList');
+      if (!list) return;
+      const term = (document.getElementById('adminMemberSearch')?.value || '').toLowerCase().trim();
+      let users = adminMembersCache.slice();
+      if (adminFilter === 'online') users = users.filter(isUserOnline);
+      else if (adminFilter === 'banned') users = users.filter(u => u.banned === true);
+      else if (adminFilter === 'admin' || adminFilter === 'moderator') users = users.filter(u => normalizeRole(u) === adminFilter);
+      if (term) {
+        users = users.filter(u =>
+          (u.username || '').toLowerCase().includes(term) ||
+          (u.email || '').toLowerCase().includes(term));
+      }
+      users.sort((a, b) => String(a.username || '').localeCompare(String(b.username || '')));
+      list.innerHTML = users.length
+        ? ''
+        : '<p class="text-[11px] text-slate-500 p-3 text-center">Hakuna member anayolingana.</p>';
+      users.forEach(u => renderAdminUserRow(u));
     }
 
     function renderAdminUserRow(u) {
@@ -2597,64 +3025,251 @@
       if (!list) return;
       const username = String(u.username || 'user');
       const role = normalizeRole(u);
+      const online = isUserOnline(u);
       const row = document.createElement('div');
-      row.className = 'flex items-center justify-between gap-2 bg-slate-950 p-2.5 rounded-xl border border-slate-800';
+      row.className = `flex items-center justify-between gap-2 p-2.5 rounded-xl border ${u.banned ? 'bg-rose-500/5 border-rose-500/30' : 'bg-slate-950 border-slate-800'}`;
 
       const left = document.createElement('div');
       left.className = 'flex items-center gap-2.5 min-w-0';
+      const avWrap = document.createElement('div');
+      avWrap.className = 'relative shrink-0';
       const av = document.createElement('div');
-      av.className = `h-9 w-9 rounded-full ${role !== 'user' ? 'neon-story-ring' : 'bg-emerald-500'} text-white font-black text-[10px] flex items-center justify-center shrink-0`;
+      av.className = `h-9 w-9 rounded-full ${role !== 'user' ? 'neon-story-ring' : 'bg-emerald-500'} text-white font-black text-[10px] flex items-center justify-center`;
       av.textContent = username.substring(0, 2).toUpperCase();
+      const dot = document.createElement('span');
+      dot.className = `absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-slate-950 ${online ? 'bg-emerald-400' : 'bg-slate-600'}`;
+      avWrap.appendChild(av);
+      avWrap.appendChild(dot);
       const info = document.createElement('div');
       info.className = 'min-w-0';
       const name = document.createElement('p');
       name.className = 'text-[11px] font-black text-white truncate flex items-center';
       name.textContent = '@' + username;
+      if (u.banned) name.insertAdjacentHTML('beforeend', '<span class="ml-1 px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-400 text-[8px] font-black">BANNED</span>');
       if (role !== 'user') name.insertAdjacentHTML('beforeend', getVerifiedBadgeHtml(!!u.isCeo) + getRoleBadgeHtml(role));
       const sub = document.createElement('p');
       sub.className = 'text-[9px] text-slate-500 truncate';
-      sub.textContent = (u.email || '') + (role !== 'user' ? ' \u2022 ' + role.toUpperCase() : '');
+      sub.textContent = (u.email || '') + ' \u2022 ' + (online ? 'Online sasa' : 'Last seen: ' + timeAgo(u.lastActiveMs));
       info.appendChild(name);
       info.appendChild(sub);
-      left.appendChild(av);
+      left.appendChild(avWrap);
       left.appendChild(info);
 
       const actions = document.createElement('div');
-      actions.className = 'flex items-center gap-1 shrink-0';
+      actions.className = 'flex flex-col items-end gap-1 shrink-0';
+      const roleBtns = document.createElement('div');
+      roleBtns.className = 'flex items-center gap-1';
       const mkBtn = (label, color, onClick) => {
         const b = document.createElement('button');
-        b.className = `touch-active px-2 py-1.5 rounded-lg text-[9px] font-black border transition ${color}`;
+        b.className = `touch-active px-2 py-1 rounded-lg text-[9px] font-black border transition ${color}`;
         b.textContent = label;
         b.addEventListener('click', onClick);
         return b;
       };
 
       if (currentUserRole === 'admin') {
-        if (role !== 'admin') actions.appendChild(mkBtn('Make Admin', 'bg-blue-500/20 text-blue-400 border-blue-500/30', () => setUserRole(username, 'admin')));
-        if (role !== 'moderator') actions.appendChild(mkBtn('Make Mod', 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30', () => setUserRole(username, 'moderator')));
-        if (role !== 'user') actions.appendChild(mkBtn('Remove', 'bg-slate-800 text-slate-400 border-slate-700', () => setUserRole(username, 'user')));
+        if (role !== 'admin') roleBtns.appendChild(mkBtn('Admin', 'bg-blue-500/20 text-blue-400 border-blue-500/30', () => setUserRole(username, 'admin')));
+        if (role !== 'moderator') roleBtns.appendChild(mkBtn('Mod', 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30', () => setUserRole(username, 'moderator')));
+        if (role !== 'user') roleBtns.appendChild(mkBtn('User', 'bg-slate-800 text-slate-400 border-slate-700', () => setUserRole(username, 'user')));
       } else if (currentUserRole === 'moderator') {
-        if (role === 'user') actions.appendChild(mkBtn('Make Mod', 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30', () => setUserRole(username, 'moderator')));
-        if (role === 'moderator') actions.appendChild(mkBtn('Remove', 'bg-slate-800 text-slate-400 border-slate-700', () => setUserRole(username, 'user')));
+        if (role === 'user') roleBtns.appendChild(mkBtn('Mod', 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30', () => setUserRole(username, 'moderator')));
+        if (role === 'moderator') roleBtns.appendChild(mkBtn('User', 'bg-slate-800 text-slate-400 border-slate-700', () => setUserRole(username, 'user')));
       }
+      if (roleBtns.children.length) actions.appendChild(roleBtns);
+
+      const modBtns = document.createElement('div');
+      modBtns.className = 'flex items-center gap-1';
+      if (currentUserRole === 'admin') {
+        if (username !== 'fahmy_mazrui') {
+          modBtns.appendChild(mkBtn(u.banned ? 'Unban' : 'Ban', u.banned ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border-amber-500/30', () => banUser(username, !u.banned)));
+          modBtns.appendChild(mkBtn('Delete', 'bg-rose-500/20 text-rose-400 border-rose-500/30', () => deleteUserDoc(username)));
+        }
+      }
+      if (modBtns.children.length) actions.appendChild(modBtns);
 
       row.appendChild(left);
       row.appendChild(actions);
       list.appendChild(row);
     }
 
+    function renderActivityFeed(users) {
+      const feed = document.getElementById('adminActivityFeed');
+      if (!feed) return;
+      const recent = users
+        .filter(u => u.lastLoginMs)
+        .sort((a, b) => (b.lastLoginMs || 0) - (a.lastLoginMs || 0))
+        .slice(0, 6);
+      feed.innerHTML = '';
+      if (!recent.length) {
+        feed.innerHTML = '<p class="text-[10px] text-slate-500 text-center py-2">Hakuna activity bado</p>';
+        return;
+      }
+      recent.forEach(u => {
+        const role = normalizeRole(u);
+        const row = document.createElement('div');
+        row.className = 'flex items-center justify-between gap-2 bg-slate-950 p-2 rounded-lg border border-slate-800';
+        const left = document.createElement('div');
+        left.className = 'flex items-center gap-2 min-w-0';
+        const dot = document.createElement('span');
+        dot.className = `h-2 w-2 rounded-full shrink-0 ${isUserOnline(u) ? 'bg-emerald-400 animate-pulse' : 'bg-slate-600'}`;
+        const nm = document.createElement('span');
+        nm.className = 'text-[10px] font-bold text-white truncate flex items-center';
+        nm.textContent = '@' + (u.username || 'user');
+        if (role !== 'user') nm.insertAdjacentHTML('beforeend', getRoleBadgeHtml(role));
+        left.appendChild(dot);
+        left.appendChild(nm);
+        const t = document.createElement('span');
+        t.className = 'text-[9px] text-slate-500 shrink-0';
+        t.textContent = timeAgo(u.lastLoginMs);
+        row.appendChild(left);
+        row.appendChild(t);
+        feed.appendChild(row);
+      });
+    }
+
     async function setUserRole(username, role) {
       try {
         await setDoc(getPublicDoc("users", username), { role: role }, { merge: true });
+        const u = adminMembersCache.find(x => x.username === username);
+        if (u) u.role = role;
         triggerNotificationToast("Role Updated", "admin", `@${username} sasa ni ${role.toUpperCase()} \u2714\u2714`, "CX");
-        loadAdminDashboard();
+        renderAdminStats(adminMembersCache);
+        renderAdminMembers();
         loadMembersFromFirestore();
       } catch (e) {
         triggerNotificationToast("Error", "system", "Imeshindikana kusasisha role.", "CX");
       }
     }
 
-    // ===== AUTH STATE PERSISTENCE (stay logged in on refresh) =====
+    async function banUser(username, banned) {
+      try {
+        await setDoc(getPublicDoc("users", username), { banned: banned }, { merge: true });
+        const u = adminMembersCache.find(x => x.username === username);
+        if (u) u.banned = banned;
+        triggerNotificationToast(banned ? "User Banned" : "User Unbanned", "admin", `@${username} ${banned ? 'amezuiwa kutoka app' : 'amefunguliwa tena'}`, "CX");
+        renderAdminMembers();
+      } catch (e) {
+        triggerNotificationToast("Error", "system", "Imeshindikana kuban user.", "CX");
+      }
+    }
+
+    async function deleteUserDoc(username) {
+      try {
+        await deleteDoc(getPublicDoc("users", username));
+        adminMembersCache = adminMembersCache.filter(x => x.username !== username);
+        triggerNotificationToast("User Deleted", "admin", `@${username} amefutwa kabisa kutoka database`, "CX");
+        renderAdminStats(adminMembersCache);
+        renderAdminMembers();
+        renderActivityFeed(adminMembersCache);
+        loadMembersFromFirestore();
+      } catch (e) {
+        triggerNotificationToast("Error", "system", "Imeshindikana kufuta user.", "CX");
+      }
+    }
+
+    async function loadModerationFeed() {
+      const box = document.getElementById('adminModList');
+      if (!box) return;
+      box.innerHTML = '<p class="text-[10px] text-slate-400 text-center py-2 animate-pulse">Loading...</p>';
+      try {
+        const snap = await getDocs(query(getPublicCol("messages_global-group"), orderBy("createdAtMs", "desc"), limit(20)));
+        const msgs = [];
+        snap.forEach(d => { const v = d.data(); v._id = d.id; msgs.push(v); });
+        box.innerHTML = msgs.length
+          ? ''
+          : '<p class="text-[10px] text-slate-500 text-center py-2">Hakuna ujumbe bado</p>';
+        msgs.forEach(msg => {
+          const row = document.createElement('div');
+          row.className = 'flex items-start justify-between gap-2 bg-slate-950 p-2 rounded-lg border border-slate-800';
+          const left = document.createElement('div');
+          left.className = 'min-w-0';
+          const author = document.createElement('p');
+          author.className = 'text-[10px] font-black text-accent-pink flex items-center';
+          author.textContent = '@' + (msg.senderHandle || 'user');
+          if (msg.senderRole) author.insertAdjacentHTML('beforeend', getRoleBadgeHtml(msg.senderRole));
+          const body = document.createElement('p');
+          body.className = 'text-[10px] text-slate-300 truncate';
+          body.textContent = msg.text || (msg.mediaUrl ? '[media attachment]' : '');
+          const time = document.createElement('p');
+          time.className = 'text-[8px] text-slate-500';
+          time.textContent = msg.time || '';
+          left.appendChild(author);
+          left.appendChild(body);
+          left.appendChild(time);
+          const del = document.createElement('button');
+          del.className = 'touch-active px-2 py-1 rounded-lg bg-rose-500/20 text-rose-400 border border-rose-500/30 text-[9px] font-black shrink-0';
+          del.textContent = 'Delete';
+          del.addEventListener('click', async () => {
+            try {
+              await deleteDoc(getPublicDoc("messages_global-group", msg._id));
+              row.remove();
+              triggerNotificationToast("Message Deleted", "admin", "Ujumbe umefutwa kwenye Global Hub", "CX");
+            } catch (e) {}
+          });
+          row.appendChild(left);
+          row.appendChild(del);
+          box.appendChild(row);
+        });
+      } catch (e) {
+        box.innerHTML = '<p class="text-[10px] text-rose-400 text-center py-2">Imeshindikana kupakia ujumbe.</p>';
+      }
+    }
+
+    // Admin sub-tab switching
+    document.querySelectorAll('.admin-tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.admin-tab-btn').forEach(b => {
+          const active = b === btn;
+          b.className = `admin-tab-btn flex-1 py-2 rounded-xl text-[10px] font-black border transition ${active ? 'bg-blue-600/20 text-blue-400 border-blue-500/30' : 'bg-slate-800/60 text-slate-400 border-slate-700'}`;
+        });
+        const tab = btn.dataset.adminTab;
+        document.getElementById('adminTabOverview')?.classList.toggle('hidden', tab !== 'overview');
+        document.getElementById('adminTabMembers')?.classList.toggle('hidden', tab !== 'members');
+        document.getElementById('adminTabBroadcast')?.classList.toggle('hidden', tab !== 'broadcast');
+        document.getElementById('adminTabMod')?.classList.toggle('hidden', tab !== 'mod');
+      });
+    });
+
+    // Members search + filter
+    document.getElementById('adminMemberSearch')?.addEventListener('input', renderAdminMembers);
+    document.querySelectorAll('.mfilter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        adminFilter = btn.dataset.mfilter;
+        document.querySelectorAll('.mfilter-btn').forEach(b => {
+          const active = b === btn;
+          b.className = `mfilter-btn px-3 py-1.5 rounded-full text-[9px] font-black shrink-0 border transition ${active ? 'bg-blue-600/20 text-blue-400 border-blue-500/30' : 'bg-slate-800 text-slate-400 border-slate-700'}`;
+        });
+        renderAdminMembers();
+      });
+    });
+
+    // Broadcast to Global Hub
+    document.getElementById('sendBroadcastBtn')?.addEventListener('click', async () => {
+      const input = document.getElementById('broadcastTextInput');
+      const text = (input?.value || '').trim();
+      if (!text) return;
+      try {
+        const bid = 'broadcast_' + Date.now();
+        await setDoc(getPublicDoc("messages_global-group", bid), {
+          id: bid,
+          text: `\u{1F4E3} ADMIN ANNOUNCEMENT:\n\n${text}`,
+          senderId: currentUserId,
+          senderHandle: currentUserHandle,
+          isCeo: isCeoUser,
+          senderRole: currentUserRole,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          createdAtMs: Date.now(),
+          status: 'sent'
+        });
+        if (input) input.value = '';
+        notifyPushAll(text, '📢 ClassmateX Announcement');
+        triggerNotificationToast("Broadcast Sent", currentUserHandle, "Tangazo limetumwa kwenye Global Hub!", "CX");
+      } catch (e) {
+        triggerNotificationToast("Broadcast Failed", "system", "Imeshindikana kutuma tangazo.", "CX");
+      }
+    });
+
+    // ===== AUTH STATE PERSISTENCE (stay logged in on refresh) =====    // ===== AUTH STATE PERSISTENCE (stay logged in on refresh) =====
     if (auth) {
       onAuthStateChanged(auth, async (user) => {
         if (!user) return;
@@ -2665,6 +3280,11 @@
           const snap = await getDocs(query(getPublicCol("users"), where("email", "==", currentUserEmail)));
           snap.forEach((d) => { udoc = d.data(); });
         } catch (e) {}
+        if (udoc && udoc.banned === true) {
+          try { await signOut(auth); } catch (e) {}
+          triggerNotificationToast("Account Banned", "system", "Akaunti yako imezuiwa. Wasiliana na Admin.", "CX");
+          return;
+        }
         const fallback = (currentUserEmail || 'user').split('@')[0];
         openMainApp(udoc?.name || fallback, udoc?.username || fallback, currentUserEmail, udoc);
       });
@@ -2683,6 +3303,11 @@
         const snap = await getDocs(query(getPublicCol("users"), where("username", "==", val)));
         err.classList.toggle('hidden', snap.empty);
       } catch (e2) { err.classList.add('hidden'); }
+    });
+
+    document.getElementById('openBlockedContactsBtn')?.addEventListener('click', () => {
+      loadBlockedContactsList();
+      document.getElementById('blockedContactsModal')?.classList.remove('hidden');
     });
 
     // ===== HEADER AVATAR OPENS PROFILE TAB (was dead button) =====
