@@ -1456,6 +1456,42 @@
       return email && email.toLowerCase() === CEO_EMAIL.toLowerCase();
     }
 
+    // ===== FREE MEDIA PIPELINE: compress images to base64 (hakuna Storage/card inahitajika) =====
+    function compressImageToDataUrl(file, maxDim, quality) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            let w = img.width, h = img.height;
+            if (w > maxDim || h > maxDim) {
+              const r = Math.min(maxDim / w, maxDim / h);
+              w = Math.round(w * r);
+              h = Math.round(h * r);
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = w;
+            canvas.height = h;
+            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+            resolve(canvas.toDataURL('image/jpeg', quality || 0.75));
+          };
+          img.onerror = reject;
+          img.src = e.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function fileToDataUrl(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
     // ===== ROLE SYSTEM: user / moderator / admin (Admin = WhatsApp blue ticks ✔✔) =====
     function normalizeRole(u) {
       if (!u) return 'user';
@@ -2131,19 +2167,31 @@
       let fileName = null;
 
       if (attachedFile) {
-        try {
-          const upFile = attachedFile;
-          const sref = storageRef(storage, `chat_media/${currentActiveChatId}/${Date.now()}_${upFile.name}`);
-          const snap = await uploadBytes(sref, upFile);
-          mediaUrl = await getDownloadURL(snap.ref);
-          mediaType = upFile.type.startsWith('image/') ? 'image' : 'doc';
-          fileName = upFile.name;
-        } catch (err) {
-          mediaUrl = URL.createObjectURL(attachedFile);
-          mediaType = attachedFile.type.startsWith('image/') ? 'image' : 'doc';
-          fileName = attachedFile.name;
-        }
+        const upFile = attachedFile;
         attachedFile = null;
+        if (upFile.type.startsWith('image/')) {
+          try {
+            mediaUrl = await compressImageToDataUrl(upFile, 1024, 0.75);
+            mediaType = 'image';
+            fileName = upFile.name;
+          } catch (err) {
+            triggerNotificationToast("Upload Failed", "system", "Picha haikupakiwa", "CX");
+            return;
+          }
+        } else {
+          if (upFile.size > 700 * 1024) {
+            triggerNotificationToast("File Too Big", "system", "PDF ni kubwa mno — maximum 700KB (bila Storage)", "CX");
+            return;
+          }
+          try {
+            mediaUrl = await fileToDataUrl(upFile);
+            mediaType = 'doc';
+            fileName = upFile.name;
+          } catch (err) {
+            triggerNotificationToast("Upload Failed", "system", "Faili haikupakiwa", "CX");
+            return;
+          }
+        }
       }
 
       // GENERATE A UNIQUE DOCUMENT ID AND USE IT FOR SETDOC TO PREVENT DUPLICATION
@@ -2256,19 +2304,13 @@
     document.getElementById('profileImageInput')?.addEventListener('change', async (e) => {
       const file = e.target.files[0];
       if (!file) return;
-      const applyAvatar = (url) => {
-        updateAllUserAvatarsInDom(url);
-        if (db) setDoc(getPublicDoc("users", currentUserHandle), { avatar: url }, { merge: true }).catch(() => {});
-        triggerNotificationToast("Profile Photo Updated", currentUserHandle, "New avatar set successfully!", "CX");
-      };
       try {
-        const sref = storageRef(storage, `avatars/${currentUserHandle}_${Date.now()}_${file.name}`);
-        const snap = await uploadBytes(sref, file);
-        applyAvatar(await getDownloadURL(snap.ref));
+        const dataUrl = await compressImageToDataUrl(file, 256, 0.85);
+        updateAllUserAvatarsInDom(dataUrl);
+        if (db) setDoc(getPublicDoc("users", currentUserHandle), { avatar: dataUrl }, { merge: true }).catch(() => {});
+        triggerNotificationToast("Profile Photo Updated", currentUserHandle, "Avatar imewekwa (punguzwa, bure)", "CX");
       } catch (err) {
-        const reader = new FileReader();
-        reader.onload = (evt) => applyAvatar(evt.target.result);
-        reader.readAsDataURL(file);
+        triggerNotificationToast("Upload Failed", "system", "Picha haikupakiwa — jaribu nyingine", "CX");
       }
     });
 
@@ -2323,12 +2365,21 @@
 
       let storyMediaUrl = null;
       if (selectedStoryMedia) {
-        try {
-          const sref = storageRef(storage, `stories/${currentUserHandle}_${Date.now()}_${selectedStoryMedia.file.name}`);
-          const snap = await uploadBytes(sref, selectedStoryMedia.file);
-          storyMediaUrl = await getDownloadURL(snap.ref);
-        } catch (err) {
-          storyMediaUrl = selectedStoryMedia.url;
+        if (selectedStoryMedia.type === 'image') {
+          try {
+            storyMediaUrl = await compressImageToDataUrl(selectedStoryMedia.file, 1080, 0.75);
+          } catch (err) {
+            triggerNotificationToast("Story Failed", "system", "Picha haikupakiwa", "CX");
+            return;
+          }
+        } else {
+          if (selectedStoryMedia.file.size > 900 * 1024) {
+            triggerNotificationToast("Video Too Big", "system", "Video inahitaji Storage (Blaze) — tumia picha au video ndogo", "CX");
+            return;
+          }
+          try {
+            storyMediaUrl = await fileToDataUrl(selectedStoryMedia.file);
+          } catch (err) { return; }
         }
       }
 
