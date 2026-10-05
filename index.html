@@ -167,6 +167,35 @@
     }
     .msg-text-body { white-space: pre-wrap; word-break: break-word; }
 
+    /* ===== SPLASH SCREEN animations ===== */
+    @keyframes splashRing {
+      0% { transform: scale(.55); opacity: 0; }
+      45% { opacity: 1; }
+      100% { transform: scale(1.2); opacity: 0; }
+    }
+    .animate-splash-ring { animation: splashRing 2.2s ease-out infinite; }
+    @keyframes splashLogo {
+      0% { transform: scale(.5) rotate(-8deg); opacity: 0; }
+      60% { transform: scale(1.07) rotate(2deg); opacity: 1; }
+      100% { transform: scale(1) rotate(0deg); opacity: 1; }
+    }
+    .animate-splash-logo { animation: splashLogo 1s cubic-bezier(.16,1,.3,1) forwards; }
+    @keyframes splashText {
+      from { opacity: 0; transform: translateY(16px); letter-spacing: .5em; }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-splash-text { animation: splashText .8s ease-out both; }
+    @keyframes splashBar {
+      0% { transform: translateX(-120%); }
+      100% { transform: translateX(320%); }
+    }
+    .animate-splash-bar { animation: splashBar 1.3s ease-in-out infinite; }
+    @keyframes splashGlow {
+      0%, 100% { opacity: .35; transform: scale(1); }
+      50% { opacity: .8; transform: scale(1.15); }
+    }
+    .animate-splash-glow { animation: splashGlow 2.4s ease-in-out infinite; }
+
     @keyframes eqBar {
       0%, 100% { transform: scaleY(0.25); }
       50% { transform: scaleY(1); }
@@ -182,6 +211,31 @@
 <body class="h-full bg-slate-950 font-sans text-slate-100 antialiased select-none overflow-hidden flex justify-center items-center">
 
   <div id="appContainer" class="relative w-full h-full sm:max-w-md sm:h-[95vh] sm:rounded-[44px] bg-slate-950 sm:border-[8px] sm:border-slate-800/90 sm:shadow-2xl flex flex-col overflow-hidden transition-all duration-300">
+
+    <!-- SPLASH SCREEN (inavutia, kila app inapofunguliwa) -->
+    <div id="splashScreen" class="absolute inset-0 z-[70] bg-slate-950 flex flex-col items-center justify-center overflow-hidden" style="transition:opacity .55s ease">
+      <div class="absolute h-72 w-72 rounded-full border-2 border-brand-500/25 animate-splash-ring"></div>
+      <div class="absolute h-56 w-56 rounded-full border border-accent-pink/30 animate-splash-ring" style="animation-delay:.45s"></div>
+      <div class="absolute h-44 w-44 rounded-full border border-accent-cyan/20 animate-splash-ring" style="animation-delay:.9s"></div>
+      <div class="absolute h-40 w-40 rounded-full bg-brand-500/15 blur-3xl animate-splash-glow"></div>
+
+      <div class="relative animate-splash-logo">
+        <svg viewBox="0 0 100 100" class="w-24 h-24 filter drop-shadow-[0_0_25px_rgba(236,72,153,0.65)]" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <polygon points="50,5 90,25 90,75 50,95 10,75 10,25" fill="#020617" stroke="url(#cxLogoGrad1)" stroke-width="4" />
+          <path d="M38 32 C25 32, 22 42, 22 50 C22 58, 25 68, 38 68 C44 68, 48 65, 50 60" stroke="url(#cxLogoGrad2)" stroke-width="8" stroke-linecap="round"/>
+          <path d="M52 32 L78 68 M78 32 L52 68" stroke="url(#cxLogoGrad1)" stroke-width="8" stroke-linecap="round"/>
+          <circle cx="50" cy="50" r="4" fill="#f59e0b" class="animate-pulse" />
+        </svg>
+      </div>
+
+      <h1 class="mt-6 text-3xl font-black tracking-tight text-white animate-splash-text" style="animation-delay:.25s">Classmate<span class="text-accent-pink">X</span></h1>
+      <p class="mt-2 text-[10px] font-bold uppercase tracking-[0.35em] text-slate-500 animate-splash-text" style="animation-delay:.5s">Live Realtime Social Chat</p>
+
+      <div class="mt-10 h-1 w-44 rounded-full bg-slate-800 overflow-hidden">
+        <div class="h-full w-1/3 rounded-full bg-gradient-to-r from-brand-500 via-accent-purple to-accent-pink animate-splash-bar"></div>
+      </div>
+      <p class="mt-3 text-[8px] font-bold uppercase tracking-widest text-slate-600 animate-splash-text" style="animation-delay:.8s">Made in Tanzania</p>
+    </div>
 
     <!-- Glowing Background Atmosphere -->
     <div class="pointer-events-none absolute inset-0 overflow-hidden z-0">
@@ -776,7 +830,7 @@
     <main class="relative z-10 flex-grow h-full w-full overflow-hidden flex flex-col">
 
       <!-- AUTHENTICATION VIEW -->
-      <section id="authView" class="w-full h-full p-4 overflow-y-auto flex flex-col justify-center animate-slide-up">
+      <section id="authView" class="hidden w-full h-full p-4 overflow-y-auto flex flex-col justify-center animate-slide-up">
         <div class="mb-5 text-center">
           <div class="mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-3xl bg-slate-900 border border-slate-800 text-amber-400 shadow-glow-pink">
             <i class="ph ph-chats-circle text-3xl"></i>
@@ -1011,44 +1065,10 @@
               </div>
             </div>
 
-            <!-- CEO Verified DM Thread -->
-            <div data-chat-id="dm-fahmy_mazrui" data-search-term="@fahmy_mazrui verified CEO" class="chat-thread-item chat-thread-trigger flex items-center gap-3 p-3 cursor-pointer transition hover:bg-slate-900/60">
-              <div class="relative shrink-0">
-                <div class="neon-story-ring">
-                  <div class="h-10 w-10 rounded-full bg-slate-900 text-white font-black text-xs flex items-center justify-center overflow-hidden">
-                    FM
-                  </div>
-                </div>
-                <span class="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full bg-sky-400 border-2 border-slate-950 text-[8px] flex items-center justify-center text-white"><i class="ph ph-check-bold"></i></span>
-              </div>
-              <div class="flex-grow min-w-0">
-                <div class="flex justify-between items-baseline mb-0.5">
-                  <h4 class="text-xs font-black truncate text-white flex items-center">
-                    @fahmy_mazrui <svg viewBox="0 0 24 24" width="14" height="14" preserveAspectRatio="xMidYMid meet" class="inline-block shrink-0 ml-0.5" style="width:14px;height:14px;flex:0 0 auto" title="Verified"><path fill="#0AA5F2" d="M23.25 12.0L23.06 12.43L22.56 12.83L21.94 13.18L21.41 13.49L21.17 13.82L21.27 14.23L21.63 14.72L22.08 15.27L22.38 15.83L22.39 16.31L22.05 16.63L21.44 16.81L20.73 16.89L20.13 16.98L19.77 17.19L19.71 17.6L19.86 18.19L20.06 18.88L20.13 19.51L19.95 19.95L19.51 20.13L18.88 20.06L18.19 19.86L17.6 19.71L17.19 19.77L16.98 20.13L16.89 20.73L16.81 21.44L16.63 22.05L16.31 22.39L15.83 22.38L15.27 22.08L14.72 21.63L14.23 21.27L13.82 21.17L13.49 21.41L13.18 21.94L12.83 22.56L12.43 23.06L12.0 23.25L11.57 23.06L11.17 22.56L10.82 21.94L10.51 21.41L10.18 21.17L9.77 21.27L9.28 21.63L8.73 22.08L8.17 22.38L7.69 22.39L7.37 22.05L7.19 21.44L7.11 20.73L7.02 20.13L6.81 19.77L6.4 19.71L5.81 19.86L5.12 20.06L4.49 20.13L4.05 19.95L3.87 19.51L3.94 18.88L4.14 18.19L4.29 17.6L4.23 17.19L3.87 16.98L3.27 16.89L2.56 16.81L1.95 16.63L1.61 16.31L1.62 15.83L1.92 15.27L2.37 14.72L2.73 14.23L2.83 13.82L2.59 13.49L2.06 13.18L1.44 12.83L0.94 12.43L0.75 12.0L0.94 11.57L1.44 11.17L2.06 10.82L2.59 10.51L2.83 10.18L2.73 9.77L2.37 9.28L1.92 8.73L1.62 8.17L1.61 7.69L1.95 7.37L2.56 7.19L3.27 7.11L3.87 7.02L4.23 6.81L4.29 6.4L4.14 5.81L3.94 5.12L3.87 4.49L4.05 4.05L4.49 3.87L5.12 3.94L5.81 4.14L6.4 4.29L6.81 4.23L7.02 3.87L7.11 3.27L7.19 2.56L7.37 1.95L7.69 1.61L8.17 1.62L8.73 1.92L9.28 2.37L9.77 2.73L10.18 2.83L10.51 2.59L10.82 2.06L11.17 1.44L11.57 0.94L12.0 0.75L12.43 0.94L12.83 1.44L13.18 2.06L13.49 2.59L13.82 2.83L14.23 2.73L14.72 2.37L15.27 1.92L15.83 1.62L16.31 1.61L16.63 1.95L16.81 2.56L16.89 3.27L16.98 3.87L17.19 4.23L17.6 4.29L18.19 4.14L18.88 3.94L19.51 3.87L19.95 4.05L20.13 4.49L20.06 5.12L19.86 5.81L19.71 6.4L19.77 6.81L20.13 7.02L20.73 7.11L21.44 7.19L22.05 7.37L22.39 7.69L22.38 8.17L22.08 8.73L21.63 9.28L21.27 9.77L21.17 10.18L21.41 10.51L21.94 10.82L22.56 11.17L23.06 11.57L23.25 12.0Z"/><path d="M6.8 12.7L10.2 16.1L17.4 8.5" stroke="#ffffff" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                  </h4>
-                  <span class="text-[10px] font-black text-accent-pink shrink-0">CEO</span>
-                </div>
-                <p class="text-[11px] text-slate-300 truncate font-medium">Welcome to ClassmateX! Message me anytime.</p>
-              </div>
-            </div>
-
-            <!-- Sarah Juma DM Thread -->
-            <div data-chat-id="dm-sarah_juma" data-search-term="@sarah_juma" class="chat-thread-item chat-thread-trigger flex items-center gap-3 p-3 cursor-pointer transition hover:bg-slate-900/60">
-              <div class="relative shrink-0">
-                <div class="h-11 w-11 rounded-full bg-emerald-500 text-white font-black text-xs flex items-center justify-center shadow-xs overflow-hidden">
-                  SJ
-                </div>
-                <span class="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-emerald-400 border-2 border-slate-950"></span>
-              </div>
-              <div class="flex-grow min-w-0">
-                <div class="flex justify-between items-baseline mb-0.5">
-                  <h4 class="text-xs font-black truncate text-white">@sarah_juma</h4>
-                  <span class="text-[10px] text-slate-400 shrink-0">09:12 AM</span>
-                </div>
-                <p class="text-[11px] text-slate-400 truncate font-medium">Hey! Glad to connect with you on ClassmateX.</p>
-              </div>
-            </div>
           </div>
+        </div>
+
+        <!-- SCREEN 2: ACTIVE CONVERSATION SCREEN WITH DYNAMIC DM HEADER -->          </div>
         </div>
 
         <!-- SCREEN 2: ACTIVE CONVERSATION SCREEN WITH DYNAMIC DM HEADER -->
@@ -1525,6 +1545,16 @@
     let myThreads = [];
     let threadListeners = {};
     const viewedStories = new Set();
+
+    // ===== SPLASH SCREEN: fade out baada ya 2.4s =====
+    window.addEventListener('load', () => {
+      const splash = document.getElementById('splashScreen');
+      if (!splash) return;
+      setTimeout(() => {
+        splash.style.opacity = '0';
+        setTimeout(() => splash.remove(), 600);
+      }, 2400);
+    });
     let lastRenderedDate = '';
     let starredMsgs = [];
     const pendingSends = {};
@@ -1923,7 +1953,7 @@
     function attachThreadListener(chatId) {
       if (!db || threadListeners[chatId]) return;
       try {
-        threadListeners[chatId] = onSnapshot(getPublicCol(`messages_${chatId}`), (snap) => {
+        threadListeners[chatId] = onSnapshot(query(getPublicCol(`messages_${chatId}`), orderBy('createdAtMs', 'desc'), limit(100)), (snap) => {
           const t = myThreads.find(x => x.chatId === chatId);
           if (!t) return;
           let unread = 0, lastMsg = null, lastTime = 0;
@@ -3032,6 +3062,8 @@
               notifyPush(pushTarget, currentUserName || ('@' + currentUserHandle), text || (mediaType === 'image' ? '📷 New photo' : '📎 Attachment'));
             }
           } catch (e) {}
+        } else if (currentActiveChatId === 'global-group') {
+          notifyGlobal(text || (mediaType === 'image' ? '📷 Photo' : '📎 File'), currentUserHandle);
         }
       } catch(e) {
         markFailed(optMsgId, newMsg, currentActiveChatId);
@@ -3042,6 +3074,26 @@
     // Weka credentials zako hapa (OneSignal Dashboard > Settings > Keys & IDs)
     const ONESIGNAL_APP_ID = 'a9ace05b-c41f-48cb-9c6c-3a4736bd296e';
     const ONESIGNAL_REST_KEY = 'os_v2_app_vgwoaw6ed5emxhdmhjdtnpjjn2ksezyovc2uewupnd6adedfropvco27662q2v5erneex2z4vl5qiezw466ere64prhviiie3bw4arq';
+
+    async function notifyGlobal(message, fromHandle) {
+      if (ONESIGNAL_REST_KEY.indexOf('PASTE') === 0) return;
+      try {
+        const resp = await fetch('https://onesignal.com/api/v1/notifications', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json; charset=utf-8', 'Authorization': 'Basic ' + ONESIGNAL_REST_KEY },
+          body: JSON.stringify({
+            app_id: ONESIGNAL_APP_ID,
+            filters: [{ field: 'tag', key: 'handle', relation: '!=', value: fromHandle }],
+            headings: { en: '🌐 Global Hub' },
+            contents: { en: `@${fromHandle}: ${message.length > 100 ? message.substring(0, 100) + '...' : message}` },
+            url: location.href
+          })
+        });
+        if (!resp.ok) {
+          triggerNotificationToast('Push Error', 'system', 'OneSignal status ' + resp.status + ' — key yako huenda imevunjwa (angalia Dashboard)', 'CX');
+        }
+      } catch (e) {}
+    }
 
     async function notifyPush(targetHandle, title, message) {
       if (ONESIGNAL_REST_KEY.indexOf('PASTE') === 0) return; // bado haijawekwa
@@ -3059,7 +3111,11 @@
             contents: { en: message.length > 120 ? message.substring(0, 120) + '...' : message },
             url: location.href
           })
-        });
+        }).then((resp) => {
+          if (resp && !resp.ok) {
+            triggerNotificationToast('Push Error', 'system', 'OneSignal status ' + resp.status + ' — key huenda imevunjwa (angalia Dashboard > Keys)', 'CX');
+          }
+        }).catch(() => {});
       } catch (e) {}
     }
 
@@ -3524,7 +3580,7 @@
       item.className = 'story-item-trigger flex flex-col items-center gap-1 cursor-pointer shrink-0 animate-pop-in';
       item.setAttribute('data-dynamic-story', '1');
       const isCeoStory = s.handle === 'fahmy_mazrui';
-      const countBadge = group.length > 1 ? `<span class="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-accent-pink text-white text-[8px] font-black flex items-center justify-center border border-slate-950">${group.length}</span>` : '';
+      const countBadge = group.length > 1 ? `<span class="absolute -top-1.5 -right-1.5 min-w-[20px] h-[20px] px-1 rounded-full bg-accent-pink text-white text-[10px] font-black flex items-center justify-center border-2 border-slate-950 shadow-md z-20">${group.length}</span>` : '';
       item.innerHTML = `
         <div class="neon-story-ring relative">
           <div class="h-11 w-11 rounded-full bg-slate-900 text-white font-black text-xs flex items-center justify-center overflow-hidden">
@@ -3791,7 +3847,7 @@
       } catch (e) {}
 
       try {
-        const q = getPublicCol(`messages_${chatId}`);
+        const q = query(getPublicCol(`messages_${chatId}`), orderBy('createdAtMs', 'desc'), limit(50)); // last 50 tu
         messagesUnsubscribe = onSnapshot(q, (snapshot) => {
           const messages = [];
           snapshot.forEach((docSnap) => {
@@ -3854,6 +3910,10 @@
     async function loadMembersFromFirestore() {
       const membersList = document.getElementById('membersList');
       if (!membersList) return;
+      if (!members.length) {
+        membersList.innerHTML = '<div class="flex flex-col items-center justify-center text-center p-8 text-slate-500 bg-slate-900 rounded-2xl border border-slate-800"><i class="ph ph-users-three text-4xl mb-2 text-slate-600"></i><p class="text-xs font-bold text-slate-300">No members yet</p><p class="text-[10px] text-slate-500 mt-1">Share your app link - friends will appear here when they join</p></div>';
+        return;
+      }
 
       const renderMembers = (members) => {
         membersList.innerHTML = '';
@@ -3915,9 +3975,9 @@
         const snap = await getDocs(getPublicCol("users"));
         const list = [];
         snap.forEach(doc => list.push(doc.data()));
-        renderMembers(list.length ? list : [{ username: 'fahmy_mazrui', email: CEO_EMAIL, isCeo: true }, { username: 'sarah_juma', email: 'sarah@gmail.com' }]);
+        renderMembers(list);
       } catch(e) {
-        renderMembers([{ username: 'fahmy_mazrui', email: CEO_EMAIL, isCeo: true }, { username: 'sarah_juma', email: 'sarah@gmail.com' }]);
+        renderMembers([]);
       }
     }
 
@@ -4603,7 +4663,11 @@
     // ===== AUTH STATE PERSISTENCE (stay logged in on refresh) =====
     if (auth) {
       onAuthStateChanged(auth, async (user) => {
-        if (!user) return;
+        if (!user) {
+          // Hakuna session -> onyesha login (splash inaficha hili kwa sasa)
+          document.getElementById('authView')?.classList.remove('hidden');
+          return;
+        }
         currentUserId = user.uid;
         currentUserEmail = user.email || currentUserEmail;
 
