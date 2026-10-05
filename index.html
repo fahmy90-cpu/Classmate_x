@@ -166,6 +166,16 @@
       border: 1px solid rgba(255, 255, 255, 0.1);
     }
     .msg-text-body { white-space: pre-wrap; word-break: break-word; }
+
+    @keyframes eqBar {
+      0%, 100% { transform: scaleY(0.25); }
+      50% { transform: scaleY(1); }
+    }
+    .voice-eq-bar {
+      display: inline-block;
+      animation: eqBar 0.9s ease-in-out infinite;
+      transform-origin: bottom;
+    }
   </style>
 </head>
 
@@ -260,7 +270,7 @@
         <!-- Large Avatar Circle -->
         <div class="relative -mt-12 mb-3 flex justify-center">
           <div id="wpModalAvatarRing" class="h-24 w-24 rounded-full neon-story-ring p-1 bg-slate-950 shadow-glow-pink">
-            <div id="wpModalAvatar" class="h-full w-full rounded-full bg-slate-800 text-white font-black text-2xl flex items-center justify-center overflow-hidden cursor-pointer touch-active" title="Tazama picha kwa ukubwa">
+            <div id="wpModalAvatar" class="h-full w-full rounded-full bg-slate-800 text-white font-black text-2xl flex items-center justify-center overflow-hidden cursor-pointer touch-active" title="View full size">
               FM
             </div>
           </div>
@@ -329,37 +339,35 @@
       </div>
     </div>
 
-    <!-- LONG-PRESS MESSAGE ACTION MODAL (EDIT, DELETE, REPLY, REACT) -->
-    <div id="messageActionModal" class="hidden absolute inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-end justify-center p-4">
-      <div class="w-full max-w-xs rounded-3xl bg-slate-900 border border-slate-800 p-4 shadow-2xl animate-slide-up space-y-3">
-        <!-- Quick Emoji Reaction Bar -->
-        <div class="flex items-center justify-around bg-slate-950 p-2.5 rounded-2xl border border-slate-800">
-          <button data-emoji="❤️" class="emoji-react-btn text-xl hover:scale-125 transition transform">❤️</button>
-          <button data-emoji="😂" class="emoji-react-btn text-xl hover:scale-125 transition transform">😂</button>
-          <button data-emoji="🔥" class="emoji-react-btn text-xl hover:scale-125 transition transform">🔥</button>
-          <button data-emoji="👍" class="emoji-react-btn text-xl hover:scale-125 transition transform">👍</button>
-          <button data-emoji="😮" class="emoji-react-btn text-xl hover:scale-125 transition transform">😮</button>
-          <button data-emoji="💡" class="emoji-react-btn text-xl hover:scale-125 transition transform">💡</button>
+    <!-- LONG-PRESS MESSAGE ACTION POPUP (WhatsApp style) -->
+    <div id="messageActionModal" class="hidden absolute inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-6">
+      <div class="w-full max-w-[260px] rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl animate-pop-in overflow-hidden">
+        <div class="flex items-center justify-around px-2 py-2 bg-slate-950/60 border-b border-slate-800">
+          <button data-emoji="\u2764\uFE0F" class="emoji-react-btn text-xl hover:scale-125 transition transform">\u2764\uFE0F</button>
+          <button data-emoji="\u{1F602}" class="emoji-react-btn text-xl hover:scale-125 transition transform">\u{1F602}</button>
+          <button data-emoji="\u{1F525}" class="emoji-react-btn text-xl hover:scale-125 transition transform">\u{1F525}</button>
+          <button data-emoji="\u{1F44D}" class="emoji-react-btn text-xl hover:scale-125 transition transform">\u{1F44D}</button>
+          <button data-emoji="\u{1F62E}" class="emoji-react-btn text-xl hover:scale-125 transition transform">\u{1F62E}</button>
+          <button data-emoji="\u{1F4A1}" class="emoji-react-btn text-xl hover:scale-125 transition transform">\u{1F4A1}</button>
         </div>
-
-        <button id="actionQuoteReplyBtn" class="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold flex items-center justify-center gap-2 transition">
-          <i class="ph ph-quotes text-base text-amber-400"></i>
-          <span>Quote Reply</span>
-        </button>
-
-        <button id="actionEditMsgBtn" class="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold flex items-center justify-center gap-2 transition">
-          <i class="ph ph-pencil-simple text-base text-cyan-400"></i>
-          <span>Edit Message</span>
-        </button>
-
-        <button id="actionDeleteMsgBtn" class="w-full py-2.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 text-xs font-bold flex items-center justify-center gap-2 transition">
-          <i class="ph ph-trash text-base text-rose-400"></i>
-          <span>Delete Message</span>
-        </button>
-
-        <button id="closeMsgActionModalBtn" class="w-full py-2 rounded-xl bg-slate-950 text-slate-400 text-xs font-bold hover:text-white transition">
-          Cancel
-        </button>
+        <div class="divide-y divide-slate-800/80 text-left">
+          <button id="actionQuoteReplyBtn" class="w-full px-4 py-3 text-xs font-bold text-white hover:bg-slate-800/70 flex items-center gap-3 transition">
+            <i class="ph ph-quotes text-base text-amber-400"></i><span>Quote Reply</span>
+          </button>
+          <button id="actionCopyMsgBtn" class="w-full px-4 py-3 text-xs font-bold text-white hover:bg-slate-800/70 flex items-center gap-3 transition">
+            <i class="ph ph-copy text-base text-cyan-400"></i><span>Copy</span>
+          </button>
+          <button id="actionForwardMsgBtn" class="w-full px-4 py-3 text-xs font-bold text-white hover:bg-slate-800/70 flex items-center gap-3 transition">
+            <i class="ph ph-arrow-u-up-right text-base text-brand-400"></i><span>Forward</span>
+          </button>
+          <button id="actionEditMsgBtn" class="w-full px-4 py-3 text-xs font-bold text-white hover:bg-slate-800/70 flex items-center gap-3 transition">
+            <i class="ph ph-pencil-simple text-base text-emerald-400"></i><span>Edit</span>
+          </button>
+          <button id="actionDeleteMsgBtn" class="w-full px-4 py-3 text-xs font-bold text-rose-300 hover:bg-rose-500/10 flex items-center gap-3 transition">
+            <i class="ph ph-trash text-base text-rose-400"></i><span>Delete</span>
+          </button>
+        </div>
+        <button id="closeMsgActionModalBtn" class="w-full py-2.5 text-[10px] font-bold text-slate-400 hover:text-white bg-slate-950/60 transition">Cancel</button>
       </div>
     </div>
 
@@ -388,8 +396,8 @@
         </div>
         <div class="bg-slate-900 p-3 rounded-2xl border border-slate-800 space-y-2">
           <h5 class="font-bold text-white">Change Password</h5>
-          <input type="password" placeholder="New Password (min 6 chars)" class="w-full bg-slate-800 p-2 rounded-xl border border-slate-700 text-white outline-none focus:border-accent-pink" />
-          <button onclick="triggerNotificationToast('Security Update', currentUserHandle, 'Password reset request sent to email', 'CX')" class="w-full py-2 rounded-xl bg-gradient-to-r from-brand-600 to-accent-pink text-white font-bold">Update Password</button>
+          <input id="newPasswordInput" type="password" placeholder="New Password (min 6 chars)" class="w-full bg-slate-800 p-2 rounded-xl border border-slate-700 text-white outline-none focus:border-accent-pink" />
+          <button id="changePasswordBtn" class="touch-active w-full py-2 rounded-xl bg-gradient-to-r from-brand-600 to-accent-pink text-white font-bold">Update Password</button>
         </div>
         <div class="bg-slate-900 p-3 rounded-2xl border border-slate-800 space-y-2">
           <h5 class="font-bold text-white flex items-center gap-1.5"><i class="ph ph-device-mobile text-accent-pink"></i> Active Devices</h5>
@@ -417,7 +425,7 @@
             <h5 class="text-xs font-bold text-white">Last Seen & Online Status</h5>
             <p class="text-[10px] text-slate-400">Show when you are active on ClassmateX</p>
           </div>
-          <input type="checkbox" checked class="accent-accent-pink h-4 w-4 cursor-pointer">
+          <input id="prefLastSeen" type="checkbox" checked class="accent-accent-pink h-4 w-4 cursor-pointer">
         </div>
         <div class="bg-slate-900 p-3 rounded-2xl border border-slate-800 space-y-1.5">
           <h5 class="text-xs font-bold text-white">Profile Picture Visibility</h5>
@@ -432,7 +440,7 @@
             <h5 class="text-xs font-bold text-white">Read Receipts</h5>
             <p class="text-[10px] text-slate-400">Show neon double ticks when messages are read</p>
           </div>
-          <input type="checkbox" checked class="accent-accent-pink h-4 w-4 cursor-pointer">
+          <input id="prefReadReceipts" type="checkbox" checked class="accent-accent-pink h-4 w-4 cursor-pointer">
         </div>
         <button id="openBlockedContactsBtn" class="w-full bg-slate-900 p-3 rounded-2xl border border-slate-800 flex items-center justify-between hover:bg-slate-800/60 transition">
           <div class="text-left">
@@ -467,21 +475,21 @@
             <h5 class="text-xs font-bold text-white">Message Sounds</h5>
             <p class="text-[10px] text-slate-400">Play tone on incoming chats</p>
           </div>
-          <input type="checkbox" checked class="accent-accent-pink h-4 w-4 cursor-pointer">
+          <input id="prefMsgSounds" type="checkbox" checked class="accent-accent-pink h-4 w-4 cursor-pointer">
         </div>
         <div class="flex items-center justify-between bg-slate-900 p-3 rounded-2xl border border-slate-800">
           <div>
             <h5 class="text-xs font-bold text-white">In-App Sounds</h5>
             <p class="text-[10px] text-slate-400">Button taps and status sound effects</p>
           </div>
-          <input type="checkbox" checked class="accent-accent-pink h-4 w-4 cursor-pointer">
+          <input id="prefInAppSounds" type="checkbox" checked class="accent-accent-pink h-4 w-4 cursor-pointer">
         </div>
         <div class="flex items-center justify-between bg-slate-900 p-3 rounded-2xl border border-slate-800">
           <div>
             <h5 class="text-xs font-bold text-white">Push Alert Popups</h5>
             <p class="text-[10px] text-slate-400">Show floating banners on top screen</p>
           </div>
-          <input type="checkbox" checked class="accent-accent-pink h-4 w-4 cursor-pointer">
+          <input id="prefPushPopups" type="checkbox" checked class="accent-accent-pink h-4 w-4 cursor-pointer">
         </div>
       </div>
       <button onclick="document.getElementById('notificationSettingsModal')?.classList.add('hidden')" class="w-full py-2.5 rounded-xl bg-slate-800 text-white text-xs font-bold">Done</button>
@@ -525,7 +533,7 @@
           <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Username (@Handle)</label>
           <input id="editUsernameInput" type="text" class="w-full mt-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-accent-pink font-bold outline-none focus:border-accent-pink transition" />
           <p id="editUsernameError" class="hidden text-[10px] font-bold text-rose-400 mt-1 flex items-center gap-1">
-            <i class="ph ph-warning-circle text-xs"></i> <span>Username hii tayari imetumiwa, tafadhali chagua nyingine.</span>
+            <i class="ph ph-warning-circle text-xs"></i> <span>Username already taken, please choose another.</span>
           </p>
         </div>
         <div>
@@ -611,6 +619,26 @@
           <button data-scolor="#000000" class="story-tool-btn story-color-dot h-7 w-7 rounded-full border-2 border-transparent touch-active" style="background:#000000"></button>
         </div>
 
+        <div class="flex items-center gap-2 py-1 overflow-x-auto no-scrollbar">
+          <span class="text-[8px] font-black text-slate-500 uppercase shrink-0">Position:</span>
+          <button data-pos="flex-start" class="story-pos-btn story-tool-btn h-7 px-2 rounded-full bg-slate-800 text-white text-[9px] font-black border border-slate-700 shrink-0 touch-active">Top</button>
+          <button data-pos="center" class="story-pos-btn story-tool-btn h-7 px-2 rounded-full bg-slate-800 text-white text-[9px] font-black border border-accent-pink shrink-0 touch-active">Middle</button>
+          <button data-pos="flex-end" class="story-pos-btn story-tool-btn h-7 px-2 rounded-full bg-slate-800 text-white text-[9px] font-black border border-slate-700 shrink-0 touch-active">Bottom</button>
+          <span class="text-[8px] font-black text-slate-500 uppercase shrink-0 ml-1">Font:</span>
+          <button data-font="default" class="story-font-btn story-tool-btn h-7 px-2 rounded-full bg-slate-800 text-white text-[9px] font-black border border-accent-pink shrink-0 touch-active" style="font-family:Inter,sans-serif">Aa</button>
+          <button data-font="fancy" class="story-font-btn story-tool-btn h-7 px-2 rounded-full bg-slate-800 text-white text-[9px] border border-slate-700 shrink-0 touch-active" style="font-family:'Comic Sans MS','Segoe Script',cursive">Aa</button>
+          <button data-font="mono" class="story-font-btn story-tool-btn h-7 px-2 rounded-full bg-slate-800 text-white text-[9px] border border-slate-700 shrink-0 touch-active" style="font-family:monospace">Aa</button>
+          <button id="storyRotateBtn" class="story-tool-btn h-7 w-7 rounded-full bg-slate-800 text-white border border-slate-700 shrink-0 touch-active flex items-center justify-center" title="Rotate image"><i class="ph ph-arrow-clockwise text-xs"></i></button>
+        </div>
+        <div class="flex items-center gap-2 py-1 overflow-x-auto no-scrollbar">
+          <span class="text-[8px] font-black text-slate-500 uppercase shrink-0">Filter:</span>
+          <button data-filter="" class="story-filter-btn story-tool-btn h-7 px-2 rounded-full bg-slate-800 text-white text-[9px] font-black border border-accent-pink shrink-0 touch-active">Normal</button>
+          <button data-filter="grayscale(100%)" class="story-filter-btn story-tool-btn h-7 px-2 rounded-full bg-slate-800 text-white text-[9px] font-black border border-slate-700 shrink-0 touch-active">B&amp;W</button>
+          <button data-filter="sepia(0.45) saturate(1.3)" class="story-filter-btn story-tool-btn h-7 px-2 rounded-full bg-slate-800 text-white text-[9px] font-black border border-slate-700 shrink-0 touch-active">Warm</button>
+          <button data-filter="brightness(1.05) hue-rotate(-12deg) saturate(1.2)" class="story-filter-btn story-tool-btn h-7 px-2 rounded-full bg-slate-800 text-white text-[9px] font-black border border-slate-700 shrink-0 touch-active">Cool</button>
+          <button data-filter="saturate(1.7) contrast(1.08)" class="story-filter-btn story-tool-btn h-7 px-2 rounded-full bg-slate-800 text-white text-[9px] font-black border border-slate-700 shrink-0 touch-active">Vivid</button>
+        </div>
+
         <div id="statusColorBar" class="flex items-center justify-center gap-2.5 overflow-x-auto no-scrollbar py-1">
           <button data-bg="bg-gradient-to-br from-purple-700 via-indigo-800 to-slate-900" class="status-color-btn h-8 w-8 rounded-full bg-gradient-to-br from-purple-700 to-slate-900 border-2 border-white shadow-md transition transform hover:scale-110 shrink-0"></button>
           <button data-bg="bg-gradient-to-br from-rose-600 via-pink-600 to-purple-800" class="status-color-btn h-8 w-8 rounded-full bg-gradient-to-br from-rose-600 to-purple-800 border-2 border-transparent hover:border-white shadow-md transition transform hover:scale-110 shrink-0"></button>
@@ -665,6 +693,17 @@
           <i class="ph ph-eye text-accent-pink text-base"></i>
           <span class="font-extrabold text-[11px]"><span id="storyViewsCount">0</span> Classmates Viewed</span>
         </div>
+      </div>
+    </div>
+
+    <!-- FORWARD PICKER MODAL -->
+    <div id="forwardPickerModal" class="hidden absolute inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-6">
+      <div class="w-full max-w-[280px] rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl animate-pop-in overflow-hidden">
+        <div class="px-4 py-3 border-b border-slate-800 font-black text-xs text-white flex items-center gap-2">
+          <i class="ph ph-arrow-u-up-right text-accent-pink"></i> Forward To...
+        </div>
+        <div id="forwardList" class="max-h-64 overflow-y-auto divide-y divide-slate-800/60"></div>
+        <button onclick="document.getElementById('forwardPickerModal')?.classList.add('hidden')" class="w-full py-2.5 text-[10px] font-bold text-slate-400 hover:text-white bg-slate-950/60 transition">Cancel</button>
       </div>
     </div>
 
@@ -1005,9 +1044,36 @@
             </button>
           </div>
 
+          <!-- Emoji Panel -->
+          <div id="emojiPanel" class="hidden px-2 pt-2 pb-1 bg-slate-900 border-t border-slate-800 grid grid-cols-8 gap-0.5 z-10"></div>
+
+          <!-- Voice Recording Bar (overlay) -->
+          <div id="voiceRecordBar" class="hidden absolute bottom-0 left-0 right-0 z-30 bg-slate-900/98 backdrop-blur border-t border-rose-500/40 px-3 py-3 items-center gap-3 animate-slide-up">
+            <span class="relative flex h-3 w-3 shrink-0">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-500 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-3 w-3 bg-rose-500"></span>
+            </span>
+            <div class="flex items-end gap-[3px] h-6 shrink-0">
+              <span class="voice-eq-bar w-[3px] rounded-full bg-rose-400" style="height:55%;animation-delay:0s"></span>
+              <span class="voice-eq-bar w-[3px] rounded-full bg-rose-400" style="height:90%;animation-delay:.12s"></span>
+              <span class="voice-eq-bar w-[3px] rounded-full bg-rose-400" style="height:65%;animation-delay:.24s"></span>
+              <span class="voice-eq-bar w-[3px] rounded-full bg-rose-400" style="height:100%;animation-delay:.36s"></span>
+              <span class="voice-eq-bar w-[3px] rounded-full bg-rose-400" style="height:70%;animation-delay:.48s"></span>
+              <span class="voice-eq-bar w-[3px] rounded-full bg-rose-400" style="height:85%;animation-delay:.6s"></span>
+              <span class="voice-eq-bar w-[3px] rounded-full bg-rose-400" style="height:50%;animation-delay:.72s"></span>
+            </div>
+            <span id="voiceTimer" class="text-rose-400 font-black text-sm font-mono shrink-0">0:59</span>
+            <span id="voiceHint" class="text-[9px] text-slate-400 font-bold flex-grow text-center truncate">Release to send &bull; Slide left to cancel</span>
+            <i class="ph ph-microphone text-rose-400 text-lg shrink-0" id="voiceBarIcon"></i>
+          </div>
+
           <!-- Chat Input Bar -->
           <div id="activeChatInputBar" class="p-2 bg-slate-900 border-t border-slate-800 shrink-0 z-10">
             <form id="sendMessageForm" class="flex items-center gap-1.5">
+              <button type="button" id="emojiToggleBtn" title="Emoji" class="touch-active p-2 rounded-xl text-slate-400 hover:text-accent-pink hover:bg-slate-800 transition">
+                <i class="ph ph-smiley text-lg"></i>
+              </button>
+
               <button type="button" id="attachFileBtn" title="Send Document / Image" class="touch-active p-2 rounded-xl text-slate-400 hover:text-accent-pink hover:bg-slate-800 transition">
                 <i class="ph ph-paperclip text-lg"></i>
               </button>
@@ -1016,6 +1082,10 @@
                 <input id="chatMessageInput" type="text" autocomplete="off" placeholder="Type a message..."
                        class="w-full rounded-2xl border border-slate-700 bg-slate-800/90 py-2 pl-3 pr-8 text-xs text-white outline-none focus:border-accent-pink focus:ring-2 focus:ring-accent-pink/20 transition" />
               </div>
+
+              <button type="button" id="voiceMsgBtn" title="Hold to record voice" class="touch-active p-2 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition">
+                <i class="ph ph-microphone text-lg" id="voiceMsgIcon"></i>
+              </button>
 
               <button type="submit" title="Send Message" class="touch-active p-2 rounded-2xl bg-gradient-to-r from-brand-600 via-accent-purple to-accent-pink text-white shadow-glow-pink hover:brightness-110 transition">
                 <i class="ph ph-paper-plane-tilt text-lg"></i>
@@ -1176,6 +1246,12 @@
             <i class="ph ph-sign-out text-base"></i>
             <span>Log Out Account</span>
           </button>
+
+          <button id="deleteAccountBtn" type="button" class="touch-active w-full p-3 rounded-2xl bg-rose-500/20 border border-rose-500/40 text-rose-300 text-xs font-bold flex items-center justify-center gap-2 hover:bg-rose-500/30 transition">
+            <i class="ph ph-user-minus text-base"></i>
+            <span>Delete Account (permanent)</span>
+          </button>
+          <p class="text-center text-[9px] text-slate-600 font-bold pt-1">ClassmateX v1.0 \u2022 Made in Tanzania \u{1F1F9}\u{1F1FF}</p>
         </div>
 
         <!-- SCREEN 5: ADMIN CONTROL CENTER -->
@@ -1252,12 +1328,12 @@
             <div id="adminTabBroadcast" class="hidden space-y-2.5">
               <div class="bg-gradient-to-br from-accent-pink/10 to-slate-900 rounded-2xl border border-accent-pink/30 p-3.5 space-y-2.5">
                 <h4 class="text-[10px] font-black uppercase tracking-wider text-accent-pink flex items-center gap-1.5"><i class="ph ph-megaphone"></i> Announcement Broadcast</h4>
-                <textarea id="broadcastTextInput" rows="3" placeholder="Tangazo kutoka kwa Admin... litatumwa kwenye Global Hub" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white outline-none focus:border-accent-pink resize-none"></textarea>
+                <textarea id="broadcastTextInput" rows="3" placeholder="Announcement from Admin... will be sent to Global Hub" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white outline-none focus:border-accent-pink resize-none"></textarea>
                 <button id="sendBroadcastBtn" class="touch-active w-full py-2.5 rounded-xl bg-gradient-to-r from-brand-600 via-accent-purple to-accent-pink text-white text-xs font-extrabold shadow-glow-pink flex items-center justify-center gap-2">
                   <i class="ph ph-paper-plane-tilt"></i> Send To Everyone
                 </button>
               </div>
-              <p class="text-[9px] text-slate-500 text-center">Ujumbe huu utaonekana kwenye @global_community kama tangazo la Admin</p>
+              <p class="text-[9px] text-slate-500 text-center">This message will appear in @global_community as an Admin announcement</p>
             </div>
 
             <!-- MODERATION -->
@@ -1314,7 +1390,9 @@
       onAuthStateChanged, 
       GoogleAuthProvider, 
       signInWithPopup,
-      sendPasswordResetEmail
+      sendPasswordResetEmail,
+      updatePassword,
+      deleteUser
     } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { 
       getFirestore, 
@@ -1374,6 +1452,9 @@
     let blockedUsers = [];
     let myThreads = [];
     let threadListeners = {};
+    const viewedStories = new Set();
+    let userPrefs = { lastSeen: true, readReceipts: true, msgSounds: true, inAppSounds: true, pushPopups: true };
+    let dmRecipientPrefs = null;
     let currentActiveChatId = 'global-group';
     let messagesUnsubscribe = null;
     let selectedMsgForAction = null;
@@ -1430,6 +1511,7 @@
 
     function playSentSound() {
       try {
+        if (userPrefs.inAppSounds === false) return;
         const ctx = getAudioContext();
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
@@ -1447,6 +1529,7 @@
 
     function playReceivedSound() {
       try {
+        if (userPrefs.msgSounds === false) return;
         const ctx = getAudioContext();
         const now = ctx.currentTime;
         
@@ -1478,7 +1561,7 @@
       return email && email.toLowerCase() === CEO_EMAIL.toLowerCase();
     }
 
-    // ===== FREE MEDIA PIPELINE: compress images to base64 (hakuna Storage/card inahitajika) =====
+    // ===== FREE MEDIA PIPELINE: compress images to base64 (no Storage/card needed) =====
     function compressImageToDataUrl(file, maxDim, quality) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -1564,7 +1647,7 @@
       if (!container || typeof QRCode === 'undefined') return;
       container.innerHTML = '';
       new QRCode(container, {
-        text: `https://classmatex.app/user/@${currentUserHandle}`,
+        text: `${location.origin}${location.pathname}`, // link HALISI ya app yako
         width: 144,
         height: 144,
         colorDark: '#0f172a',
@@ -1595,6 +1678,7 @@
     }
 
     function triggerNotificationToast(senderName, handle, message, avatarInitials) {
+      if (userPrefs.pushPopups === false) return;
       const toast = document.getElementById('topToastNotification');
       if (!toast) return;
       
@@ -1636,19 +1720,22 @@
 
       // ===== PRESENCE TRACKING: mark online + heartbeat every 60s + ban enforcement =====
       if (db) {
-        setDoc(getPublicDoc("users", currentUserHandle), {
-          isOnline: true, lastLoginMs: Date.now(), lastActiveMs: Date.now()
-        }, { merge: true }).catch(() => {});
+        setDoc(getPublicDoc("users", currentUserHandle), Object.assign(
+          { lastLoginMs: Date.now() },
+          userPrefs.lastSeen === false ? { isOnline: false } : { isOnline: true, lastActiveMs: Date.now() }
+        ), { merge: true }).catch(() => {});
         if (presenceInterval) clearInterval(presenceInterval);
         presenceInterval = setInterval(async () => {
           try {
-            await setDoc(getPublicDoc("users", currentUserHandle), { lastActiveMs: Date.now(), isOnline: true }, { merge: true });
+            if (userPrefs.lastSeen !== false) {
+              await setDoc(getPublicDoc("users", currentUserHandle), { lastActiveMs: Date.now(), isOnline: true }, { merge: true });
+            }
             const me = await getDoc(getPublicDoc("users", currentUserHandle));
             if (me.exists() && me.data().banned === true) {
               clearInterval(presenceInterval);
               presenceInterval = null;
               await signOut(auth);
-              triggerNotificationToast("Account Banned", "system", "Akaunti yako imezuiwa na Admin.", "CX");
+              triggerNotificationToast("Account Banned", "system", "Your account has been banned by Admin.", "CX");
             }
           } catch (e) {}
         }, 60000);
@@ -1664,13 +1751,28 @@
       renderAllThreads();
       attachInboxListener();
 
+      // Wire privacy/sound toggles kwenye Firebase (sasa ni HALISI)
+      if (userDoc?.prefs) userPrefs = { ...userPrefs, ...userDoc.prefs };
+      ['prefLastSeen','prefReadReceipts','prefMsgSounds','prefInAppSounds','prefPushPopups'].forEach(pid => {
+        const el = document.getElementById(pid);
+        if (!el) return;
+        const base = pid.replace('pref', '');
+        const key = base.charAt(0).toLowerCase() + base.slice(1);
+        el.checked = userPrefs[key] !== false;
+        el.onchange = () => {
+          userPrefs[key] = el.checked;
+          if (db) setDoc(getPublicDoc("users", currentUserHandle), { prefs: userPrefs }, { merge: true }).catch(() => {});
+          triggerNotificationToast('Settings Saved', currentUserHandle, 'Preferences saved', 'CX');
+        };
+      });
+
       // OneSignal: link device to username for targeted push
       try {
         if (window.OneSignalReady) {
           window.OneSignalReady.login(currentUserHandle).then(() => {
             return window.OneSignalReady.User.addTag('handle', currentUserHandle);
           }).then(() => {
-            // MOMBA RUHUSA ya notifications (bila hii hakuna mtu anayepata prompt!)
+            // ASK for notification permission (without this nobody gets prompted!)
             if (window.OneSignalReady.Slidedown) {
               window.OneSignalReady.Slidedown.promptPush();
             }
@@ -1736,7 +1838,7 @@
             <span class="text-[10px] text-slate-400 shrink-0">${t.lastMsgTime || ''}</span>
           </div>
           <div class="flex justify-between items-center gap-2">
-            <p class="text-[11px] truncate ${(t.unread || 0) > 0 ? 'text-slate-100 font-bold' : 'text-slate-400 font-medium'}">${escapeHtml(t.lastMsg || 'Anza mazungumzo...')}</p>
+            <p class="text-[11px] truncate ${(t.unread || 0) > 0 ? 'text-slate-100 font-bold' : 'text-slate-400 font-medium'}">${escapeHtml(t.lastMsg || 'Start a conversation...')}</p>
             ${unreadHtml}
           </div>
         </div>`;
@@ -1756,8 +1858,13 @@
           });
           t.unread = unread;
           if (lastMsg) {
-            t.lastMsg = lastMsg.text || (lastMsg.mediaType === 'image' ? '\u{1F4F7} Picha' : lastMsg.mediaUrl ? '\u{1F4CE} Faili' : '');
+            t.lastMsg = lastMsg.text || (lastMsg.mediaType === 'image' ? '\u{1F4F7} Photo' : lastMsg.mediaType === 'audio' ? '\u{1F3A4} Voice' : lastMsg.mediaUrl ? '\u{1F4CE} File' : '');
             t.lastMsgTime = lastMsg.time || '';
+            // Thread inapanda JUU (latest message top — kama WhatsApp)
+            const listEl = document.getElementById('chatThreadList');
+            const itemEl = listEl?.querySelector(`[data-chat-id="${chatId}"][data-dynamic-thread]`);
+            if (listEl && itemEl) listEl.insertBefore(itemEl, listEl.querySelector('[data-dynamic-thread]'));
+            myThreads = [t, ...myThreads.filter(x => x.chatId !== chatId)];
           }
           renderThreadItem(t);
         }, () => {});
@@ -1843,7 +1950,8 @@
 
       const lsEl = document.getElementById('wpModalLastSeen');
       if (lsEl) {
-        const uOnline = user.isOnline === true && (Date.now() - (user.lastActiveMs || 0) < 180000);
+        const uHideSeen = user.prefs && user.prefs.lastSeen === false;
+        const uOnline = !uHideSeen && user.isOnline === true && (Date.now() - (user.lastActiveMs || 0) < 180000);
         lsEl.innerHTML = uOnline
           ? '<span class="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Online sasa'
           : 'Last seen: ' + timeAgo(user.lastActiveMs);
@@ -1899,7 +2007,7 @@
       try {
         if (!blockedUsers.includes(handleToBlock)) blockedUsers.push(handleToBlock);
         await setDoc(getPublicDoc("users", currentUserHandle), { blockedUsers: blockedUsers }, { merge: true });
-        triggerNotificationToast("Contact Blocked", handleToBlock, "Ujumbe wake hutaonekana kwenye DMs zako", "CX");
+        triggerNotificationToast("Contact Blocked", handleToBlock, "Their messages will be hidden in your DMs", "CX");
         loadBlockedContactsList();
       } catch (e) {}
     }
@@ -1925,7 +2033,7 @@
           blockedUsers = blockedUsers.filter(x => x !== h);
           try { await setDoc(getPublicDoc("users", currentUserHandle), { blockedUsers: blockedUsers }, { merge: true }); } catch (e) {}
           loadBlockedContactsList();
-          triggerNotificationToast("Unblocked", h, "Unaweza tena kuona ujumbe wake", "CX");
+          triggerNotificationToast("Unblocked", h, "You can see their messages again", "CX");
         });
         row.appendChild(nm);
         row.appendChild(un);
@@ -1968,7 +2076,8 @@
             let reactTag = bubble.querySelector('.msg-reaction-badge');
             if (!reactTag) {
               reactTag = document.createElement('div');
-              reactTag.className = 'msg-reaction-badge absolute -bottom-2 right-2 bg-slate-900 border border-slate-700/80 rounded-full px-2 py-0.5 text-xs shadow-md animate-pop-in flex items-center gap-1 z-10';
+              const posCls = bubble.classList.contains('chat-bubble-sent') ? '-right-2' : '-left-2';
+              reactTag.className = `msg-reaction-badge absolute -bottom-2 ${posCls} bg-slate-900 border border-slate-700/80 rounded-full px-2 py-0.5 text-xs shadow-md animate-pop-in flex items-center gap-1 z-10`;
               bubble.classList.add('relative');
               bubble.appendChild(reactTag);
             }
@@ -1983,23 +2092,32 @@
       });
     });
 
+    document.getElementById('actionCopyMsgBtn')?.addEventListener('click', async () => {
+      if (selectedMsgForAction?.text) {
+        try {
+          await navigator.clipboard.writeText(selectedMsgForAction.text);
+          triggerNotificationToast('Copied', 'system', 'Message copied', 'CX');
+        } catch (e) {}
+      }
+      closeMessageActionModal();
+    });
+
     // Quote Reply Action
+    function startQuoteReply(author, text) {
+      quoteReplyData = { author: author || 'user', text: text || '' };
+      const authorEl = document.getElementById('quoteAuthorText');
+      const textEl = document.getElementById('quoteContentText');
+      const replyBar = document.getElementById('quoteReplyPreviewBar');
+      if (authorEl) authorEl.textContent = `Replying to @${quoteReplyData.author}`;
+      if (textEl) textEl.textContent = quoteReplyData.text;
+      if (replyBar) replyBar.classList.remove('hidden');
+      const input = document.getElementById('chatMessageInput');
+      if (input) input.focus();
+    }
+
     document.getElementById('actionQuoteReplyBtn')?.addEventListener('click', () => {
       if (selectedMsgForAction) {
-        quoteReplyData = {
-          author: selectedMsgForAction.author || 'user',
-          text: selectedMsgForAction.text || ''
-        };
-        const authorEl = document.getElementById('quoteAuthorText');
-        const textEl = document.getElementById('quoteContentText');
-        const replyBar = document.getElementById('quoteReplyPreviewBar');
-        
-        if (authorEl) authorEl.textContent = `Replying to @${quoteReplyData.author}`;
-        if (textEl) textEl.textContent = quoteReplyData.text;
-        if (replyBar) replyBar.classList.remove('hidden');
-
-        const input = document.getElementById('chatMessageInput');
-        if (input) input.focus();
+        startQuoteReply(selectedMsgForAction.author, selectedMsgForAction.text);
       }
       closeMessageActionModal();
     });
@@ -2126,12 +2244,13 @@
               const role = normalizeRole(u);
               activeChatRecipient.lastActiveMs = u.lastActiveMs;
               activeChatRecipient.isOnline = u.isOnline;
+              dmRecipientPrefs = u.prefs || null; // heshimu read receipts zake
               if (role !== 'user' && headerTitle) {
                 headerTitle.innerHTML = `<span>@${formattedHandle}</span> ${getRoleBadgeHtml(role)}`;
               }
               const online = isUserOnline(u);
               if (headerSubtitle) {
-                headerSubtitle.innerHTML = `<span class="h-1.5 w-1.5 rounded-full ${online ? 'bg-emerald-400 animate-ping' : 'bg-slate-500'}"></span> ${online ? 'Online sasa' : 'Last seen: ' + timeAgo(u.lastActiveMs)}`;
+                headerSubtitle.innerHTML = `<span class="h-1.5 w-1.5 rounded-full ${online ? 'bg-emerald-400 animate-ping' : 'bg-slate-500'}"></span> ${online ? 'Online now' : 'Last seen: ' + timeAgo(u.lastActiveMs)}`;
                 currentSubtitleHtml = headerSubtitle.innerHTML;
               }
             }
@@ -2155,6 +2274,59 @@
 
       loadRealtimeMessages(chatId);
     };
+
+    // ===== EMOTION SENSE: dictionary ya hisia (Kiswahili + English) =====
+    const EMOTION_DICT = [
+      { key: 'love', emoji: '\u2764\uFE0F', burst: ['\u2764\uFE0F','\u{1F496}','\u{1F497}','\u{1F49D}','\u{1F60D}','\u{1F970}'],
+        words: ['love','mahaba','mapenzi','nakupenda','napenda','nampenda','mpenzi','mpendwa','moyoni','moyo wangu','sweetheart','honey','bae','babe','dear','busu','kiss','nakumiss','nakumisi','miss you'] },
+      { key: 'joy', emoji: '\u{1F602}', burst: ['\u{1F602}','\u{1F923}','\u{1F606}','\u{1F604}'],
+        words: ['haha','hehe','hihi','funny','cheka','kicheko','mzaha','komedi','fun','enjoy','furahi','nimefurahi','shangilia'] },
+      { key: 'sad', emoji: '\u{1F622}', burst: ['\u{1F622}','\u{1F97A}','\u{1F62D}','\u{1F494}'],
+        words: ['sad','huzuni','huzunika','kilio','nalia','nalia','cry','crying','msongo','stress','maumivu','pain','pole','nimeumia','heartbreak','kuvunjika moyo'] },
+      { key: 'party', emoji: '\u{1F389}', burst: ['\u{1F389}','\u{1F38A}','\u{1F44F}','\u{1F973}'],
+        words: ['congrats','hongera','pongezi','sherehe','celebrate','party','victory','ushindi','nimefaulu','nimepass','imepita','graduation','birthday','siku ya kuzaliwa'] },
+      { key: 'fire', emoji: '\u{1F525}', burst: ['\u{1F525}','\u26A1','\u{1F4AF}','\u{1F680}'],
+        words: ['fire','kali','dope','lit','nzuri sana','imeweza','umeweza','umekaza','ubaya','pressure','kiboko','goal','goli'] },
+      { key: 'thanks', emoji: '\u{1F64F}', burst: ['\u{1F64F}','\u{1F970}','\u{1F49B}'],
+        words: ['asante','thank','thanks','shukrani','ahsante','natumai'] },
+      { key: 'greet', emoji: '\u{1F44B}', burst: ['\u{1F44B}','\u{1F60A}','\u2728'],
+        words: ['habari','hujambo','mambo','vipi','hello','helo','hi','good morning','good evening','shikamoo','salam'] },
+      { key: 'sleep', emoji: '\u{1F634}', burst: ['\u{1F634}','\u{1F319}','\u{1F4A4}'],
+        words: ['good night','usiku mwema','lala','usingizi','nitakulala','sleep','bed'] },
+      { key: 'money', emoji: '\u{1F4B0}', burst: ['\u{1F4B0}','\u{1F4B5}','\u{1F911}'],
+        words: ['pesa','hela','malipo','dollar','rich','tajiri','mpesa','mshahara','faida'] }
+    ];
+
+    function detectEmotion(text) {
+      const t = ' ' + String(text || '').toLowerCase() + ' ';
+      for (const cat of EMOTION_DICT) {
+        for (const w of cat.words) {
+          if (t.includes(w)) return cat;
+        }
+      }
+      return null;
+    }
+
+    function burstEmojis(x, y, emojis) {
+      const container = document.getElementById('messagesContainer');
+      if (!container || !emojis || !emojis.length) return;
+      const rect = container.getBoundingClientRect();
+      const cx = (x != null) ? x - rect.left : rect.width / 2;
+      const cy = (y != null) ? y - rect.top : rect.height * 0.75;
+      for (let i = 0; i < 14; i++) {
+        const s = document.createElement('span');
+        s.textContent = emojis[i % emojis.length];
+        s.style.cssText = `position:absolute;left:${cx}px;top:${cy}px;font-size:${16 + Math.random() * 14}px;pointer-events:none;z-index:60;transition:all 1.3s cubic-bezier(.16,1,.3,1);will-change:transform,opacity;`;
+        container.appendChild(s);
+        requestAnimationFrame(() => {
+          const ang = Math.random() * Math.PI * 2;
+          const dist = 70 + Math.random() * 130;
+          s.style.transform = `translate(${Math.cos(ang) * dist}px, ${-Math.abs(Math.sin(ang)) * dist - 50}px) rotate(${((Math.random() * 360) | 0)}deg) scale(${0.5 + Math.random()})`;
+          s.style.opacity = '0';
+        });
+        setTimeout(() => s.remove(), 1450);
+      }
+    }
 
     function renderMessageBubble(msg, isSent) {
       const container = document.getElementById('messagesContainer');
@@ -2206,6 +2378,8 @@
       if (msg.mediaUrl) {
         if (msg.mediaType === 'image') {
           contentHtml += `<img src="${msg.mediaUrl}" class="max-w-full rounded-xl my-1 max-h-48 object-cover shadow-sm" />`;
+        } else if (msg.mediaType === 'audio') {
+          contentHtml += `<audio controls src="${msg.mediaUrl}" class="w-48 max-w-full my-1 rounded-lg"></audio>`;
         } else {
           contentHtml += `
             <a href="${msg.mediaUrl}" download="${msg.fileName || 'document'}" class="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-950/60 my-1 text-cyan-400 font-bold border border-white/10 hover:border-cyan-400 transition">
@@ -2229,7 +2403,7 @@
 
       if (msg.reaction) {
         contentHtml += `
-          <div class="msg-reaction-badge absolute -bottom-2 right-2 bg-slate-900 border border-slate-700 rounded-full px-1.5 py-0.5 text-xs shadow-md animate-pop-in">
+          <div class="msg-reaction-badge absolute -bottom-2 ${isSent ? '-right-2' : '-left-2'} bg-slate-900 border border-slate-700 rounded-full px-1.5 py-0.5 text-xs shadow-md animate-pop-in">
             ${msg.reaction}
           </div>
         `;
@@ -2244,6 +2418,36 @@
           openFullImage(bubbleImg.src);
         });
       }
+      // SWIPE RIGHT kujibu moja kwa moja (kama WhatsApp)
+      let swipeStartX = 0, swipeStartY = 0, swipeActive = false;
+      bubble.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 1) {
+          swipeStartX = e.touches[0].clientX;
+          swipeStartY = e.touches[0].clientY;
+          swipeActive = true;
+        }
+      }, { passive: true });
+      bubble.addEventListener('touchmove', (e) => {
+        if (!swipeActive) return;
+        const dx = e.touches[0].clientX - swipeStartX;
+        const dy = Math.abs(e.touches[0].clientY - swipeStartY);
+        if (dx > 10 && dx > dy && dx < 90) {
+          bubble.style.transition = 'none';
+          bubble.style.transform = `translateX(${dx}px)`;
+        }
+      }, { passive: true });
+      bubble.addEventListener('touchend', (e) => {
+        if (!swipeActive) return;
+        const dx = e.changedTouches[0].clientX - swipeStartX;
+        const dy = Math.abs(e.changedTouches[0].clientY - swipeStartY);
+        bubble.style.transition = '';
+        bubble.style.transform = '';
+        swipeActive = false;
+        if (dx > 60 && dy < 50) {
+          startQuoteReply(msg.senderHandle, msg.text || (msg.mediaUrl ? '[picha/faili/sauti]' : ''));
+        }
+      });
+
       bubbleWrapper.appendChild(bubble);
 
       // Long-press Touch & Drag Guard
@@ -2317,7 +2521,7 @@
 
       const dmTarget = currentActiveChatId.startsWith('dm-') ? currentActiveChatId.replace('dm-', '') : null;
       if (dmTarget && blockedUsers.includes(dmTarget)) {
-        triggerNotificationToast("Blocked", "system", `Umemzuia @${dmTarget} — enda Profile > Blocked Contacts ku-unblock`, "CX");
+        triggerNotificationToast("Blocked", "system", `You blocked @${dmTarget} — go to Profile > Blocked Contacts to unblock`, "CX");
         return;
       }
 
@@ -2375,8 +2579,11 @@
       };
 
       // OPTIMISTIC UI: Render instantly & clear input immediately!
+      document.getElementById('emojiPanel')?.classList.add('hidden');
       renderMessageBubble(newMsg, true);
       playSentSound();
+      const emoHit = detectEmotion(text || '');
+      if (emoHit) burstEmojis(null, null, emoHit.burst);
 
       if (input) input.value = '';
       quoteReplyData = null;
@@ -2392,7 +2599,7 @@
             const rdoc = rsnap.exists() ? rsnap.data() : null;
             const rMuted = rdoc && Array.isArray(rdoc.mutedChats) && rdoc.mutedChats.includes(currentActiveChatId);
             if (!rMuted) {
-              notifyPush(pushTarget, currentUserName || ('@' + currentUserHandle), text || (mediaType === 'image' ? '📷 Picha mpya' : '📎 Attachment'));
+              notifyPush(pushTarget, currentUserName || ('@' + currentUserHandle), text || (mediaType === 'image' ? '📷 New photo' : '📎 Attachment'));
             }
           } catch (e) {}
         }
@@ -2444,6 +2651,205 @@
       } catch (e) {}
     }
 
+    // ===== EMOJI PANEL kwenye input =====
+    const EMOJI_SET = ['\u{1F600}','\u{1F602}','\u{1F923}','\u{1F60A}','\u{1F60D}','\u{1F970}','\u{1F60E}','\u{1F929}','\u{1F622}','\u{1F62D}','\u{1F621}','\u{1F97A}','\u{1F64F}','\u{1F44D}','\u{1F44E}','\u{1F44F}','\u{1F64C}','\u{1F4AA}','\u{1F525}','\u{2728}','\u{1F389}','\u2764\uFE0F','\u{1F4AF}','\u{1F4A1}','\u{1F680}','\u{1F1F9}\u{1F1FF}','\u{1F30D}','\u2600\uFE0F','\u{1F319}','\u2B50','\u{1F340}','\u{1F3B5}'];
+    function buildEmojiPanel() {
+      const panel = document.getElementById('emojiPanel');
+      if (!panel || panel.children.length) return;
+      EMOJI_SET.forEach(em => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'text-lg py-1.5 hover:scale-125 transition transform';
+        b.textContent = em;
+        b.addEventListener('click', () => {
+          const input = document.getElementById('chatMessageInput');
+          if (input) { input.value += em; input.focus(); }
+        });
+        panel.appendChild(b);
+      });
+    }
+    buildEmojiPanel();
+    document.getElementById('emojiToggleBtn')?.addEventListener('click', () => {
+      buildEmojiPanel();
+      document.getElementById('emojiPanel')?.classList.toggle('hidden');
+    });
+
+    // ===== VOICE MESSAGES PRO: countdown, equalizer, slide-to-cancel =====
+    let mediaRecorder = null;
+    let recordStream = null;
+    let audioChunks = [];
+    let recordingActive = false;
+    let recordRequested = false;
+    let recordStart = 0;
+    let recordStartX = 0;
+    let recordCountdownInt = null;
+    let recordCancelMode = false;
+
+    function showVoiceBar(show) {
+      const bar = document.getElementById('voiceRecordBar');
+      if (!bar) return;
+      bar.classList.toggle('hidden', !show);
+      bar.classList.toggle('flex', show);
+    }
+
+    function resetVoiceBarUI() {
+      recordCancelMode = false;
+      const hint = document.getElementById('voiceHint');
+      if (hint) {
+        hint.textContent = 'Release to send \u2022 Slide left to cancel';
+        hint.classList.remove('text-rose-400');
+      }
+      const ic = document.getElementById('voiceBarIcon');
+      if (ic) ic.className = 'ph ph-microphone text-rose-400 text-lg shrink-0';
+    }
+
+    async function startVoiceRecording(e) {
+      if (recordingActive || recordRequested) return;
+      recordRequested = true;
+      if (e && e.touches && e.touches[0]) recordStartX = e.touches[0].clientX;
+      resetVoiceBarUI();
+      try {
+        recordStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      } catch (err) {
+        recordRequested = false;
+        triggerNotificationToast('Microphone Blocked', 'system', 'Microphone permission denied by browser', 'CX');
+        return;
+      }
+      if (!recordRequested) {
+        // mtumiaji alishaachia kabla ya ruhusa kutoka
+        if (recordStream) { recordStream.getTracks().forEach(t => t.stop()); recordStream = null; }
+        return;
+      }
+      audioChunks = [];
+      mediaRecorder = new MediaRecorder(recordStream);
+      mediaRecorder.ondataavailable = (ev) => { if (ev.data.size) audioChunks.push(ev.data); };
+      mediaRecorder.onstop = async () => {
+        if (recordStream) { recordStream.getTracks().forEach(t => t.stop()); recordStream = null; }
+        const dur = Date.now() - recordStart;
+        const blob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+        const icon = document.getElementById('voiceMsgIcon');
+        if (icon) icon.className = 'ph ph-microphone text-lg';
+        recordingActive = false;
+        if (recordCancelMode) {
+          recordCancelMode = false;
+          triggerNotificationToast('Discarded', 'system', 'Recording discarded', 'CX');
+          return;
+        }
+        if (dur < 800 || blob.size < 1000) {
+          triggerNotificationToast('Recording Too Short', 'system', 'Hold for at least 1 second', 'CX');
+          return;
+        }
+        try {
+          const dataUrl = await fileToDataUrl(blob);
+          const now = new Date();
+          const optMsgId = 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+          const newMsg = {
+            id: optMsgId, text: '',
+            senderId: currentUserId || 'demo-user',
+            senderHandle: currentUserHandle,
+            isCeo: isCeoUser,
+            senderRole: currentUserRole,
+            time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            createdAtMs: Date.now(),
+            status: 'sent',
+            mediaUrl: dataUrl, mediaType: 'audio', fileName: 'Sauti'
+          };
+          renderMessageBubble(newMsg, true);
+          playSentSound();
+          await setDoc(getPublicDoc(`messages_${currentActiveChatId}`, optMsgId), newMsg);
+          const pushTarget = currentActiveChatId.startsWith('dm-') ? currentActiveChatId.replace('dm-', '') : null;
+          if (pushTarget) notifyPush(pushTarget, currentUserName || ('@' + currentUserHandle), '\u{1F3A4} Voice message');
+        } catch (err) {}
+      };
+      mediaRecorder.start();
+      recordingActive = true;
+      recordRequested = false;
+      recordStart = Date.now();
+      showVoiceBar(true);
+      let remaining = 59;
+      const tEl = document.getElementById('voiceTimer');
+      if (tEl) tEl.textContent = '0:59';
+      recordCountdownInt = setInterval(() => {
+        if (tEl) tEl.textContent = '0:' + String(Math.max(remaining, 0)).padStart(2, '0');
+        remaining--;
+        if (remaining < 0) stopVoiceRecording();
+      }, 1000);
+    }
+
+    function updateVoiceSlide(e) {
+      if (!recordingActive || !e.touches || !e.touches[0]) return;
+      const dx = e.touches[0].clientX - recordStartX;
+      if (dx < -60 && !recordCancelMode) {
+        recordCancelMode = true;
+        const hint = document.getElementById('voiceHint');
+        if (hint) { hint.textContent = 'Release to cancel...'; hint.classList.add('text-rose-400'); }
+        const ic = document.getElementById('voiceBarIcon');
+        if (ic) ic.className = 'ph ph-trash text-rose-400 text-lg shrink-0';
+      } else if (dx > -30 && recordCancelMode) {
+        resetVoiceBarUI();
+      }
+    }
+
+    function stopVoiceRecording() {
+      if (recordCountdownInt) { clearInterval(recordCountdownInt); recordCountdownInt = null; }
+      showVoiceBar(false);
+      if (!recordingActive) { recordRequested = false; return; }
+      try { mediaRecorder.stop(); } catch (e) {}
+    }
+
+    const voiceBtnEl = document.getElementById('voiceMsgBtn');
+    voiceBtnEl?.addEventListener('touchstart', (e) => { e.preventDefault(); startVoiceRecording(e); }, { passive: false });
+    voiceBtnEl?.addEventListener('touchmove', (e) => { e.preventDefault(); updateVoiceSlide(e); }, { passive: false });
+    voiceBtnEl?.addEventListener('touchend', (e) => { e.preventDefault(); stopVoiceRecording(); }, { passive: false });
+    voiceBtnEl?.addEventListener('touchcancel', () => stopVoiceRecording());
+    voiceBtnEl?.addEventListener('mousedown', startVoiceRecording);
+    voiceBtnEl?.addEventListener('mousemove', updateVoiceSlide);
+    voiceBtnEl?.addEventListener('mouseup', stopVoiceRecording);
+
+    // ===== FORWARD message =====
+    document.getElementById('actionForwardMsgBtn')?.addEventListener('click', () => {
+      const msg = selectedMsgForAction;
+      closeMessageActionModal();
+      if (!msg) return;
+      const list = document.getElementById('forwardList');
+      if (!list) return;
+      list.innerHTML = '';
+      const targets = [{ chatId: 'global-group', name: '@global_community' }]
+        .concat(myThreads.map(t => ({ chatId: t.chatId, name: '@' + t.handle })));
+      const seen = new Set();
+      targets.forEach(tg => {
+        if (seen.has(tg.chatId) || tg.chatId === currentActiveChatId) return;
+        seen.add(tg.chatId);
+        const row = document.createElement('button');
+        row.className = 'w-full px-4 py-3 text-left text-xs font-bold text-white hover:bg-slate-800/70 flex items-center gap-3 transition';
+        const initials = tg.name.replace('@', '').substring(0, 2).toUpperCase();
+        row.innerHTML = `<span class="h-8 w-8 rounded-full bg-gradient-to-tr from-brand-500 to-accent-pink text-[10px] font-black flex items-center justify-center text-white shrink-0">${initials}</span><span class="truncate">${tg.name}</span>`;
+        row.addEventListener('click', async () => {
+          document.getElementById('forwardPickerModal')?.classList.add('hidden');
+          try {
+            const fid = 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+            await setDoc(getPublicDoc(`messages_${tg.chatId}`, fid), {
+              id: fid,
+              text: `[Forwarded from @${msg.author || 'user'}] ${msg.text || '[media]'}`,
+              senderId: currentUserId,
+              senderHandle: currentUserHandle,
+              isCeo: isCeoUser,
+              senderRole: currentUserRole,
+              time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              createdAtMs: Date.now(),
+              status: 'sent'
+            });
+            triggerNotificationToast('Forwarded', currentUserHandle, `Forwarded to ${tg.name}`, 'CX');
+          } catch (e) {}
+        });
+        list.appendChild(row);
+      });
+      if (!list.children.length) {
+        list.innerHTML = '<p class="text-[10px] text-slate-500 text-center py-3">No other chats yet</p>';
+      }
+      document.getElementById('forwardPickerModal')?.classList.remove('hidden');
+    });
+
     // ===== REALTIME TYPING: broadcast while typing, stop after 2.5s idle =====
     document.getElementById('chatMessageInput')?.addEventListener('input', async () => {
       if (!db || !currentUserHandle || !currentActiveChatId) return;
@@ -2480,15 +2886,37 @@
     let storyFontSize = 20;
     let storyFontBold = false;
     let storyFontColor = '#ffffff';
+    let storyTextPos = 'center';
+    let storyFontFam = 'default';
+    let storyFilter = '';
+    let storyRotation = 0;
 
-    function applyStoryTextStyle() {
+    const STORY_FONTS = {
+      default: "Inter, sans-serif",
+      fancy: "'Comic Sans MS', 'Segoe Script', cursive",
+      mono: "monospace"
+    };
+
+    function applyStoryStudio() {
       const el = document.getElementById('storyTextInput');
-      if (!el) return;
-      el.style.fontSize = storyFontSize + 'px';
-      el.style.fontWeight = storyFontBold ? '900' : '700';
-      el.style.color = storyFontColor;
+      if (el) {
+        el.style.fontSize = storyFontSize + 'px';
+        el.style.fontWeight = storyFontBold ? '900' : '700';
+        el.style.color = storyFontColor;
+        el.style.fontFamily = STORY_FONTS[storyFontFam] || STORY_FONTS.default;
+      }
+      const canvas = document.getElementById('storyCanvasPreview');
+      if (canvas) canvas.style.justifyContent = storyTextPos;
+      const pv = document.getElementById('storyImagePreview');
+      if (pv) { pv.style.filter = storyFilter; pv.style.transform = storyRotation ? `rotate(${storyRotation}deg)` : ''; }
+      const pvV = document.getElementById('storyVideoPreview');
+      if (pvV) { pvV.style.filter = storyFilter; pvV.style.transform = storyRotation ? `rotate(${storyRotation}deg)` : ''; }
       const boldBtn = document.getElementById('storyBoldBtn');
       if (boldBtn) boldBtn.classList.toggle('border-accent-pink', storyFontBold);
+    }
+
+    function applyStoryTextStyle() {
+      applyStoryStudio();
       const sizeBtn = document.getElementById('storySizeBtn');
       if (sizeBtn) sizeBtn.textContent = storyFontSize >= 36 ? 'A+' : storyFontSize >= 28 ? 'Aa' : 'A-';
     }
@@ -2501,6 +2929,38 @@
     document.getElementById('storySizeBtn')?.addEventListener('click', () => {
       storyFontSize = storyFontSize >= 36 ? 20 : storyFontSize >= 28 ? 36 : 28;
       applyStoryTextStyle();
+    });
+
+    document.querySelectorAll('.story-pos-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        storyTextPos = btn.dataset.pos || 'center';
+        document.querySelectorAll('.story-pos-btn').forEach(b => b.classList.replace('border-accent-pink', 'border-slate-700'));
+        btn.classList.replace('border-slate-700', 'border-accent-pink');
+        applyStoryStudio();
+      });
+    });
+
+    document.querySelectorAll('.story-font-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        storyFontFam = btn.dataset.font || 'default';
+        document.querySelectorAll('.story-font-btn').forEach(b => b.classList.replace('border-accent-pink', 'border-slate-700'));
+        btn.classList.replace('border-slate-700', 'border-accent-pink');
+        applyStoryStudio();
+      });
+    });
+
+    document.querySelectorAll('.story-filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        storyFilter = btn.dataset.filter || '';
+        document.querySelectorAll('.story-filter-btn').forEach(b => b.classList.replace('border-accent-pink', 'border-slate-700'));
+        btn.classList.replace('border-slate-700', 'border-accent-pink');
+        applyStoryStudio();
+      });
+    });
+
+    document.getElementById('storyRotateBtn')?.addEventListener('click', () => {
+      storyRotation = (storyRotation + 90) % 360;
+      applyStoryStudio();
     });
 
     document.querySelectorAll('.story-color-dot').forEach(btn => {
@@ -2593,6 +3053,10 @@
           textSize: storyFontSize,
           textBold: storyFontBold,
           textColor: storyFontColor,
+          textPos: storyTextPos,
+          textFam: storyFontFam,
+          textFilter: storyFilter,
+          textRot: storyRotation,
           createdAtMs: Date.now(),
           expiresAtMs: Date.now() + 24 * 3600 * 1000
         });
@@ -2624,7 +3088,8 @@
           </div>
           ${countBadge}
         </div>
-        <span class="text-[10px] font-bold tracking-tight text-brand-400 flex items-center">@${s.handle}${isCeoStory ? getVerifiedBadgeHtml(true) : ''}</span>
+        <span class="text-[10px] font-bold tracking-tight text-brand-400 flex items-center">@${s.handle}${isCeoStory ? getVerifiedBadgeHtml(true) : ''} </span>
+        <span class="text-[8px] text-slate-500 font-bold">${timeAgo(s.createdAtMs)}</span>
       `;
       item.addEventListener('click', () => openStoryQueue(group));
       container.appendChild(item);
@@ -2640,8 +3105,14 @@
         storySize: st.textSize || 20,
         storyBold: !!st.textBold,
         storyColor: st.textColor || '#ffffff',
+        storyPos: st.textPos || 'center',
+        storyFam: st.textFam || 'default',
+        storyFilter: st.textFilter || '',
+        storyRot: st.textRot || 0,
         storyId: st._id || null,
-        viewsCount: (st.views || []).length
+        viewsCount: (st.views || []).length,
+        storyPosted: st.createdAtMs || 0,
+        storyExpires: st.expiresAtMs || 0,
       }));
       storyIndex = 0;
       openStoryViewer(storyQueue[0]);
@@ -2738,6 +3209,13 @@
       const contentBox = document.getElementById('storyContentContainer');
       const bar = document.getElementById('storyProgressBar');
 
+      const timeEl2 = document.getElementById('storyViewerTime');
+      if (timeEl2) {
+        const postedTxt = data.storyPosted ? timeAgo(data.storyPosted) : 'just now';
+        const leftTxt = data.storyExpires ? timeUntil(data.storyExpires) : null;
+        timeEl2.textContent = leftTxt ? `${postedTxt} \u2022 expires in ${leftTxt}` : postedTxt;
+      }
+
       if (nameEl) nameEl.innerHTML = `${data.storyHandle || '@classmate'} ${String(data.storyHandle || '').replace('@','') === 'fahmy_mazrui' ? getVerifiedBadgeHtml(true) : ''}`;
       if (contentBox) contentBox.className = `flex-grow flex flex-col items-center justify-center rounded-3xl overflow-hidden ${data.storyBg || 'bg-slate-900'} border border-slate-800 relative my-2 p-4 text-center shadow-2xl transition-all duration-300`;
 
@@ -2762,17 +3240,32 @@
         textEl.style.fontSize = (data.storySize || 20) + 'px';
         textEl.style.fontWeight = data.storyBold ? '900' : '700';
         textEl.style.color = data.storyColor || '#ffffff';
+        textEl.style.fontFamily = STORY_FONTS[data.storyFam] || STORY_FONTS.default;
       }
+      const sContainer = document.getElementById('storyContentContainer');
+      if (sContainer) sContainer.style.justifyContent = data.storyPos || 'center';
+      const mediaFilter = data.storyFilter || '';
+      const mediaRot = data.storyRot || 0;
+      ['storyViewerImage', 'storyViewerVideo'].forEach(mid => {
+        const mEl = document.getElementById(mid);
+        if (mEl) { mEl.style.filter = mediaFilter; mEl.style.transform = mediaRot ? `rotate(${mediaRot}deg)` : ''; }
+      });
 
       modal?.classList.remove('hidden');
 
       // Views halisi: onyesha + record
       const vcEl = document.getElementById('storyViewsCount');
       if (vcEl) vcEl.textContent = data.viewsCount || 0;
-      if (data.storyId && currentUserHandle) {
+      // IDADI HALISI: record mara MOJA tu, kisha soma idadi sahihi kutoka server
+      if (data.storyId && currentUserHandle && !viewedStories.has(data.storyId)) {
+        viewedStories.add(data.storyId);
         try {
-          updateDoc(getPublicDoc("stories", data.storyId), { views: arrayUnion(currentUserHandle) }).then(() => {
-            if (vcEl) vcEl.textContent = (parseInt(vcEl.textContent || '0', 10) + 1);
+          updateDoc(getPublicDoc("stories", data.storyId), { views: arrayUnion(currentUserHandle) }).then(async () => {
+            try {
+              const d2 = await getDoc(getPublicDoc("stories", data.storyId));
+              const exact = (d2.data()?.views || []).length;
+              if (vcEl) vcEl.textContent = exact;
+            } catch (e) {}
           }).catch(() => {});
         } catch (e) {}
       }
@@ -2841,7 +3334,7 @@
           const sEl = document.getElementById('onlineLiveStatusText');
           if (!tEl || !sEl) return;
           if (typers.length) {
-            tEl.textContent = (typers.length === 1 ? `@${typers[0]}` : `${typers.length} watumiaji`) + ' inaandika...';
+            tEl.textContent = (typers.length === 1 ? `@${typers[0]}` : `${typers.length} people`) + ' is typing...';
             tEl.classList.remove('hidden');
             sEl.classList.add('hidden');
           } else {
@@ -2872,6 +3365,23 @@
             if (!renderedMsgIds.has(msg.id)) {
               if (!isSent) receivedNewCount++;
               renderMessageBubble(msg, isSent);
+              // EMOTION SENSE: ujumbe wenye hisia → mlipuko wa emoji + reaction otomatiki
+              if (!isSent && msg.text) {
+                const emoRecv = detectEmotion(msg.text);
+                if (emoRecv) {
+                  const bubEl = container.lastElementChild;
+                  const r = bubEl ? bubEl.getBoundingClientRect() : null;
+                  burstEmojis(r ? r.left + r.width / 2 : null, r ? r.top : null, emoRecv.burst);
+                  const bubInner = bubEl?.querySelector('.chat-bubble-received');
+                  if (bubInner && !bubInner.querySelector('.msg-reaction-badge')) {
+                    const tag = document.createElement('div');
+                    tag.className = 'msg-reaction-badge absolute -bottom-2 -left-2 bg-slate-900 border border-slate-700 rounded-full px-1.5 py-0.5 text-xs shadow-md animate-pop-in';
+                    tag.textContent = emoRecv.emoji;
+                    bubInner.classList.add('relative');
+                    bubInner.appendChild(tag);
+                  }
+                }
+              }
             }
             // SYNC STATUS: my messages -> update ticks live; others' messages -> mark delivered/read
             if (isSent) {
@@ -2879,7 +3389,8 @@
             } else if (db && msg.id && msg.status !== 'read') {
               const chatVisible = !document.hidden
                 && !(document.getElementById('screenActiveChat')?.classList.contains('hidden'));
-              const newStatus = chatVisible ? 'read' : 'delivered';
+              const receiptsOn = !dmRecipientPrefs || dmRecipientPrefs.readReceipts !== false;
+              const newStatus = (chatVisible && receiptsOn) ? 'read' : 'delivered';
               if (newStatus !== msg.status) {
                 updateDoc(getPublicDoc(`messages_${currentActiveChatId}`, msg.id), { status: newStatus }).catch(() => {});
               }
@@ -2932,7 +3443,8 @@
           const p = document.createElement('p');
           p.className = 'text-[10px] text-slate-400 truncate';
           const mOnline = isUserOnline(m);
-        p.textContent = (m.bio || 'Classmate Member') + ' • ' + (mOnline ? 'Online sasa' : 'Last seen ' + timeAgo(m.lastActiveMs));
+        const mHideSeen = m.prefs && m.prefs.lastSeen === false;
+        p.textContent = (m.bio || 'Classmate Member') + ' • ' + (mOnline && !mHideSeen ? 'Online now' : mHideSeen ? 'Last seen recently' : 'Last seen ' + timeAgo(m.lastActiveMs));
         if (mOnline) { p.classList.remove('text-slate-400'); p.classList.add('text-emerald-400'); }
           info.appendChild(h4);
           info.appendChild(p);
@@ -3046,11 +3558,11 @@
       const newBio = document.getElementById('editBioInput')?.value.trim();
 
       if (editUsernameError && !editUsernameError.classList.contains('hidden')) {
-        triggerNotificationToast("Username Taken", "system", "Username hii tayari imetumiwa, tafadhali chagua nyingine.", "CX");
+        triggerNotificationToast("Username Taken", "system", "Username already taken, please choose another.", "CX");
         return;
       }
       if (!newHandle) {
-        triggerNotificationToast("Invalid Username", "system", "Username haitakiwi kuwa wazi.", "CX");
+        triggerNotificationToast("Invalid Username", "system", "Username cannot be empty.", "CX");
         return;
       }
 
@@ -3059,7 +3571,7 @@
           const taken = await getDocs(query(getPublicCol("users"), where("username", "==", newHandle)));
           if (!taken.empty) {
             editUsernameError?.classList.remove('hidden');
-            triggerNotificationToast("Username Taken", "system", "Username hii tayari imetumiwa.", "CX");
+            triggerNotificationToast("Username Taken", "system", "Username already taken.", "CX");
             return;
           }
         }
@@ -3148,6 +3660,11 @@
     document.getElementById('closeQrModalBtn')?.addEventListener('click', () => document.getElementById('profileQrModal')?.classList.add('hidden'));
     document.getElementById('addMyStoryBtn')?.addEventListener('click', () => {
       storyFontSize = 20; storyFontBold = false; storyFontColor = '#ffffff';
+      storyTextPos = 'center'; storyFontFam = 'default'; storyFilter = ''; storyRotation = 0;
+      document.querySelectorAll('.story-pos-btn,.story-font-btn,.story-filter-btn').forEach(b => {
+        b.classList.remove('border-accent-pink');
+        b.classList.add('border-slate-700');
+      });
       applyStoryTextStyle();
       document.getElementById('createStoryModal')?.classList.remove('hidden');
     });
@@ -3163,7 +3680,7 @@
     // Copy Profile Link Button (Iframe-Safe ExecCommand)
     document.getElementById('copyProfileLinkBtn')?.addEventListener('click', () => {
       const dummy = document.createElement('input');
-      dummy.value = `https://classmatex.app/user/@${currentUserHandle}`;
+      dummy.value = `${location.origin}${location.pathname}?u=@${currentUserHandle}`;
       document.body.appendChild(dummy);
       dummy.select();
       document.execCommand('copy');
@@ -3186,7 +3703,7 @@
       const idInput = (document.getElementById('login-identifier')?.value || '').trim();
       const password = document.getElementById('login-password')?.value || '';
       if (!idInput || !password) {
-        triggerNotificationToast("Login Failed", "system", "Tafadhali jaza barua pepe/username na nenosiri.", "CX");
+        triggerNotificationToast("Login Failed", "system", "Please fill in email/username and password.", "CX");
         return;
       }
       try {
@@ -3200,8 +3717,8 @@
         await signInWithEmailAndPassword(auth, email, password);
       } catch (err) {
         const msg = err.message === 'username-not-found'
-          ? 'Username hajapatikana — tumia barua pepe badala yake.'
-          : 'Nenosiri si sahihi au akaunti haipo.';
+          ? 'Username not found — use email instead.'
+          : 'Incorrect password or account does not exist.';
         triggerNotificationToast("Login Failed", "system", msg, "CX");
       }
     });
@@ -3213,7 +3730,7 @@
       const username = (document.getElementById('signup-username')?.value || '').trim().replace('@','').toLowerCase();
       const password = document.getElementById('signup-password')?.value || '';
       if (!name || !email || !username || password.length < 6) {
-        triggerNotificationToast("Sign Up Failed", "system", "Jaza taarifa zote (nenosiri: herufi 6+).", "CX");
+        triggerNotificationToast("Sign Up Failed", "system", "Fill in all fields (password: 6+ characters).", "CX");
         return;
       }
       try {
@@ -3230,8 +3747,8 @@
         });
       } catch (err) {
         const msg = err.message === 'username-taken'
-          ? 'Username hii tayari imetumiwa, chagua nyingine.'
-          : 'Imeshindikana: ' + (err.code || err.message);
+          ? 'Username already taken, choose another one.'
+          : 'Failed: ' + (err.code || err.message);
         triggerNotificationToast("Sign Up Failed", "system", msg, "CX");
       }
     });
@@ -3244,7 +3761,7 @@
         await sendPasswordResetEmail(auth, email);
         triggerNotificationToast("Reset Email Sent", "system", `Password reset link sent to ${email}`, "CX");
       } catch (err) {
-        triggerNotificationToast("Reset Failed", "system", "Barua pepe haijapatikana kwenye mfumo.", "CX");
+        triggerNotificationToast("Reset Failed", "system", "Email not found in the system.", "CX");
       }
       document.querySelectorAll('.auth-card').forEach(card => card.classList.add('hidden'));
       document.getElementById('form-login')?.classList.remove('hidden');
@@ -3257,7 +3774,8 @@
         const cred = await signInWithPopup(auth, provider);
         currentUserId = cred.user.uid;
         const email = cred.user.email || '';
-        const username = email.split('@')[0].toLowerCase().replace(/[^a-z0-9_]/g, '') || 'user';
+        let username = email.split('@')[0].toLowerCase().replace(/[^a-z0-9_]/g, '') || 'user';
+        if (checkCeoStatus(email)) username = 'fahmy_mazrui'; // JINA MOJA — si duplicate
         const existing = await getDoc(getPublicDoc("users", username));
         if (!existing.exists()) {
           await setDoc(getPublicDoc("users", username), {
@@ -3271,7 +3789,7 @@
           });
         }
       } catch (err) {
-        triggerNotificationToast("Google Sign-In", "system", "Imeshindikana: " + (err.code || err.message), "CX");
+        triggerNotificationToast("Google Sign-In", "system", "Failed: " + (err.code || err.message), "CX");
       }
     });
 
@@ -3304,14 +3822,22 @@
 
     // ===== ADMIN CONTROL CENTER =====
     function timeAgo(ms) {
-      if (!ms) return 'Hajawahi kuingia';
+      if (!ms) return 'Never joined';
       const diff = Date.now() - ms;
       const m = Math.floor(diff / 60000);
-      if (m < 1) return 'Sasa hivi';
+      if (m < 1) return 'Just now';
       if (m < 60) return m + ' min ago';
       const h = Math.floor(m / 60);
       if (h < 24) return h + ' hr ago';
       return Math.floor(h / 24) + ' days ago';
+    }
+
+    function timeUntil(ms) {
+      const diff = ms - Date.now();
+      if (diff <= 0) return 'expired';
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      return h > 0 ? h + 'h ' + m + 'm' : m + 'm';
     }
 
     function isUserOnline(u) {
@@ -3341,7 +3867,7 @@
         renderActivityFeed(users);
         loadModerationFeed();
       } catch (e) {
-        list.innerHTML = '<p class="text-[11px] text-rose-400 p-3 text-center">Imeshindikana kupakia wanachama.</p>';
+        list.innerHTML = '<p class="text-[11px] text-rose-400 p-3 text-center">Failed to load members.</p>';
       }
     }
 
@@ -3376,7 +3902,7 @@
       users.sort((a, b) => String(a.username || '').localeCompare(String(b.username || '')));
       list.innerHTML = users.length
         ? ''
-        : '<p class="text-[11px] text-slate-500 p-3 text-center">Hakuna member anayolingana.</p>';
+        : '<p class="text-[11px] text-slate-500 p-3 text-center">No matching members.</p>';
       users.forEach(u => renderAdminUserRow(u));
     }
 
@@ -3409,7 +3935,7 @@
       if (role !== 'user') name.insertAdjacentHTML('beforeend', u.isCeo ? getVerifiedBadgeHtml(true) : getRoleBadgeHtml(role));
       const sub = document.createElement('p');
       sub.className = 'text-[9px] text-slate-500 truncate';
-      sub.textContent = (u.email || '') + ' \u2022 ' + (online ? 'Online sasa' : 'Last seen: ' + timeAgo(u.lastActiveMs));
+      sub.textContent = (u.email || '') + ' \u2022 ' + (online ? 'Online now' : 'Last seen: ' + timeAgo(u.lastActiveMs));
       info.appendChild(name);
       info.appendChild(sub);
       left.appendChild(avWrap);
@@ -3461,7 +3987,7 @@
         .slice(0, 6);
       feed.innerHTML = '';
       if (!recent.length) {
-        feed.innerHTML = '<p class="text-[10px] text-slate-500 text-center py-2">Hakuna activity bado</p>';
+        feed.innerHTML = '<p class="text-[10px] text-slate-500 text-center py-2">No activity yet</p>';
         return;
       }
       recent.forEach(u => {
@@ -3497,7 +4023,7 @@
         renderAdminMembers();
         loadMembersFromFirestore();
       } catch (e) {
-        triggerNotificationToast("Error", "system", "Imeshindikana kusasisha role.", "CX");
+        triggerNotificationToast("Error", "system", "Failed to update role.", "CX");
       }
     }
 
@@ -3506,10 +4032,10 @@
         await setDoc(getPublicDoc("users", username), { banned: banned }, { merge: true });
         const u = adminMembersCache.find(x => x.username === username);
         if (u) u.banned = banned;
-        triggerNotificationToast(banned ? "User Banned" : "User Unbanned", "admin", `@${username} ${banned ? 'amezuiwa kutoka app' : 'amefunguliwa tena'}`, "CX");
+        triggerNotificationToast(banned ? "User Banned" : "User Unbanned", "admin", `@${username} ${banned ? 'banned from the app' : 'unbanned'}`, "CX");
         renderAdminMembers();
       } catch (e) {
-        triggerNotificationToast("Error", "system", "Imeshindikana kuban user.", "CX");
+        triggerNotificationToast("Error", "system", "Failed to ban user.", "CX");
       }
     }
 
@@ -3517,13 +4043,13 @@
       try {
         await deleteDoc(getPublicDoc("users", username));
         adminMembersCache = adminMembersCache.filter(x => x.username !== username);
-        triggerNotificationToast("User Deleted", "admin", `@${username} amefutwa kabisa kutoka database`, "CX");
+        triggerNotificationToast("User Deleted", "admin", `@${username} permanently deleted from database`, "CX");
         renderAdminStats(adminMembersCache);
         renderAdminMembers();
         renderActivityFeed(adminMembersCache);
         loadMembersFromFirestore();
       } catch (e) {
-        triggerNotificationToast("Error", "system", "Imeshindikana kufuta user.", "CX");
+        triggerNotificationToast("Error", "system", "Failed to delete user.", "CX");
       }
     }
 
@@ -3537,7 +4063,7 @@
         snap.forEach(d => { const v = d.data(); v._id = d.id; msgs.push(v); });
         box.innerHTML = msgs.length
           ? ''
-          : '<p class="text-[10px] text-slate-500 text-center py-2">Hakuna ujumbe bado</p>';
+          : '<p class="text-[10px] text-slate-500 text-center py-2">No messages yet</p>';
         msgs.forEach(msg => {
           const row = document.createElement('div');
           row.className = 'flex items-start justify-between gap-2 bg-slate-950 p-2 rounded-lg border border-slate-800';
@@ -3563,7 +4089,7 @@
             try {
               await deleteDoc(getPublicDoc("messages_global-group", msg._id));
               row.remove();
-              triggerNotificationToast("Message Deleted", "admin", "Ujumbe umefutwa kwenye Global Hub", "CX");
+              triggerNotificationToast("Message Deleted", "admin", "Message deleted from Global Hub", "CX");
             } catch (e) {}
           });
           row.appendChild(left);
@@ -3571,7 +4097,7 @@
           box.appendChild(row);
         });
       } catch (e) {
-        box.innerHTML = '<p class="text-[10px] text-rose-400 text-center py-2">Imeshindikana kupakia ujumbe.</p>';
+        box.innerHTML = '<p class="text-[10px] text-rose-400 text-center py-2">Failed to load messages.</p>';
       }
     }
 
@@ -3623,9 +4149,9 @@
         });
         if (input) input.value = '';
         notifyPushAll(text, '📢 ClassmateX Announcement');
-        triggerNotificationToast("Broadcast Sent", currentUserHandle, "Tangazo limetumwa kwenye Global Hub!", "CX");
+        triggerNotificationToast("Broadcast Sent", currentUserHandle, "Announcement sent to Global Hub!", "CX");
       } catch (e) {
-        triggerNotificationToast("Broadcast Failed", "system", "Imeshindikana kutuma tangazo.", "CX");
+        triggerNotificationToast("Broadcast Failed", "system", "Failed to send announcement.", "CX");
       }
     });
 
@@ -3635,20 +4161,64 @@
         if (!user) return;
         currentUserId = user.uid;
         currentUserEmail = user.email || currentUserEmail;
-        let udoc = null;
-        try {
-          const snap = await getDocs(query(getPublicCol("users"), where("email", "==", currentUserEmail)));
-          snap.forEach((d) => { udoc = d.data(); });
-        } catch (e) {}
+
+        const fetchUdoc = async () => {
+          let found = null;
+          try {
+            const snap = await getDocs(query(getPublicCol("users"), where("email", "==", currentUserEmail)));
+            snap.forEach((d) => { found = d.data(); });
+          } catch (e) {}
+          return found;
+        };
+
+        let udoc = await fetchUdoc();
+
+        // Subiri kidogo kwa ajili ya Google (doc huandikwa baada ya auth state)
+        if (!udoc) {
+          await new Promise(r => setTimeout(r, 2000));
+          udoc = await fetchUdoc();
+        }
+
+        // Akaunti imefutwa na Admin → fukuza
+        if (!udoc) {
+          try { await signOut(auth); } catch (e) {}
+          triggerNotificationToast("Account Removed", "system", "Account deleted by Admin. Contact him.", "CX");
+          return;
+        }
+
+        // CEO: UNGANISHA docs mbili kuwa moja (fahmymazrui + fahmy_mazrui → moja)
+        if (checkCeoStatus(currentUserEmail) && udoc.username !== 'fahmy_mazrui') {
+          try {
+            await setDoc(getPublicDoc("users", "fahmy_mazrui"), { ...udoc, username: 'fahmy_mazrui', isCeo: true }, { merge: true });
+            await deleteDoc(getPublicDoc("users", udoc.username));
+            udoc = { ...udoc, username: 'fahmy_mazrui', isCeo: true };
+          } catch (e) {}
+        }
+
         if (udoc && udoc.banned === true) {
           try { await signOut(auth); } catch (e) {}
-          triggerNotificationToast("Account Banned", "system", "Akaunti yako imezuiwa. Wasiliana na Admin.", "CX");
+          triggerNotificationToast("Account Banned", "system", "Your account is banned. Contact Admin.", "CX");
           return;
         }
         const fallback = (currentUserEmail || 'user').split('@')[0];
         openMainApp(udoc?.name || fallback, udoc?.username || fallback, currentUserEmail, udoc);
       });
     }
+
+    document.getElementById('changePasswordBtn')?.addEventListener('click', async () => {
+      const pw = document.getElementById('newPasswordInput')?.value || '';
+      if (pw.length < 6) {
+        triggerNotificationToast('Password Too Short', 'system', 'Use 6 or more characters', 'CX');
+        return;
+      }
+      try {
+        await updatePassword(auth.currentUser, pw);
+        document.getElementById('newPasswordInput').value = '';
+        triggerNotificationToast('Changed', 'system', 'Password changed successfully', 'CX');
+      } catch (e) {
+        triggerNotificationToast('Failed', 'system', 'Log in again and try (Firebase security)', 'CX');
+      }
+    });
 
     // ===== USERNAME UNIQUENESS LIVE CHECK =====
     document.getElementById('editUsernameInput')?.addEventListener('input', async (e) => {
@@ -3668,6 +4238,18 @@
     document.getElementById('openBlockedContactsBtn')?.addEventListener('click', () => {
       loadBlockedContactsList();
       document.getElementById('blockedContactsModal')?.classList.remove('hidden');
+    });
+
+    document.getElementById('deleteAccountBtn')?.addEventListener('click', async () => {
+      if (!confirm('Are you sure? Your account and all data will be permanently deleted. This cannot be undone.')) return;
+      try {
+        if (db) await deleteDoc(getPublicDoc("users", currentUserHandle));
+        if (auth.currentUser) await deleteUser(auth.currentUser);
+        document.getElementById('settingsLogoutBtn')?.click();
+        triggerNotificationToast('Account Deleted', 'system', 'Account permanently deleted. Welcome back anytime!', 'CX');
+      } catch (e) {
+        triggerNotificationToast('Failed', 'system', 'Log in again and try (requires recent verification)', 'CX');
+      }
     });
 
     // ===== HEADER AVATAR OPENS PROFILE TAB (was dead button) =====
