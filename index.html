@@ -190,7 +190,9 @@
     </div>
 
     <!-- Hidden File Inputs -->
-    <input type="file" id="chatFileInput" class="hidden" accept="image/*,.pdf,.doc,.docx" />
+    <input type="file" id="chatFileInput" class="hidden" accept="image/*" />
+    <input type="file" id="chatDocInput" class="hidden" accept=".pdf,.doc,.docx" />
+    <input type="file" id="chatCameraInput" class="hidden" accept="image/*" capture="environment" />
     <input type="file" id="profileImageInput" accept="image/*" class="hidden" />
     <input type="file" id="storyMediaInput" accept="image/*,video/*" class="hidden" />
 
@@ -314,6 +316,22 @@
       </div>
     </div>
 
+    <!-- ATTACH SHEET (Gallery / Document) -->
+    <div id="attachSheetModal" class="hidden absolute inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-end justify-center">
+      <div class="w-full max-w-xs rounded-t-3xl bg-slate-900 border-t border-x border-slate-800 p-4 space-y-2 animate-slide-up">
+        <div class="text-center pb-1">
+          <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider">Share</span>
+        </div>
+        <button id="pickGalleryBtn" class="touch-active w-full py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold flex items-center justify-center gap-2.5 transition">
+          <i class="ph ph-image text-lg text-accent-pink"></i><span>Gallery / Photos</span>
+        </button>
+        <button id="pickDocBtn" class="touch-active w-full py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold flex items-center justify-center gap-2.5 transition">
+          <i class="ph ph-file-pdf text-lg text-cyan-400"></i><span>Document (PDF / DOC)</span>
+        </button>
+        <button onclick="document.getElementById('attachSheetModal')?.classList.add('hidden')" class="w-full py-2.5 rounded-2xl bg-slate-950 text-slate-400 text-xs font-bold hover:text-white transition">Cancel</button>
+      </div>
+    </div>
+
     <!-- CHAT THREAD OPTIONS MODAL -->
     <div id="chatOptionsModal" class="hidden absolute inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-end justify-center p-4">
       <div class="w-full max-w-xs rounded-3xl bg-slate-900 border border-slate-800 p-4 shadow-2xl animate-slide-up space-y-2">
@@ -343,16 +361,22 @@
     <div id="messageActionModal" class="hidden absolute inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-6">
       <div class="w-full max-w-[260px] rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl animate-pop-in overflow-hidden">
         <div class="flex items-center justify-around px-2 py-2 bg-slate-950/60 border-b border-slate-800">
-          <button data-emoji="\u2764\uFE0F" class="emoji-react-btn text-xl hover:scale-125 transition transform">\u2764\uFE0F</button>
-          <button data-emoji="\u{1F602}" class="emoji-react-btn text-xl hover:scale-125 transition transform">\u{1F602}</button>
-          <button data-emoji="\u{1F525}" class="emoji-react-btn text-xl hover:scale-125 transition transform">\u{1F525}</button>
-          <button data-emoji="\u{1F44D}" class="emoji-react-btn text-xl hover:scale-125 transition transform">\u{1F44D}</button>
-          <button data-emoji="\u{1F62E}" class="emoji-react-btn text-xl hover:scale-125 transition transform">\u{1F62E}</button>
-          <button data-emoji="\u{1F4A1}" class="emoji-react-btn text-xl hover:scale-125 transition transform">\u{1F4A1}</button>
+          <button data-emoji="❤️" class="emoji-react-btn text-xl hover:scale-125 transition transform">❤️</button>
+          <button data-emoji="😂" class="emoji-react-btn text-xl hover:scale-125 transition transform">😂</button>
+          <button data-emoji="🔥" class="emoji-react-btn text-xl hover:scale-125 transition transform">🔥</button>
+          <button data-emoji="👍" class="emoji-react-btn text-xl hover:scale-125 transition transform">👍</button>
+          <button data-emoji="😮" class="emoji-react-btn text-xl hover:scale-125 transition transform">😮</button>
+          <button data-emoji="💡" class="emoji-react-btn text-xl hover:scale-125 transition transform">💡</button>
         </div>
         <div class="divide-y divide-slate-800/80 text-left">
+          <button id="actionReplyPrivateBtn" class="hidden w-full px-4 py-3 text-xs font-bold text-white hover:bg-slate-800/70 flex items-center gap-3 transition">
+            <i class="ph ph-chat-circle text-base text-sky-400"></i><span>Reply Privately</span>
+          </button>
           <button id="actionQuoteReplyBtn" class="w-full px-4 py-3 text-xs font-bold text-white hover:bg-slate-800/70 flex items-center gap-3 transition">
             <i class="ph ph-quotes text-base text-amber-400"></i><span>Quote Reply</span>
+          </button>
+          <button id="actionStarMsgBtn" class="w-full px-4 py-3 text-xs font-bold text-white hover:bg-slate-800/70 flex items-center gap-3 transition">
+            <i class="ph ph-star text-base text-yellow-400"></i><span>Star</span>
           </button>
           <button id="actionCopyMsgBtn" class="w-full px-4 py-3 text-xs font-bold text-white hover:bg-slate-800/70 flex items-center gap-3 transition">
             <i class="ph ph-copy text-base text-cyan-400"></i><span>Copy</span>
@@ -707,6 +731,39 @@
       </div>
     </div>
 
+    <!-- IMAGE CROP MODAL (Instagram style: drag + zoom + aspect) -->
+    <div id="cropModal" class="hidden absolute inset-0 z-50 bg-slate-950/98 backdrop-blur flex flex-col animate-pop-in">
+      <div class="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0">
+        <button id="cropCancelBtn" class="touch-active text-slate-300 text-xs font-bold hover:text-white transition">Cancel</button>
+        <span class="text-white text-xs font-black tracking-wide">Crop Photo</span>
+        <button id="cropDoneBtn" class="touch-active text-accent-pink text-xs font-black hover:brightness-125 transition">Done</button>
+      </div>
+      <div class="flex-grow flex items-center justify-center overflow-hidden relative p-4" id="cropStage">
+        <div id="cropViewport" class="relative overflow-hidden bg-black shadow-2xl" style="width:300px;height:300px;touch-action:none">
+          <img id="cropImage" class="absolute max-w-none select-none" draggable="false" style="transform-origin:0 0" alt="" />
+          <div class="absolute inset-0 pointer-events-none z-10" style="background-image:linear-gradient(to right, rgba(255,255,255,.22) 1px, transparent 1px),linear-gradient(to bottom, rgba(255,255,255,.22) 1px, transparent 1px);background-size:33.33% 33.33%;"></div>
+        </div>
+      </div>
+      <div class="p-4 space-y-3 border-t border-slate-800 shrink-0">
+        <input id="cropZoom" type="range" min="1" max="3" step="0.01" value="1" class="w-full" style="accent-color:#ec4899">
+        <div class="flex justify-center gap-2">
+          <button data-aspect="1:1" class="crop-aspect-btn touch-active px-3 py-1.5 rounded-full bg-slate-800 text-white text-[10px] font-black border border-accent-pink">1:1</button>
+          <button data-aspect="4:5" class="crop-aspect-btn touch-active px-3 py-1.5 rounded-full bg-slate-800 text-white text-[10px] font-black border border-slate-700">4:5</button>
+          <button data-aspect="16:9" class="crop-aspect-btn touch-active px-3 py-1.5 rounded-full bg-slate-800 text-white text-[10px] font-black border border-slate-700">16:9</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STARRED MESSAGES MODAL -->
+    <div id="starredMsgsModal" class="hidden absolute inset-0 z-50 bg-slate-950 flex flex-col p-4 animate-pop-in">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 class="text-xs font-black text-white flex items-center gap-1.5"><i class="ph ph-star text-yellow-400 text-base"></i> Starred Messages</h3>
+        <button onclick="document.getElementById('starredMsgsModal')?.classList.add('hidden')" class="h-8 w-8 rounded-full bg-slate-800 text-slate-300 flex items-center justify-center"><i class="ph ph-x text-base"></i></button>
+      </div>
+      <div id="starredList" class="flex-grow my-3 overflow-y-auto space-y-2"></div>
+      <button onclick="document.getElementById('starredMsgsModal')?.classList.add('hidden')" class="w-full py-2.5 rounded-xl bg-slate-800 text-white text-xs font-bold">Close</button>
+    </div>
+
     <!-- FULLSCREEN IMAGE VIEWER (tap any avatar/image to zoom) -->
     <div id="fullImageModal" class="hidden absolute inset-0 z-[60] bg-slate-950/98 backdrop-blur-xl flex items-center justify-center p-4 cursor-pointer">
       <button id="closeFullImageBtn" class="absolute top-4 right-4 h-10 w-10 rounded-full bg-slate-800/90 text-white flex items-center justify-center z-10 touch-active">
@@ -743,7 +800,7 @@
                   <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
                     <i class="ph ph-user-circle text-base"></i>
                   </span>
-                  <input id="login-identifier" name="identifier" type="text" required placeholder="barua@gmail.com au @jina_lako"
+                  <input id="login-identifier" name="identifier" type="text" required placeholder="email@gmail.com or @username"
                          class="w-full rounded-xl border border-slate-700 bg-slate-800/90 py-2.5 pl-9 pr-3 text-xs text-white outline-none focus:border-accent-pink focus:ring-2 focus:ring-accent-pink/20 transition" />
                 </div>
               </div>
@@ -810,7 +867,7 @@
                   <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
                     <i class="ph ph-user text-base"></i>
                   </span>
-                  <input id="signup-name" name="fullName" type="text" required placeholder="Jina Lako Kamili"
+                  <input id="signup-name" name="fullName" type="text" required placeholder="Your Full Name"
                          class="w-full rounded-xl border border-slate-700 bg-slate-800/90 py-2 pl-9 pr-3 text-xs text-white outline-none focus:border-accent-pink focus:ring-2 focus:ring-accent-pink/20 transition" />
                 </div>
               </div>
@@ -821,7 +878,7 @@
                   <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
                     <i class="ph ph-envelope text-base"></i>
                   </span>
-                  <input id="signup-email" name="email" type="email" required placeholder="barua@gmail.com"
+                  <input id="signup-email" name="email" type="email" required placeholder="your@gmail.com"
                          class="w-full rounded-xl border border-slate-700 bg-slate-800/90 py-2 pl-9 pr-3 text-xs text-white outline-none focus:border-accent-pink focus:ring-2 focus:ring-accent-pink/20 transition" />
                 </div>
               </div>
@@ -832,7 +889,7 @@
                   <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
                     <i class="ph ph-at text-base"></i>
                   </span>
-                  <input id="signup-username" name="username" type="text" required placeholder="jina_lako"
+                  <input id="signup-username" name="username" type="text" required placeholder="your_username"
                          class="w-full rounded-xl border border-slate-700 bg-slate-800/90 py-2 pl-9 pr-3 text-xs text-white outline-none focus:border-accent-pink focus:ring-2 focus:ring-accent-pink/20 transition" />
                 </div>
               </div>
@@ -879,7 +936,7 @@
                   <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
                     <i class="ph ph-envelope text-base"></i>
                   </span>
-                  <input id="forgot-email" name="email" type="email" required placeholder="barua@gmail.com"
+                  <input id="forgot-email" name="email" type="email" required placeholder="your@gmail.com"
                          class="w-full rounded-xl border border-slate-700 bg-slate-800/90 py-2.5 pl-9 pr-3 text-xs text-white outline-none focus:border-accent-pink focus:ring-2 focus:ring-accent-pink/20 transition" />
                 </div>
               </div>
@@ -909,7 +966,7 @@
               </span>
             </div>
 
-            <div id="storiesContainer" class="flex items-center gap-3 overflow-x-auto no-scrollbar pb-1">
+            <div id="storiesContainer" class="flex items-center gap-3 overflow-x-auto no-scrollbar pb-1 px-1">
               <!-- My Story Button -->
               <div id="addMyStoryBtn" class="flex flex-col items-center gap-1 cursor-pointer shrink-0 group">
                 <div class="relative p-0.5 rounded-full border-2 border-dashed border-accent-pink/80 group-hover:border-accent-pink transition">
@@ -1074,6 +1131,10 @@
                 <i class="ph ph-smiley text-lg"></i>
               </button>
 
+              <button type="button" id="cameraBtn" title="Take Photo" class="touch-active p-2 rounded-xl text-slate-400 hover:text-accent-pink hover:bg-slate-800 transition">
+                <i class="ph ph-camera text-lg"></i>
+              </button>
+
               <button type="button" id="attachFileBtn" title="Send Document / Image" class="touch-active p-2 rounded-xl text-slate-400 hover:text-accent-pink hover:bg-slate-800 transition">
                 <i class="ph ph-paperclip text-lg"></i>
               </button>
@@ -1152,6 +1213,17 @@
                   <div class="text-left">
                     <p class="text-white text-xs">Profile Settings</p>
                     <p class="text-[9px] text-slate-400 font-medium">Name, Bio, Photo, Username (@handle)</p>
+                  </div>
+                </div>
+                <i class="ph ph-caret-right text-slate-500"></i>
+              </button>
+
+              <button onclick="document.getElementById('starredMsgsModal')?.classList.remove('hidden'); renderStarredList();" class="w-full p-3 flex items-center justify-between text-slate-200 hover:bg-slate-800/50 transition">
+                <div class="flex items-center gap-2.5">
+                  <div class="h-7 w-7 rounded-xl bg-yellow-500/10 text-yellow-400 flex items-center justify-center"><i class="ph ph-star text-base"></i></div>
+                  <div class="text-left">
+                    <p class="text-white text-xs">Starred Messages</p>
+                    <p class="text-[9px] text-slate-400 font-medium">Your saved messages (long-press &rarr; Star)</p>
                   </div>
                 </div>
                 <i class="ph ph-caret-right text-slate-500"></i>
@@ -1251,7 +1323,7 @@
             <i class="ph ph-user-minus text-base"></i>
             <span>Delete Account (permanent)</span>
           </button>
-          <p class="text-center text-[9px] text-slate-600 font-bold pt-1">ClassmateX v1.0 \u2022 Made in Tanzania \u{1F1F9}\u{1F1FF}</p>
+          <p class="text-center text-[9px] text-slate-600 font-bold pt-1">ClassmateX v1.0 • Made in Tanzania 🇹🇿</p>
         </div>
 
         <!-- SCREEN 5: ADMIN CONTROL CENTER -->
@@ -1453,6 +1525,9 @@
     let myThreads = [];
     let threadListeners = {};
     const viewedStories = new Set();
+    let lastRenderedDate = '';
+    let starredMsgs = [];
+    const pendingSends = {};
     let userPrefs = { lastSeen: true, readReceipts: true, msgSounds: true, inAppSounds: true, pushPopups: true };
     let dmRecipientPrefs = null;
     let currentActiveChatId = 'global-group';
@@ -1738,7 +1813,7 @@
               triggerNotificationToast("Account Banned", "system", "Your account has been banned by Admin.", "CX");
             }
           } catch (e) {}
-        }, 60000);
+        }, 300000); // dakika 5 (60s = quota ya bure inaisha haraka)
       }
 
       // Load mute/block lists + real stories
@@ -1753,6 +1828,7 @@
 
       // Wire privacy/sound toggles kwenye Firebase (sasa ni HALISI)
       if (userDoc?.prefs) userPrefs = { ...userPrefs, ...userDoc.prefs };
+      starredMsgs = Array.isArray(userDoc?.starred) ? userDoc.starred : [];
       ['prefLastSeen','prefReadReceipts','prefMsgSounds','prefInAppSounds','prefPushPopups'].forEach(pid => {
         const el = document.getElementById(pid);
         if (!el) return;
@@ -1834,7 +1910,7 @@
         </div>
         <div class="flex-grow min-w-0">
           <div class="flex justify-between items-baseline mb-0.5 gap-2">
-            <h4 class="text-xs font-black truncate text-white">@${t.handle}</h4>
+            <h4 class="text-xs font-black truncate text-white">@${escapeHtml(t.handle)}</h4>
             <span class="text-[10px] text-slate-400 shrink-0">${t.lastMsgTime || ''}</span>
           </div>
           <div class="flex justify-between items-center gap-2">
@@ -1858,7 +1934,7 @@
           });
           t.unread = unread;
           if (lastMsg) {
-            t.lastMsg = lastMsg.text || (lastMsg.mediaType === 'image' ? '\u{1F4F7} Photo' : lastMsg.mediaType === 'audio' ? '\u{1F3A4} Voice' : lastMsg.mediaUrl ? '\u{1F4CE} File' : '');
+            t.lastMsg = lastMsg.text || (lastMsg.mediaType === 'image' ? '📷 Photo' : lastMsg.mediaType === 'audio' ? '🎤 Voice' : lastMsg.mediaUrl ? '📎 File' : '');
             t.lastMsgTime = lastMsg.time || '';
             // Thread inapanda JUU (latest message top — kama WhatsApp)
             const listEl = document.getElementById('chatThreadList');
@@ -1951,7 +2027,7 @@
       const lsEl = document.getElementById('wpModalLastSeen');
       if (lsEl) {
         const uHideSeen = user.prefs && user.prefs.lastSeen === false;
-        const uOnline = !uHideSeen && user.isOnline === true && (Date.now() - (user.lastActiveMs || 0) < 180000);
+        const uOnline = !uHideSeen && user.isOnline === true && (Date.now() - (user.lastActiveMs || 0) < 720000);
         lsEl.innerHTML = uOnline
           ? '<span class="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Online sasa'
           : 'Last seen: ' + timeAgo(user.lastActiveMs);
@@ -2272,28 +2348,38 @@
         attachThreadListener(chatId);
       }
 
+      // Quote bar iendelee kuonekana (Reply Privately)
+      if (quoteReplyData) {
+        const authorEl = document.getElementById('quoteAuthorText');
+        const textEl = document.getElementById('quoteContentText');
+        const replyBar = document.getElementById('quoteReplyPreviewBar');
+        if (authorEl) authorEl.textContent = `Replying to @${quoteReplyData.author}`;
+        if (textEl) textEl.textContent = quoteReplyData.text;
+        if (replyBar) replyBar.classList.remove('hidden');
+      }
+
       loadRealtimeMessages(chatId);
     };
 
     // ===== EMOTION SENSE: dictionary ya hisia (Kiswahili + English) =====
     const EMOTION_DICT = [
-      { key: 'love', emoji: '\u2764\uFE0F', burst: ['\u2764\uFE0F','\u{1F496}','\u{1F497}','\u{1F49D}','\u{1F60D}','\u{1F970}'],
+      { key: 'love', emoji: '❤️', burst: ['❤️','💖','💗','💝','😍','🥰'],
         words: ['love','mahaba','mapenzi','nakupenda','napenda','nampenda','mpenzi','mpendwa','moyoni','moyo wangu','sweetheart','honey','bae','babe','dear','busu','kiss','nakumiss','nakumisi','miss you'] },
-      { key: 'joy', emoji: '\u{1F602}', burst: ['\u{1F602}','\u{1F923}','\u{1F606}','\u{1F604}'],
+      { key: 'joy', emoji: '😂', burst: ['😂','🤣','😆','😄'],
         words: ['haha','hehe','hihi','funny','cheka','kicheko','mzaha','komedi','fun','enjoy','furahi','nimefurahi','shangilia'] },
-      { key: 'sad', emoji: '\u{1F622}', burst: ['\u{1F622}','\u{1F97A}','\u{1F62D}','\u{1F494}'],
+      { key: 'sad', emoji: '😢', burst: ['😢','🥺','😭','💔'],
         words: ['sad','huzuni','huzunika','kilio','nalia','nalia','cry','crying','msongo','stress','maumivu','pain','pole','nimeumia','heartbreak','kuvunjika moyo'] },
-      { key: 'party', emoji: '\u{1F389}', burst: ['\u{1F389}','\u{1F38A}','\u{1F44F}','\u{1F973}'],
+      { key: 'party', emoji: '🎉', burst: ['🎉','🎊','👏','🥳'],
         words: ['congrats','hongera','pongezi','sherehe','celebrate','party','victory','ushindi','nimefaulu','nimepass','imepita','graduation','birthday','siku ya kuzaliwa'] },
-      { key: 'fire', emoji: '\u{1F525}', burst: ['\u{1F525}','\u26A1','\u{1F4AF}','\u{1F680}'],
+      { key: 'fire', emoji: '🔥', burst: ['🔥','⚡','💯','🚀'],
         words: ['fire','kali','dope','lit','nzuri sana','imeweza','umeweza','umekaza','ubaya','pressure','kiboko','goal','goli'] },
-      { key: 'thanks', emoji: '\u{1F64F}', burst: ['\u{1F64F}','\u{1F970}','\u{1F49B}'],
+      { key: 'thanks', emoji: '🙏', burst: ['🙏','🥰','💛'],
         words: ['asante','thank','thanks','shukrani','ahsante','natumai'] },
-      { key: 'greet', emoji: '\u{1F44B}', burst: ['\u{1F44B}','\u{1F60A}','\u2728'],
+      { key: 'greet', emoji: '👋', burst: ['👋','😊','✨'],
         words: ['habari','hujambo','mambo','vipi','hello','helo','hi','good morning','good evening','shikamoo','salam'] },
-      { key: 'sleep', emoji: '\u{1F634}', burst: ['\u{1F634}','\u{1F319}','\u{1F4A4}'],
+      { key: 'sleep', emoji: '😴', burst: ['😴','🌙','💤'],
         words: ['good night','usiku mwema','lala','usingizi','nitakulala','sleep','bed'] },
-      { key: 'money', emoji: '\u{1F4B0}', burst: ['\u{1F4B0}','\u{1F4B5}','\u{1F911}'],
+      { key: 'money', emoji: '💰', burst: ['💰','💵','🤑'],
         words: ['pesa','hela','malipo','dollar','rich','tajiri','mpesa','mshahara','faida'] }
     ];
 
@@ -2328,6 +2414,286 @@
       }
     }
 
+    // ===== IMAGE CROPPER (Instagram style) =====
+    const cropState = { img: null, x: 0, y: 0, scale: 1, minScale: 1, aspect: '1:1', vw: 300, vh: 300 };
+
+    function openCropper(file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          cropState.img = img;
+          setCropAspect('1:1');
+          document.getElementById('cropModal').classList.remove('hidden');
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function setCropAspect(a) {
+      cropState.aspect = a;
+      const stage = document.getElementById('cropStage');
+      const maxW = Math.min((stage?.clientWidth || 340) - 32, 340);
+      const maxH = Math.min((stage?.clientHeight || 420) - 32, 460);
+      let vw = maxW, vh = maxW;
+      if (a === '4:5') { vh = maxW * 1.25; if (vh > maxH) { vh = maxH; vw = vh * 0.8; } }
+      else if (a === '16:9') { vh = maxW * 9 / 16; if (vh > maxH) { vh = maxH; vw = vh * 16 / 9; } }
+      else { if (vw > maxH) { vw = maxH; vh = maxH; } }
+      cropState.vw = vw;
+      cropState.vh = vh;
+      const vp = document.getElementById('cropViewport');
+      if (vp) { vp.style.width = vw + 'px'; vp.style.height = vh + 'px'; }
+      const img = cropState.img;
+      cropState.minScale = Math.max(vw / img.width, vh / img.height);
+      cropState.scale = cropState.minScale;
+      cropState.x = (vw - img.width * cropState.scale) / 2;
+      cropState.y = (vh - img.height * cropState.scale) / 2;
+      const zoom = document.getElementById('cropZoom');
+      if (zoom) {
+        zoom.min = cropState.minScale;
+        zoom.max = cropState.minScale * 3;
+        zoom.value = cropState.scale;
+      }
+      applyCropTransform();
+    }
+
+    function clampCrop() {
+      const img = cropState.img;
+      if (!img) return;
+      const w = img.width * cropState.scale, h = img.height * cropState.scale;
+      cropState.x = Math.min(0, Math.max(cropState.vw - w, cropState.x));
+      cropState.y = Math.min(0, Math.max(cropState.vh - h, cropState.y));
+    }
+
+    function applyCropTransform() {
+      const el = document.getElementById('cropImage');
+      if (!el || !cropState.img) return;
+      clampCrop();
+      el.style.transform = `translate(${cropState.x}px, ${cropState.y}px) scale(${cropState.scale})`;
+    }
+
+    // Drag (pointer events = touch + mouse)
+    let cropDrag = null;
+    const cropVp = document.getElementById('cropViewport');
+    cropVp?.addEventListener('pointerdown', (e) => {
+      cropDrag = { sx: e.clientX, sy: e.clientY, ox: cropState.x, oy: cropState.y };
+      cropVp.setPointerCapture(e.pointerId);
+    });
+    cropVp?.addEventListener('pointermove', (e) => {
+      if (!cropDrag) return;
+      cropState.x = cropDrag.ox + (e.clientX - cropDrag.sx);
+      cropState.y = cropDrag.oy + (e.clientY - cropDrag.sy);
+      applyCropTransform();
+    });
+    cropVp?.addEventListener('pointerup', () => { cropDrag = null; });
+    cropVp?.addEventListener('pointercancel', () => { cropDrag = null; });
+
+    document.getElementById('cropZoom')?.addEventListener('input', (e) => {
+      const ns = parseFloat(e.target.value);
+      const old = cropState.scale;
+      const cx = cropState.vw / 2, cy = cropState.vh / 2;
+      cropState.x = cx - ((cx - cropState.x) / old) * ns;
+      cropState.y = cy - ((cy - cropState.y) / old) * ns;
+      cropState.scale = ns;
+      applyCropTransform();
+    });
+
+    document.querySelectorAll('.crop-aspect-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.crop-aspect-btn').forEach(b => b.classList.replace('border-accent-pink', 'border-slate-700'));
+        btn.classList.replace('border-slate-700', 'border-accent-pink');
+        setCropAspect(btn.dataset.aspect);
+      });
+    });
+
+    document.getElementById('cropCancelBtn')?.addEventListener('click', () => {
+      cropState.img = null;
+      document.getElementById('cropModal').classList.add('hidden');
+    });
+
+    document.getElementById('cropDoneBtn')?.addEventListener('click', () => {
+      const img = cropState.img;
+      if (!img) return;
+      const outW = Math.min(1000, Math.round(cropState.vw * 2.5));
+      const outH = Math.round(outW * (cropState.vh / cropState.vw));
+      const canvas = document.createElement('canvas');
+      canvas.width = outW;
+      canvas.height = outH;
+      const ctx = canvas.getContext('2d');
+      const r = outW / cropState.vw;
+      ctx.drawImage(img, cropState.x * r, cropState.y * r, img.width * cropState.scale * r, img.height * cropState.scale * r);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+      cropState.img = null;
+      document.getElementById('cropModal').classList.add('hidden');
+      sendImageMessage(dataUrl);
+    });
+
+    async function sendImageMessage(dataUrl) {
+      const now = new Date();
+      const optMsgId = 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+      const newMsg = {
+        id: optMsgId, text: '',
+        senderId: currentUserId || 'demo-user',
+        senderHandle: currentUserHandle,
+        isCeo: isCeoUser,
+        senderRole: currentUserRole,
+        time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        createdAtMs: Date.now(),
+        status: 'sent',
+        mediaUrl: dataUrl, mediaType: 'image', fileName: 'Photo'
+      };
+      renderMessageBubble(newMsg, true);
+      playSentSound();
+      try {
+        await setDoc(getPublicDoc(`messages_${currentActiveChatId}`, optMsgId), newMsg);
+        delete pendingSends[optMsgId];
+        const pushTarget = currentActiveChatId.startsWith('dm-') ? currentActiveChatId.replace('dm-', '') : null;
+        if (pushTarget) notifyPush(pushTarget, currentUserName || ('@' + currentUserHandle), '📷 New photo');
+      } catch (e) {
+        markFailed(optMsgId, newMsg, currentActiveChatId);
+      }
+    }
+
+    // ===== STARRED MESSAGES =====
+    function isStarred(id) { return starredMsgs.some(s => s.id === id); }
+
+    document.getElementById('actionStarMsgBtn')?.addEventListener('click', async () => {
+      if (!selectedMsgForAction) { closeMessageActionModal(); return; }
+      const m = selectedMsgForAction;
+      if (isStarred(m.id)) {
+        starredMsgs = starredMsgs.filter(s => s.id !== m.id);
+      } else {
+        starredMsgs.unshift({ id: m.id, chatId: currentActiveChatId, text: m.text || '', senderHandle: m.author || 'user', time: '', mediaType: m.mediaType || null });
+        starredMsgs = starredMsgs.slice(0, 50);
+      }
+      if (db) setDoc(getPublicDoc("users", currentUserHandle), { starred: starredMsgs }, { merge: true }).catch(() => {});
+      triggerNotificationToast(isStarred(m.id) ? 'Starred' : 'Unstarred', 'system', isStarred(m.id) ? 'Message saved to Starred' : 'Removed from Starred', 'CX');
+      closeMessageActionModal();
+    });
+
+    function renderStarredList() {
+      const list = document.getElementById('starredList');
+      if (!list) return;
+      if (!starredMsgs.length) {
+        list.innerHTML = '<div class="flex flex-col items-center justify-center text-center p-8 text-slate-500"><i class="ph ph-star text-4xl mb-2 text-slate-600"></i><p class="text-xs font-bold text-slate-300">No starred messages yet</p><p class="text-[10px] text-slate-500 mt-1">Long-press any message and tap Star to save it here</p></div>';
+        return;
+      }
+      list.innerHTML = '';
+      starredMsgs.forEach(s => {
+        const row = document.createElement('div');
+        row.className = 'bg-slate-900 p-3 rounded-2xl border border-slate-800 cursor-pointer hover:bg-slate-800/60 transition';
+        const preview = s.text || (s.mediaType === 'image' ? '📷 Photo' : s.mediaType === 'audio' ? '🎤 Voice' : '📎 File');
+        row.innerHTML = `
+          <div class="flex justify-between items-start gap-2">
+            <span class="text-[10px] font-black text-accent-pink truncate">@${escapeHtml(s.senderHandle || 'user')}</span>
+            <button class="star-remove touch-active text-slate-500 hover:text-yellow-400 shrink-0" title="Unstar"><i class="ph ph-star text-sm"></i></button>
+          </div>
+          <p class="text-[11px] text-slate-200 mt-1 truncate">${escapeHtml(preview)}</p>`;
+        row.querySelector('.star-remove').addEventListener('click', (e) => {
+          e.stopPropagation();
+          starredMsgs = starredMsgs.filter(x => x.id !== s.id);
+          if (db) setDoc(getPublicDoc("users", currentUserHandle), { starred: starredMsgs }, { merge: true }).catch(() => {});
+          renderStarredList();
+        });
+        row.addEventListener('click', () => {
+          document.getElementById('starredMsgsModal')?.classList.add('hidden');
+          window.openChatThread(s.chatId || 'global-group');
+        });
+        list.appendChild(row);
+      });
+    }
+
+    // ===== REPLY PRIVATELY (Global Hub -> DM) =====
+    document.getElementById('actionReplyPrivateBtn')?.addEventListener('click', () => {
+      const m = selectedMsgForAction;
+      closeMessageActionModal();
+      if (m && m.author && m.author !== currentUserHandle) {
+        startQuoteReply(m.author, m.text || (m.mediaUrl ? '[media]' : ''));
+        window.openChatThread('dm-' + m.author);
+      }
+    });
+
+    // ===== FAILED MESSAGE RETRY =====
+    function markFailed(msgId, msgData, chatId) {
+      pendingSends[msgId] = { msg: msgData, chatId };
+      const wrap = document.querySelector(`[data-msg-id="${msgId}"]`);
+      if (!wrap || wrap.querySelector('.msg-retry')) return;
+      wrap.classList.add('relative');
+      const badge = document.createElement('button');
+      badge.className = 'msg-retry touch-active absolute -top-2 -right-2 h-5 w-5 rounded-full bg-rose-500 text-white text-[10px] font-black flex items-center justify-center shadow-md z-10';
+      badge.textContent = '!';
+      badge.title = 'Failed - tap to retry';
+      wrap.appendChild(badge);
+    }
+
+    // ===== CUSTOM VOICE PLAYER (modern, kama WhatsApp) =====
+    let voiceAudioEl = null;
+    let voiceActiveWrap = null;
+
+    function fmtTime(sec) {
+      sec = Math.max(0, Math.floor(sec || 0));
+      return Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0');
+    }
+
+    document.getElementById('messagesContainer')?.addEventListener('click', (e) => {
+      const retryBtn = e.target.closest('.msg-retry');
+      if (retryBtn) {
+        const wrap = retryBtn.closest('[data-msg-id]');
+        const msgId = wrap?.getAttribute('data-msg-id');
+        const pending = pendingSends[msgId];
+        if (pending) {
+          retryBtn.remove();
+          setDoc(getPublicDoc(`messages_${pending.chatId}`, msgId), pending.msg).then(() => {
+            delete pendingSends[msgId];
+          }).catch(() => markFailed(msgId, pending.msg, pending.chatId));
+        }
+        return;
+      }
+      const playBtn = e.target.closest('.vb-play');
+      if (!playBtn) return;
+      const wrap = playBtn.closest('.voice-player');
+      if (!wrap) return;
+      const srcUrl = wrap.dataset.src;
+      if (voiceAudioEl && voiceActiveWrap === wrap && !voiceAudioEl.paused) {
+        voiceAudioEl.pause();
+        playBtn.innerHTML = '<i class="ph ph-play text-sm"></i>';
+        return;
+      }
+      if (voiceAudioEl && voiceActiveWrap && voiceActiveWrap !== wrap) {
+        const oldBtn = voiceActiveWrap.querySelector('.vb-play');
+        if (oldBtn) oldBtn.innerHTML = '<i class="ph ph-play text-sm"></i>';
+        voiceAudioEl.pause();
+      }
+      if (!voiceAudioEl || voiceAudioEl.dataset.curSrc !== srcUrl) {
+        voiceAudioEl = new Audio(srcUrl);
+        voiceAudioEl.dataset.curSrc = srcUrl;
+      }
+      voiceActiveWrap = wrap;
+      const seek = wrap.querySelector('.vb-seek');
+      const cur = wrap.querySelector('.vb-cur');
+      const dur = wrap.querySelector('.vb-dur');
+      voiceAudioEl.ontimeupdate = () => {
+        if (voiceAudioEl.duration) {
+          if (seek) seek.value = (voiceAudioEl.currentTime / voiceAudioEl.duration) * 100;
+          if (cur) cur.textContent = fmtTime(voiceAudioEl.currentTime);
+          if (dur) dur.textContent = fmtTime(voiceAudioEl.duration);
+        }
+      };
+      voiceAudioEl.onended = () => {
+        playBtn.innerHTML = '<i class="ph ph-play text-sm"></i>';
+        if (seek) seek.value = 0;
+        if (cur) cur.textContent = '0:00';
+      };
+      voiceAudioEl.play().catch(() => {});
+      playBtn.innerHTML = '<i class="ph ph-pause text-sm"></i>';
+      if (seek) {
+        seek.oninput = () => {
+          if (voiceAudioEl.duration) voiceAudioEl.currentTime = (seek.value / 100) * voiceAudioEl.duration;
+        };
+      }
+    });
+
     function renderMessageBubble(msg, isSent) {
       const container = document.getElementById('messagesContainer');
       if (!container) return;
@@ -2338,6 +2704,21 @@
       }
       if (msg.id) {
         renderedMsgIds.add(msg.id);
+      }
+
+      // DATE SEPARATOR: chip ya "Today / Yesterday / Mon 5 Oct"
+      const msgDate = msg.createdAtMs ? new Date(msg.createdAtMs) : new Date();
+      const dateKey = msgDate.toDateString();
+      if (dateKey !== lastRenderedDate) {
+        lastRenderedDate = dateKey;
+        const todayK = new Date().toDateString();
+        const yestK = new Date(Date.now() - 86400000).toDateString();
+        const label = dateKey === todayK ? 'Today' : dateKey === yestK ? 'Yesterday'
+          : msgDate.toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' });
+        const div = document.createElement('div');
+        div.className = 'flex justify-center my-2';
+        div.innerHTML = `<span class="px-3 py-1 rounded-full bg-slate-900/90 border border-slate-800 text-[9px] font-black text-slate-400 uppercase tracking-wider">${label}</span>`;
+        container.appendChild(div);
       }
 
       const bubbleWrapper = document.createElement('div');
@@ -2361,7 +2742,7 @@
       let contentHtml = `
         <div class="flex items-center justify-between gap-2 mb-1">
           <span class="text-[10px] font-bold ${isSent ? 'text-indigo-200' : 'text-accent-pink'} flex items-center">
-            @${msg.senderHandle || 'user'} ${isVerifiedUser ? getVerifiedBadgeHtml(true) : getRoleBadgeHtml(msg.senderRole)}
+            @${escapeHtml(msg.senderHandle || 'user')} ${isVerifiedUser ? getVerifiedBadgeHtml(true) : getRoleBadgeHtml(msg.senderRole)}
           </span>
         </div>
       `;
@@ -2379,7 +2760,19 @@
         if (msg.mediaType === 'image') {
           contentHtml += `<img src="${msg.mediaUrl}" class="max-w-full rounded-xl my-1 max-h-48 object-cover shadow-sm" />`;
         } else if (msg.mediaType === 'audio') {
-          contentHtml += `<audio controls src="${msg.mediaUrl}" class="w-48 max-w-full my-1 rounded-lg"></audio>`;
+          contentHtml += `
+            <div class="voice-player flex items-center gap-2 my-1 min-w-[190px]" data-src="${msg.mediaUrl}">
+              <button type="button" class="vb-play touch-active h-8 w-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white shrink-0">
+                <i class="ph ph-play text-sm"></i>
+              </button>
+              <div class="flex-grow flex flex-col gap-1 min-w-0">
+                <input type="range" class="vb-seek w-full h-1 cursor-pointer" min="0" max="100" value="0" style="accent-color:#ffffff">
+                <div class="flex justify-between text-[8px] text-white/70 font-bold">
+                  <span class="vb-cur">0:00</span>
+                  <span class="vb-dur">0:00</span>
+                </div>
+              </div>
+            </div>`;
         } else {
           contentHtml += `
             <a href="${msg.mediaUrl}" download="${msg.fileName || 'document'}" class="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-950/60 my-1 text-cyan-400 font-bold border border-white/10 hover:border-cyan-400 transition">
@@ -2465,6 +2858,9 @@
           selectedMsgForAction = { id: msg.id, text: msg.text, author: msg.senderHandle, element: bubbleWrapper, isOwn: isOwnMsg };
           document.getElementById('actionEditMsgBtn')?.classList.toggle('hidden', !isOwnMsg);
           document.getElementById('actionDeleteMsgBtn')?.classList.toggle('hidden', !isOwnMsg);
+          document.getElementById('actionReplyPrivateBtn')?.classList.toggle('hidden', !(currentActiveChatId === 'global-group' && !isOwnMsg));
+          const starLbl = document.querySelector('#actionStarMsgBtn span');
+          if (starLbl) starLbl.textContent = isStarred(msg.id) ? 'Unstar' : 'Star';
           document.getElementById('messageActionModal')?.classList.remove('hidden');
         }, 450);
       };
@@ -2502,15 +2898,48 @@
 
     // Attach File Input Handler
     document.getElementById('attachFileBtn')?.addEventListener('click', () => {
-      document.getElementById('chatFileInput')?.click();
+      document.getElementById('attachSheetModal')?.classList.remove('hidden');
     });
 
-    document.getElementById('chatFileInput')?.addEventListener('change', (e) => {
+    document.getElementById('pickGalleryBtn')?.addEventListener('click', () => {
+      document.getElementById('attachSheetModal')?.classList.add('hidden');
+      document.getElementById('chatFileInput')?.click(); // gallery DIRECT
+    });
+
+    document.getElementById('pickDocBtn')?.addEventListener('click', () => {
+      document.getElementById('attachSheetModal')?.classList.add('hidden');
+      document.getElementById('chatDocInput')?.click();
+    });
+
+    document.getElementById('chatDocInput')?.addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (file) {
         attachedFile = file;
         triggerNotificationToast("File Selected", currentUserHandle, `Attached: ${file.name}`, "CX");
       }
+      e.target.value = '';
+    });
+
+    document.getElementById('chatFileInput')?.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      if (file.type.startsWith('image/')) {
+        openCropper(file); // CROP kama Instagram kabla ya kutuma
+      } else {
+        attachedFile = file;
+        triggerNotificationToast("File Selected", currentUserHandle, `Attached: ${file.name}`, "CX");
+      }
+      e.target.value = '';
+    });
+
+    document.getElementById('chatCameraInput')?.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) openCropper(file);
+      e.target.value = '';
+    });
+
+    document.getElementById('cameraBtn')?.addEventListener('click', () => {
+      document.getElementById('chatCameraInput')?.click();
     });
 
     document.getElementById('sendMessageForm')?.addEventListener('submit', async (e) => {
@@ -2591,6 +3020,7 @@
 
       try {
         await setDoc(getPublicDoc(`messages_${currentActiveChatId}`, optMsgId), newMsg);
+        delete pendingSends[optMsgId];
         // Push notify DM recipient (heshimu mute list yake)
         const pushTarget = currentActiveChatId.startsWith('dm-') ? currentActiveChatId.replace('dm-', '') : null;
         if (pushTarget) {
@@ -2603,7 +3033,9 @@
             }
           } catch (e) {}
         }
-      } catch(e) {}
+      } catch(e) {
+        markFailed(optMsgId, newMsg, currentActiveChatId);
+      }
     });
 
     // ===== PUSH NOTIFICATIONS (OneSignal - free tier) =====
@@ -2652,7 +3084,7 @@
     }
 
     // ===== EMOJI PANEL kwenye input =====
-    const EMOJI_SET = ['\u{1F600}','\u{1F602}','\u{1F923}','\u{1F60A}','\u{1F60D}','\u{1F970}','\u{1F60E}','\u{1F929}','\u{1F622}','\u{1F62D}','\u{1F621}','\u{1F97A}','\u{1F64F}','\u{1F44D}','\u{1F44E}','\u{1F44F}','\u{1F64C}','\u{1F4AA}','\u{1F525}','\u{2728}','\u{1F389}','\u2764\uFE0F','\u{1F4AF}','\u{1F4A1}','\u{1F680}','\u{1F1F9}\u{1F1FF}','\u{1F30D}','\u2600\uFE0F','\u{1F319}','\u2B50','\u{1F340}','\u{1F3B5}'];
+    const EMOJI_SET = ['😀','😂','🤣','😊','😍','🥰','😎','🤩','😢','😭','😡','🥺','🙏','👍','👎','👏','🙌','💪','🔥','✨','🎉','❤️','💯','💡','🚀','🇹🇿','🌍','☀️','🌙','⭐','🍀','🎵'];
     function buildEmojiPanel() {
       const panel = document.getElementById('emojiPanel');
       if (!panel || panel.children.length) return;
@@ -2696,7 +3128,7 @@
       recordCancelMode = false;
       const hint = document.getElementById('voiceHint');
       if (hint) {
-        hint.textContent = 'Release to send \u2022 Slide left to cancel';
+        hint.textContent = 'Release to send • Slide left to cancel';
         hint.classList.remove('text-rose-400');
       }
       const ic = document.getElementById('voiceBarIcon');
@@ -2756,10 +3188,17 @@
           };
           renderMessageBubble(newMsg, true);
           playSentSound();
-          await setDoc(getPublicDoc(`messages_${currentActiveChatId}`, optMsgId), newMsg);
+          try {
+            await setDoc(getPublicDoc(`messages_${currentActiveChatId}`, optMsgId), newMsg);
+            delete pendingSends[optMsgId];
+          } catch (errSend) {
+            markFailed(optMsgId, newMsg, currentActiveChatId);
+          }
           const pushTarget = currentActiveChatId.startsWith('dm-') ? currentActiveChatId.replace('dm-', '') : null;
-          if (pushTarget) notifyPush(pushTarget, currentUserName || ('@' + currentUserHandle), '\u{1F3A4} Voice message');
-        } catch (err) {}
+          if (pushTarget) notifyPush(pushTarget, currentUserName || ('@' + currentUserHandle), '🎤 Voice message');
+        } catch (err) {
+          markFailed(optMsgId, newMsg, currentActiveChatId);
+        }
       };
       mediaRecorder.start();
       recordingActive = true;
@@ -2851,13 +3290,18 @@
     });
 
     // ===== REALTIME TYPING: broadcast while typing, stop after 2.5s idle =====
+    let lastTypingWrite = 0;
     document.getElementById('chatMessageInput')?.addEventListener('input', async () => {
       if (!db || !currentUserHandle || !currentActiveChatId) return;
-      try {
-        await setDoc(getPublicDoc(`typing_${currentActiveChatId}`, currentUserHandle), {
-          handle: currentUserHandle, typing: true, ts: Date.now()
-        }, { merge: true });
-      } catch (e) {}
+      const nowTs = Date.now();
+      if (nowTs - lastTypingWrite > 2000) { // throttle: 1 write / 2s (kulinda quota)
+        lastTypingWrite = nowTs;
+        try {
+          await setDoc(getPublicDoc(`typing_${currentActiveChatId}`, currentUserHandle), {
+            handle: currentUserHandle, typing: true, ts: Date.now()
+          }, { merge: true });
+        } catch (e) {}
+      }
       if (typingTimeout) clearTimeout(typingTimeout);
       typingTimeout = setTimeout(async () => {
         try {
@@ -3134,8 +3578,8 @@
         if (snap.empty && !localStorage.getItem('cx_seeded')) {
           localStorage.setItem('cx_seeded', '1');
           const seeds = [
-            { handle: 'fahmy_mazrui', text: 'Welcome everyone to ClassmateX Social App! \u{1F680}', bg: 'bg-gradient-to-br from-purple-700 via-indigo-800 to-slate-900' },
-            { handle: 'sarah_juma', text: 'Hello classmates! Super excited to connect \u{1F680}\u{1F525}', bg: 'bg-gradient-to-br from-rose-600 via-pink-600 to-purple-800' }
+            { handle: 'fahmy_mazrui', text: 'Welcome everyone to ClassmateX Social App! 🚀', bg: 'bg-gradient-to-br from-purple-700 via-indigo-800 to-slate-900' },
+            { handle: 'sarah_juma', text: 'Hello classmates! Super excited to connect 🚀🔥', bg: 'bg-gradient-to-br from-rose-600 via-pink-600 to-purple-800' }
           ];
           for (const s of seeds) {
             await setDoc(getPublicDoc("stories", 'story_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5)), {
@@ -3213,7 +3657,7 @@
       if (timeEl2) {
         const postedTxt = data.storyPosted ? timeAgo(data.storyPosted) : 'just now';
         const leftTxt = data.storyExpires ? timeUntil(data.storyExpires) : null;
-        timeEl2.textContent = leftTxt ? `${postedTxt} \u2022 expires in ${leftTxt}` : postedTxt;
+        timeEl2.textContent = leftTxt ? `${postedTxt} • expires in ${leftTxt}` : postedTxt;
       }
 
       if (nameEl) nameEl.innerHTML = `${data.storyHandle || '@classmate'} ${String(data.storyHandle || '').replace('@','') === 'fahmy_mazrui' ? getVerifiedBadgeHtml(true) : ''}`;
@@ -3316,6 +3760,7 @@
       if (!container) return;
       container.innerHTML = '';
       renderedMsgIds.clear();
+      lastRenderedDate = '';
 
       if (messagesUnsubscribe) messagesUnsubscribe();
 
@@ -3727,7 +4172,7 @@
       e.preventDefault();
       const name = (document.getElementById('signup-name')?.value || '').trim();
       const email = (document.getElementById('signup-email')?.value || '').trim();
-      const username = (document.getElementById('signup-username')?.value || '').trim().replace('@','').toLowerCase();
+      const username = (document.getElementById('signup-username')?.value || '').trim().replace('@','').toLowerCase().replace(/[^a-z0-9_]/g, '');
       const password = document.getElementById('signup-password')?.value || '';
       if (!name || !email || !username || password.length < 6) {
         triggerNotificationToast("Sign Up Failed", "system", "Fill in all fields (password: 6+ characters).", "CX");
@@ -3841,7 +4286,7 @@
     }
 
     function isUserOnline(u) {
-      return u.isOnline === true && (Date.now() - (u.lastActiveMs || 0) < 180000);
+      return u.isOnline === true && (Date.now() - (u.lastActiveMs || 0) < 720000); // 12 min window
     }
 
     async function loadAdminDashboard() {
@@ -3882,7 +4327,7 @@
         const qs = await getDocs(query(getPublicCol("messages_global-group"), where("createdAtMs", ">=", start.getTime())));
         document.getElementById('adminMsgsToday').textContent = qs.size;
       } catch (e) {
-        document.getElementById('adminMsgsToday').textContent = '\u2014';
+        document.getElementById('adminMsgsToday').textContent = '—';
       }
     }
 
@@ -3935,7 +4380,7 @@
       if (role !== 'user') name.insertAdjacentHTML('beforeend', u.isCeo ? getVerifiedBadgeHtml(true) : getRoleBadgeHtml(role));
       const sub = document.createElement('p');
       sub.className = 'text-[9px] text-slate-500 truncate';
-      sub.textContent = (u.email || '') + ' \u2022 ' + (online ? 'Online now' : 'Last seen: ' + timeAgo(u.lastActiveMs));
+      sub.textContent = (u.email || '') + ' • ' + (online ? 'Online now' : 'Last seen: ' + timeAgo(u.lastActiveMs));
       info.appendChild(name);
       info.appendChild(sub);
       left.appendChild(avWrap);
@@ -4018,7 +4463,7 @@
         await setDoc(getPublicDoc("users", username), { role: role }, { merge: true });
         const u = adminMembersCache.find(x => x.username === username);
         if (u) u.role = role;
-        triggerNotificationToast("Role Updated", "admin", `@${username} sasa ni ${role.toUpperCase()} \u2714\u2714`, "CX");
+        triggerNotificationToast("Role Updated", "admin", `@${username} sasa ni ${role.toUpperCase()} ✔✔`, "CX");
         renderAdminStats(adminMembersCache);
         renderAdminMembers();
         loadMembersFromFirestore();
@@ -4138,7 +4583,7 @@
         const bid = 'broadcast_' + Date.now();
         await setDoc(getPublicDoc("messages_global-group", bid), {
           id: bid,
-          text: `\u{1F4E3} ADMIN ANNOUNCEMENT:\n\n${text}`,
+          text: `📣 ADMIN ANNOUNCEMENT:\n\n${text}`,
           senderId: currentUserId,
           senderHandle: currentUserHandle,
           isCeo: isCeoUser,
