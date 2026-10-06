@@ -411,6 +411,19 @@
       </div>
     </div>
 
+    <!-- THREAD ACTION MODAL (long-press chat thread) -->
+    <div id="threadActionModal" class="hidden absolute inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-6">
+      <div class="w-full max-w-[260px] rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl animate-pop-in overflow-hidden divide-y divide-slate-800/80 text-left">
+        <button id="threadArchiveBtn" class="w-full px-4 py-3 text-xs font-bold text-white hover:bg-slate-800/70 flex items-center gap-3 transition">
+          <i class="ph ph-archive text-base text-cyan-400"></i><span>Archive</span>
+        </button>
+        <button id="threadDeleteBtn" class="w-full px-4 py-3 text-xs font-bold text-rose-300 hover:bg-rose-500/10 flex items-center gap-3 transition">
+          <i class="ph ph-trash text-base text-rose-400"></i><span>Delete Chat</span>
+        </button>
+        <button onclick="document.getElementById('threadActionModal')?.classList.add('hidden')" class="w-full py-2.5 text-[10px] font-bold text-slate-400 hover:text-white bg-slate-950/60 transition">Cancel</button>
+      </div>
+    </div>
+
     <!-- LONG-PRESS MESSAGE ACTION POPUP (WhatsApp style) -->
     <div id="messageActionModal" class="hidden absolute inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-6">
       <div class="w-full max-w-[260px] rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl animate-pop-in overflow-hidden">
@@ -1556,6 +1569,9 @@
     });
     let lastRenderedDate = '';
     let starredMsgs = [];
+    let selectedThreadId = null;
+    let showArchived = false;
+    const avatarMap = {}; // handle -> avatar (kufreshi picha kila mahali)
     const pendingSends = {};
     let userPrefs = { lastSeen: true, readReceipts: true, msgSounds: true, inAppSounds: true, pushPopups: true };
     let dmRecipientPrefs = null;
@@ -1909,9 +1925,26 @@
     function renderAllThreads() {
       const list = document.getElementById('chatThreadList');
       if (!list) return;
-      list.querySelectorAll('[data-dynamic-thread]').forEach(el => el.remove());
-      myThreads.forEach(t => renderThreadItem(t));
+      list.querySelectorAll('[data-dynamic-thread],[data-archived-toggle]').forEach(el => el.remove());
+      myThreads.filter(t => showArchived ? !!t.archived : !t.archived).forEach(t => renderThreadItem(t));
       myThreads.forEach(t => attachThreadListener(t.chatId));
+      // Archived toggle
+      const archCount = myThreads.filter(t => t.archived).length;
+      if (!showArchived && archCount > 0) {
+        const btn = document.createElement('button');
+        btn.setAttribute('data-archived-toggle', '1');
+        btn.className = 'w-full p-3 text-center text-[10px] font-black uppercase tracking-wider text-slate-500 hover:text-accent-pink transition';
+        btn.textContent = `Archived (${archCount})`;
+        btn.addEventListener('click', () => { showArchived = true; renderAllThreads(); });
+        list.appendChild(btn);
+      } else if (showArchived) {
+        const btn = document.createElement('button');
+        btn.setAttribute('data-archived-toggle', '1');
+        btn.className = 'w-full p-3 text-center text-[10px] font-black uppercase tracking-wider text-accent-pink hover:text-white transition';
+        btn.textContent = 'Hide Archived';
+        btn.addEventListener('click', () => { showArchived = false; renderAllThreads(); });
+        list.appendChild(btn);
+      }
     }
 
     function renderThreadItem(t) {
@@ -1925,6 +1958,21 @@
         item.setAttribute('data-dynamic-thread', '1');
         item.dataset.searchTerm = '@' + t.handle;
         item.addEventListener('click', () => window.openChatThread(t.chatId));
+
+        // Long-press: Archive / Delete chat
+        let tPressTimer = null;
+        const openThreadMenu = () => {
+          selectedThreadId = t.chatId;
+          const lbl = document.querySelector('#threadArchiveBtn span');
+          if (lbl) lbl.textContent = t.archived ? 'Unarchive' : 'Archive';
+          document.getElementById('threadActionModal')?.classList.remove('hidden');
+        };
+        item.addEventListener('touchstart', () => {
+          tPressTimer = setTimeout(openThreadMenu, 500);
+        }, { passive: true });
+        ['touchend', 'touchmove', 'touchcancel'].forEach(ev => item.addEventListener(ev, () => clearTimeout(tPressTimer)));
+        item.addEventListener('mousedown', () => { tPressTimer = setTimeout(openThreadMenu, 500); });
+        ['mouseup', 'mouseleave'].forEach(ev => item.addEventListener(ev, () => clearTimeout(tPressTimer)));
         list.insertBefore(item, list.firstChild);
       }
       const unreadHtml = (t.unread || 0) > 0
@@ -1933,7 +1981,7 @@
       item.innerHTML = `
         <div class="relative shrink-0">
           <div class="h-11 w-11 rounded-full bg-gradient-to-tr from-brand-500 to-accent-pink text-white font-black text-xs flex items-center justify-center overflow-hidden">
-            ${t.avatar ? `<img src="${t.avatar}" class="avatar-img" />` : String(t.handle).substring(0,2).toUpperCase()}
+            ${(t.avatar || avatarMap[t.handle]) ? `<img src="${t.avatar || avatarMap[t.handle]}" class="avatar-img" />` : String(t.handle).substring(0,2).toUpperCase()}
           </div>
           <span class="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-emerald-400 border-2 border-slate-950"></span>
         </div>
@@ -1993,6 +2041,35 @@
         }, () => {});
       } catch (e) {}
     }
+
+    // ===== THREAD ACTIONS: Archive / Delete =====
+    document.getElementById('threadArchiveBtn')?.addEventListener('click', () => {
+      const tt = myThreads.find(x => x.chatId === selectedThreadId);
+      if (tt) {
+        tt.archived = !tt.archived;
+        saveMyThreads();
+        showArchived = false;
+        renderAllThreads();
+        triggerNotificationToast(tt.archived ? 'Archived' : 'Unarchived', 'system', tt.archived ? 'Chat moved to Archived' : 'Chat restored to inbox', 'CX');
+      }
+      document.getElementById('threadActionModal')?.classList.add('hidden');
+    });
+
+    document.getElementById('threadDeleteBtn')?.addEventListener('click', async () => {
+      const tid = selectedThreadId;
+      document.getElementById('threadActionModal')?.classList.add('hidden');
+      if (!tid || !confirm('Delete this chat? Messages will be removed (up to 200).')) return;
+      myThreads = myThreads.filter(x => x.chatId !== tid);
+      saveMyThreads();
+      if (threadListeners[tid]) { try { threadListeners[tid](); } catch (e) {} delete threadListeners[tid]; }
+      try {
+        const snap = await getDocs(query(getPublicCol(`messages_${tid}`), orderBy('createdAtMs', 'desc'), limit(200)));
+        await Promise.allSettled(snap.docs.map(d => deleteDoc(getPublicDoc(`messages_${tid}`, d.id))));
+      } catch (e) {}
+      showArchived = false;
+      renderAllThreads();
+      triggerNotificationToast('Chat Deleted', 'system', 'Conversation removed', 'CX');
+    });
 
     // ===== FULLSCREEN IMAGE VIEWER =====
     function openFullImage(src) {
@@ -3146,7 +3223,7 @@
       EMOJI_SET.forEach(em => {
         const b = document.createElement('button');
         b.type = 'button';
-        b.className = 'text-lg py-1.5 hover:scale-125 transition transform';
+        b.className = 'text-2xl py-2.5 hover:scale-125 transition transform';
         b.textContent = em;
         b.addEventListener('click', () => {
           const input = document.getElementById('chatMessageInput');
@@ -3375,6 +3452,8 @@
         const dataUrl = await compressSquareImageToDataUrl(file, 256, 0.85); // center-crop square
         updateAllUserAvatarsInDom(dataUrl);
         if (db) setDoc(getPublicDoc("users", currentUserHandle), { avatar: dataUrl }, { merge: true }).catch(() => {});
+        avatarMap[currentUserHandle] = dataUrl;
+        loadMembersFromFirestore();
         triggerNotificationToast("Profile Photo Updated", currentUserHandle, "Avatar imewekwa (punguzwa, bure)", "CX");
       } catch (err) {
         triggerNotificationToast("Upload Failed", "system", "Picha haikupakiwa — jaribu nyingine", "CX");
@@ -3582,7 +3661,7 @@
       const countBadge = group.length > 1 ? `<span class="absolute -top-1.5 -right-1.5 min-w-[20px] h-[20px] px-1 rounded-full bg-accent-pink text-white text-[10px] font-black flex items-center justify-center border-2 border-slate-950 shadow-md z-20">${group.length}</span>` : '';
       item.innerHTML = `
         <div class="neon-story-ring relative">
-          <div class="h-11 w-11 rounded-full bg-slate-900 text-white font-black text-xs flex items-center justify-center overflow-hidden">
+          <div class="h-12 w-12 rounded-full bg-slate-900 text-white font-black text-xs flex items-center justify-center overflow-hidden shrink-0">
             ${s.avatar ? `<img src="${s.avatar}" class="avatar-img" />` : String(s.handle).substring(0,2).toUpperCase()}
           </div>
           ${countBadge}
@@ -3918,6 +3997,7 @@
         membersList.innerHTML = '';
         members.forEach(m => {
           const username = String(m.username || 'user').replace(/[^a-zA-Z0-9_]/g, '') || 'user';
+          if (m.avatar) avatarMap[username] = m.avatar;
           const mRole = normalizeRole(m);
           const isVerified = mRole !== 'user';
           const card = document.createElement('div');
@@ -4425,7 +4505,15 @@
       avWrap.className = 'relative shrink-0';
       const av = document.createElement('div');
       av.className = `h-9 w-9 rounded-full ${role !== 'user' ? 'neon-story-ring' : 'bg-emerald-500'} text-white font-black text-[10px] flex items-center justify-center`;
-      av.textContent = username.substring(0, 2).toUpperCase();
+      if (u.avatar) {
+        const aimg = document.createElement('img');
+        aimg.src = u.avatar;
+        aimg.className = 'avatar-img';
+        av.innerHTML = '';
+        av.appendChild(aimg);
+      } else {
+        av.textContent = username.substring(0, 2).toUpperCase();
+      }
       const dot = document.createElement('span');
       dot.className = `absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-slate-950 ${online ? 'bg-emerald-400' : 'bg-slate-600'}`;
       avWrap.appendChild(av);
