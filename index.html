@@ -1912,7 +1912,7 @@
       // ===== PRESENCE TRACKING: mark online + heartbeat every 60s + ban enforcement =====
       if (db) {
         setDoc(getPublicDoc("users", currentUserHandle), Object.assign(
-          { lastLoginMs: Date.now() },
+          { lastLoginMs: Date.now(), uid: currentUserId },
           userPrefs.lastSeen === false ? { isOnline: false } : { isOnline: true, lastActiveMs: Date.now() }
         ), { merge: true }).catch(() => {});
         if (presenceInterval) clearInterval(presenceInterval);
@@ -2185,7 +2185,7 @@
           snap.forEach(d => {
             const m = d.data();
             if (!m.senderHandle || m.senderHandle === currentUserHandle) return;
-            const cid = 'dm-' + m.senderHandle;
+            const cid = 'dm-' + (m.senderId || m.senderHandle);
             if (!myThreads.find(x => x.chatId === cid)) {
               myThreads.unshift({ chatId: cid, handle: m.senderHandle, lastReadMs: 0, unread: 0, lastMsg: '', lastMsgTime: '' });
               attachThreadListener(cid);
@@ -2602,48 +2602,73 @@
         if (headerSubtitle) headerSubtitle.innerHTML = `<span class="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping"></span> Public Room • Active`;
         if (headerSubtitle) currentSubtitleHtml = headerSubtitle.innerHTML;
       } else {
-        const rawHandle = chatId.replace('dm-', '').replace('chat-', '').replace('ceo-', '');
-        const isCeo = rawHandle === 'fahmy_mazrui' || rawHandle === 'fahmy-mazrui';
-        const formattedHandle = isCeo ? 'fahmy_mazrui' : rawHandle;
-        
-        activeChatRecipient = { 
-          handle: formattedHandle, 
-          name: isCeo ? 'Fahmy Mazrui' : `@${formattedHandle}`, 
-          bio: isCeo ? 'ClassmateX Founder & CEO 🚀' : 'Active Classmate Student',
-          isCeo: isCeo,
-          avatar: null
-        };
+        const rawId = chatId.replace('dm-', '');
+        const isUid = rawId.length > 20; // UID ni imara — handle hubadiliki
 
-        const dispH = aliasMap[formattedHandle] || formattedHandle;
-        if (headerTitle) {
-          headerTitle.innerHTML = `<span>@${dispH}</span> ${getVerifiedBadgeHtml(isCeo)}`;
+        if (!isUid) {
+          // LEGACY (handle ya zamana): tatua UID → hamisha data → rejea upya
+          if (db) {
+            getDocs(query(getPublicCol("users"), where("username", "==", rawId))).then((snap) => {
+              if (!snap.empty) {
+                const udoc = snap.docs[0].data();
+                if (udoc.uid) {
+                  migrateDmCollection(chatId, 'dm-' + udoc.uid);
+                  window.openChatThread('dm-' + udoc.uid);
+                  return;
+                }
+              }
+              setupLegacyDm(rawId, headerTitle, headerIcon, headerSubtitle);
+            }).catch(() => setupLegacyDm(rawId, headerTitle, headerIcon, headerSubtitle));
+          } else {
+            setupLegacyDm(rawId, headerTitle, headerIcon, headerSubtitle);
+          }
+          return; // recursive call itafanya mabaki
         }
+
+        // UID-BASED (mpya — haiharibiki kwa rename)
+        const recipUid = rawId;
+        activeChatRecipient = {
+          handle: recipUid, uid: recipUid,
+          name: '@classmate', bio: 'Classmate Student',
+          isCeo: false, avatar: null
+        };
+        if (headerTitle) headerTitle.innerHTML = `<span>@classmate</span>`;
         if (headerIcon) {
-          headerIcon.className = `h-9 w-9 rounded-full ${isCeo ? 'neon-story-ring' : 'bg-emerald-500'} text-white font-black flex items-center justify-center text-xs shadow-xs shrink-0 overflow-hidden`;
-          headerIcon.innerHTML = `<div class="h-full w-full bg-slate-900 flex items-center justify-center rounded-full">${formattedHandle.substring(0,2).toUpperCase()}</div>`;
+          headerIcon.className = "h-9 w-9 rounded-full bg-emerald-500 text-white font-black flex items-center justify-center text-xs shadow-xs shrink-0 overflow-hidden";
+          headerIcon.innerHTML = `<div class="h-full w-full bg-slate-900 flex items-center justify-center rounded-full"><i class="ph ph-user text-sm"></i></div>`;
         }
         if (headerSubtitle) {
-          headerSubtitle.innerHTML = `<span class="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping"></span> Online • Active Now`;
+          headerSubtitle.innerHTML = `<span class="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping"></span> Connecting...`;
           currentSubtitleHtml = headerSubtitle.innerHTML;
         }
-
-        // Fetch recipient role + presence live for DM header
-        if (db && !isCeo) {
-          getDoc(getPublicDoc("users", formattedHandle)).then((snap) => {
-            if (snap.exists()) {
-              const u = snap.data();
-              const role = normalizeRole(u);
-              activeChatRecipient.lastActiveMs = u.lastActiveMs;
-              activeChatRecipient.isOnline = u.isOnline;
-              dmRecipientPrefs = u.prefs || null; // heshimu read receipts zake
-              if (role !== 'user' && headerTitle) {
-                headerTitle.innerHTML = `<span>@${aliasMap[formattedHandle] || formattedHandle}</span> ${getRoleBadgeHtml(role)}`;
-              }
-              const online = isUserOnline(u);
-              if (headerSubtitle) {
-                headerSubtitle.innerHTML = `<span class="h-1.5 w-1.5 rounded-full ${online ? 'bg-emerald-400 animate-ping' : 'bg-slate-500'}"></span> ${online ? 'Online now' : 'Last seen: ' + timeAgo(u.lastActiveMs)}`;
-                currentSubtitleHtml = headerSubtitle.innerHTML;
-              }
+        if (db) {
+          getDocs(query(getPublicCol("users"), where("uid", "==", recipUid))).then((snap) => {
+            if (snap.empty) return;
+            const u = snap.docs[0].data();
+            const uname = u.username || 'user';
+            activeChatRecipient.handle = uname;
+            activeChatRecipient.avatar = u.avatar || null;
+            activeChatRecipient.lastActiveMs = u.lastActiveMs;
+            activeChatRecipient.isOnline = u.isOnline;
+            activeChatRecipient.isCeo = !!u.isCeo;
+            dmRecipientPrefs = u.prefs || null;
+            const tt = myThreads.find(x => x.chatId === chatId);
+            if (tt) { tt.handle = uname; saveMyThreads(); renderThreadItem(tt); }
+            const role = normalizeRole(u);
+            const isCeoR = role === 'admin';
+            if (headerTitle) {
+              headerTitle.innerHTML = `<span>@${aliasMap[uname] || uname}</span> ${isCeoR ? getVerifiedBadgeHtml(true) : getRoleBadgeHtml(role)}`;
+            }
+            if (headerIcon) {
+              headerIcon.className = `h-9 w-9 rounded-full ${isCeoR ? 'neon-story-ring' : 'bg-emerald-500'} text-white font-black flex items-center justify-center text-xs shadow-xs shrink-0 overflow-hidden`;
+              headerIcon.innerHTML = u.avatar
+                ? `<img src="${u.avatar}" class="avatar-img" />`
+                : `<div class="h-full w-full bg-slate-900 flex items-center justify-center rounded-full">${uname.substring(0,2).toUpperCase()}</div>`;
+            }
+            const online = isUserOnline(u);
+            if (headerSubtitle) {
+              headerSubtitle.innerHTML = `<span class="h-1.5 w-1.5 rounded-full ${online ? 'bg-emerald-400 animate-ping' : 'bg-slate-500'}"></span> ${online ? 'Online now' : 'Last seen: ' + timeAgo(u.lastActiveMs)}`;
+              currentSubtitleHtml = headerSubtitle.innerHTML;
             }
           }).catch(() => {});
         }
@@ -2689,6 +2714,52 @@
 
       loadRealtimeMessages(chatId);
     };
+
+    // DM ya zamana (handle) — hatua za muda tu
+    function setupLegacyDm(rawHandle, headerTitle, headerIcon, headerSubtitle) {
+      const isCeo = rawHandle === 'fahmy_mazrui';
+      activeChatRecipient = {
+        handle: rawHandle, uid: null,
+        name: isCeo ? 'Fahmy Mazrui' : `@${rawHandle}`,
+        bio: isCeo ? 'ClassmateX Founder & CEO' : 'Classmate Student',
+        isCeo: isCeo, avatar: null
+      };
+      if (headerTitle) headerTitle.innerHTML = `<span>@${aliasMap[rawHandle] || rawHandle}</span> ${getVerifiedBadgeHtml(isCeo)}`;
+      if (headerIcon) {
+        headerIcon.className = `h-9 w-9 rounded-full ${isCeo ? 'neon-story-ring' : 'bg-emerald-500'} text-white font-black flex items-center justify-center text-xs shadow-xs shrink-0 overflow-hidden`;
+        headerIcon.innerHTML = `<div class="h-full w-full bg-slate-900 flex items-center justify-center rounded-full">${rawHandle.substring(0,2).toUpperCase()}</div>`;
+      }
+      if (headerSubtitle) {
+        headerSubtitle.innerHTML = `<span class="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping"></span> Online`;
+        currentSubtitleHtml = headerSubtitle.innerHTML;
+      }
+      loadRealtimeMessages(currentActiveChatId);
+      // fufua hatua nyingine (thread tracking) kwa muda
+      if (currentActiveChatId.startsWith('dm-')) {
+        let tt = myThreads.find(x => x.chatId === currentActiveChatId);
+        if (!tt) {
+          tt = { chatId: currentActiveChatId, handle: rawHandle, lastReadMs: 0, unread: 0, lastMsg: '', lastMsgTime: '' };
+          myThreads.unshift(tt);
+        }
+        tt.lastReadMs = Date.now(); tt.unread = 0;
+        saveMyThreads(); renderThreadItem(tt); attachThreadListener(currentActiveChatId);
+      }
+    }
+
+    // Hamisha ujumbe wa DM ya zamana hadi ya UID (mpaka 300)
+    async function migrateDmCollection(oldCid, newCid) {
+      try {
+        const snap = await getDocs(getPublicCol(`messages_${oldCid}`));
+        let count = 0;
+        for (const d of snap.docs) {
+          if (count++ >= 300) break;
+          await setDoc(getPublicDoc(`messages_${newCid}`, d.id), d.data());
+        }
+        let changed = false;
+        myThreads.forEach(t => { if (t.chatId === oldCid) { t.chatId = newCid; changed = true; } });
+        if (changed) { saveMyThreads(); renderAllThreads(); }
+      } catch (e) {}
+    }
 
     // ===== EMOTION SENSE: dictionary ya hisia (Kiswahili + English) =====
     const EMOTION_DICT = [
@@ -3320,7 +3391,7 @@
       const text = input?.value.trim();
       if (!text && !attachedFile) return;
 
-      const dmTarget = currentActiveChatId.startsWith('dm-') ? currentActiveChatId.replace('dm-', '') : null;
+      const dmTarget = currentActiveChatId.startsWith('dm-') ? (activeChatRecipient.handle || currentActiveChatId.replace('dm-', '')) : null;
       if (dmTarget && blockedUsers.includes(dmTarget)) {
         triggerNotificationToast("Blocked", "system", `You blocked @${dmTarget} — go to Profile > Blocked Contacts to unblock`, "CX");
         return;
@@ -3394,7 +3465,7 @@
         await setDoc(getPublicDoc(`messages_${currentActiveChatId}`, optMsgId), newMsg);
         delete pendingSends[optMsgId];
         // Push notify DM recipient (heshimu mute list yake)
-        const pushTarget = currentActiveChatId.startsWith('dm-') ? currentActiveChatId.replace('dm-', '') : null;
+        const pushTarget = currentActiveChatId.startsWith('dm-') ? (activeChatRecipient.handle || currentActiveChatId.replace('dm-', '')) : null;
         if (pushTarget) {
           try {
             const rsnap = await getDoc(getPublicDoc("users", pushTarget));
@@ -4345,8 +4416,8 @@
         }
         visibleMembers.forEach(m => {
           const username = String(m.username || 'user').replace(/[^a-zA-Z0-9_]/g, '') || 'user';
-          if (m.avatar) avatarMap[username] = m.avatar;
-          if (m.name) nameMap[username] = m.name;
+          if (m.avatar) { avatarMap[username] = m.avatar; if (m.uid) avatarMap[m.uid] = m.avatar; }
+          if (m.name) { nameMap[username] = m.name; if (m.uid) nameMap[m.uid] = m.name; }
           if (Array.isArray(m.aliases)) m.aliases.forEach(a => { aliasMap[String(a).replace(/[^a-zA-Z0-9_]/g, '')] = username; });
           const mRole = normalizeRole(m);
           const isVerified = mRole !== 'user';
@@ -4393,7 +4464,7 @@
           const dmBtn = document.createElement('button');
           dmBtn.className = 'touch-active px-3 py-1.5 rounded-xl bg-gradient-to-r from-brand-600 to-accent-pink text-white text-[11px] font-bold shadow-glow-pink transition shrink-0';
           dmBtn.textContent = 'Direct DM';
-          dmBtn.addEventListener('click', () => window.openChatThread('dm-' + username));
+          dmBtn.addEventListener('click', () => window.openChatThread('dm-' + (m.uid || username)));
 
           card.appendChild(left);
           card.appendChild(dmBtn);
@@ -4708,6 +4779,7 @@
           bio: 'Connecting on ClassmateX!',
           avatar: null,
           isCeo: checkCeoStatus(email),
+          uid: cred.user.uid,
           createdAtMs: Date.now()
         });
       } catch (err) {
@@ -4750,6 +4822,7 @@
             bio: 'Connecting on ClassmateX!',
             avatar: cred.user.photoURL || null,
             isCeo: checkCeoStatus(email),
+            uid: cred.user.uid,
             createdAtMs: Date.now()
           });
         }
