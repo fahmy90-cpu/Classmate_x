@@ -311,8 +311,7 @@
           </span>
         </div>
         <div>
-          <span class="text-base font-black tracking-tight text-white">Classmate<span class="text-accent-pink">X</span></span>
-          <span id="liveStatusBadge" class="text-[9px] font-black tracking-wider px-1.5 py-0.5 ml-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 uppercase">LIVE REALTIME</span>
+          <span class="text-lg font-black tracking-tight text-white">Classmate<span class="text-accent-pink">X</span></span>
         </div>
       </div>
 
@@ -1054,7 +1053,7 @@
       <div id="mainAppView" class="hidden flex-col h-full w-full bg-slate-950 overflow-hidden">
         
         <!-- SCREEN 1: CHATS LIST & STORIES SCREEN -->
-        <div id="screenChatsList" class="flex flex-col h-full w-full overflow-hidden">
+        <div id="screenChatsList" class="relative flex flex-col h-full w-full overflow-hidden">
           
           <div class="px-3 pt-3 pb-2 bg-slate-900 border-b border-slate-800 shrink-0">
             <div class="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2 flex justify-between items-center px-1">
@@ -1079,6 +1078,11 @@
             </div>
           </div>
 
+          <!-- FAB: New DM (kama WhatsApp) -->
+          <button id="fabNewDm" class="absolute bottom-4 right-4 z-20 h-13 w-13 p-3.5 rounded-2xl bg-gradient-to-tr from-brand-600 via-accent-purple to-accent-pink text-white shadow-glow-pink touch-active hover:brightness-110 transition">
+            <i class="ph ph-chat-circle-dots text-2xl"></i>
+          </button>
+
           <!-- Realtime Search Input -->
           <div class="p-2.5 bg-slate-900/80 border-b border-slate-800 space-y-2">
             <div class="relative flex items-center">
@@ -1088,6 +1092,12 @@
               <input id="searchChatsInput" type="text" placeholder="Search by @username..."
                      class="w-full rounded-2xl border border-slate-700 bg-slate-800/90 py-2 pl-9 pr-8 text-xs text-white outline-none focus:border-accent-pink focus:ring-2 focus:ring-accent-pink/20 transition shadow-xs" />
             </div>
+          </div>
+
+          <!-- Filter Chips (kama WhatsApp) -->
+          <div class="px-2.5 pb-1.5 bg-slate-900/80 flex gap-1.5 overflow-x-auto no-scrollbar">
+            <button data-chip="all" class="chip-btn px-3 py-1.5 rounded-full bg-accent-pink text-white text-[10px] font-black shrink-0 transition touch-active">All</button>
+            <button data-chip="unread" class="chip-btn px-3 py-1.5 rounded-full bg-slate-800 text-slate-300 text-[10px] font-black border border-slate-700 shrink-0 transition touch-active">Unread</button>
           </div>
 
           <!-- Direct Chat Threads List -->
@@ -1499,8 +1509,11 @@
 
         <!-- Bottom Navigation -->
         <nav id="bottomNav" class="shrink-0 bg-slate-900 border-t border-slate-800 flex justify-around items-center py-2 px-1 shadow-mobile-nav z-20">
-          <button data-nav="chats" class="nav-item active flex flex-col items-center gap-0.5 text-accent-pink transition transform active:scale-90">
-            <i class="ph ph-chat-circle-text text-xl"></i>
+          <button data-nav="chats" class="nav-item active relative flex flex-col items-center gap-0.5 text-accent-pink transition transform active:scale-90">
+            <span class="relative">
+              <i class="ph ph-chat-circle-text text-xl"></i>
+              <span id="navChatsBadge" class="hidden absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 rounded-full bg-accent-pink text-white text-[9px] font-black flex items-center justify-center border border-slate-950">0</span>
+            </span>
             <span class="text-[9px] font-bold">Chats</span>
           </button>
 
@@ -2007,11 +2020,36 @@
       }
     }
 
+    function updateNavBadge() {
+      const total = myThreads.reduce((s, t) => s + (t.unread || 0), 0);
+      const badge = document.getElementById('navChatsBadge');
+      if (!badge) return;
+      badge.classList.toggle('hidden', total === 0);
+      badge.textContent = total > 99 ? '99+' : total;
+    }
+
+    // Filter chips (All / Unread) — kama WhatsApp
+    let chatFilter = 'all';
+    document.querySelectorAll('.chip-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        chatFilter = btn.dataset.chip;
+        document.querySelectorAll('.chip-btn').forEach(b => {
+          const active = b === btn;
+          b.className = `chip-btn px-3 py-1.5 rounded-full text-[10px] font-black shrink-0 transition touch-active ${active ? 'bg-accent-pink text-white' : 'bg-slate-800 text-slate-300 border border-slate-700'}`;
+        });
+        renderAllThreads();
+      });
+    });
+
+    document.getElementById('fabNewDm')?.addEventListener('click', () => switchAppTab('members'));
+
     function renderAllThreads() {
       const list = document.getElementById('chatThreadList');
       if (!list) return;
       list.querySelectorAll('[data-dynamic-thread],[data-archived-toggle]').forEach(el => el.remove());
-      myThreads.filter(t => showArchived ? !!t.archived : !t.archived).forEach(t => renderThreadItem(t));
+      myThreads.filter(t => showArchived ? !!t.archived : !t.archived)
+        .filter(t => chatFilter === 'unread' ? (t.unread || 0) > 0 : true)
+        .forEach(t => renderThreadItem(t));
       myThreads.forEach(t => attachThreadListener(t.chatId));
       // Archived toggle
       const archCount = myThreads.filter(t => t.archived).length;
@@ -2063,6 +2101,7 @@
       const unreadHtml = (t.unread || 0) > 0
         ? `<span class="min-w-[18px] h-[18px] px-1 rounded-full bg-accent-pink text-white text-[9px] font-black flex items-center justify-center shrink-0">${t.unread > 9 ? '9+' : t.unread}</span>`
         : '';
+      updateNavBadge();
       item.innerHTML = `
         <div class="relative shrink-0">
           <div class="h-11 w-11 rounded-full bg-gradient-to-tr from-brand-500 to-accent-pink text-white font-black text-xs flex items-center justify-center overflow-hidden">
@@ -2076,7 +2115,9 @@
             <span class="text-[10px] text-slate-400 shrink-0">${t.lastMsgTime || ''}</span>
           </div>
           <div class="flex justify-between items-center gap-2">
-            <p class="text-[11px] truncate ${(t.unread || 0) > 0 ? 'text-slate-100 font-bold' : 'text-slate-400 font-medium'}">${escapeHtml(t.lastMsg || 'Start a conversation...')}</p>
+            ${t.typingNow
+              ? '<p class="text-[11px] truncate font-bold text-accent-pink animate-pulse">typing...</p>'
+              : `<p class="text-[11px] truncate ${(t.unread || 0) > 0 ? 'text-slate-100 font-bold' : 'text-slate-400 font-medium'}">${escapeHtml(t.lastMsg || 'Start a conversation...')}</p>`}
             ${unreadHtml}
           </div>
         </div>`;
@@ -2085,7 +2126,7 @@
     function attachThreadListener(chatId) {
       if (!db || threadListeners[chatId]) return;
       try {
-        threadListeners[chatId] = onSnapshot(getPublicCol(`messages_${chatId}`), (snap) => {
+        const msgUnsub = onSnapshot(getPublicCol(`messages_${chatId}`), (snap) => {
           const t = myThreads.find(x => x.chatId === chatId);
           if (!t) return;
           let unread = 0, lastMsg = null, lastTime = 0, inboundNew = 0;
@@ -2115,6 +2156,25 @@
           }
           renderThreadItem(t);
         }, () => {});
+        // Typing-in-list (kama WhatsApp): "typing..." badala ya preview
+        let typeUnsub = null;
+        try {
+          typeUnsub = onSnapshot(getPublicCol(`typing_${chatId}`), (tsnap) => {
+            const t2 = myThreads.find(x => x.chatId === chatId);
+            if (!t2) return;
+            let typingName = null;
+            tsnap.forEach(d => {
+              const v = d.data();
+              if (v.handle && v.handle !== currentUserHandle && v.typing === true && (Date.now() - (v.ts || 0)) < 6000) typingName = v.handle;
+            });
+            t2.typingNow = typingName;
+            renderThreadItem(t2);
+          }, () => {});
+        } catch (e) {}
+        threadListeners[chatId] = () => {
+          try { msgUnsub(); } catch (e) {}
+          if (typeUnsub) { try { typeUnsub(); } catch (e) {} }
+        };
       } catch (e) {}
     }
 
