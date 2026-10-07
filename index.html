@@ -2126,7 +2126,7 @@
     function attachThreadListener(chatId) {
       if (!db || threadListeners[chatId]) return;
       try {
-        const msgUnsub = onSnapshot(getPublicCol(`messages_${chatId}`), (snap) => {
+        const handleThreadSnap = (snap) => {
           const t = myThreads.find(x => x.chatId === chatId);
           if (!t) return;
           let unread = 0, lastMsg = null, lastTime = 0, inboundNew = 0;
@@ -2135,8 +2135,16 @@
             const m = d.data();
             if ((m.createdAtMs || 0) > lastTime) { lastTime = m.createdAtMs; lastMsg = m; }
             if (m.senderHandle && m.senderHandle !== currentUserHandle) {
-              if ((m.createdAtMs || 0) > (t.lastReadMs || 0)) unread++;
-              if (prevLast && (m.createdAtMs || 0) > prevLast) inboundNew++;
+              const cms = m.createdAtMs || 0;
+              // Watermark: hairuhusu kuhesabu mara 2 (dual-write hupiga nakala 2 yenye muda mmoja)
+              if (cms > (t.lastReadMs || 0) && cms > (t._lastCountedMs || 0)) {
+                unread++;
+                t._lastCountedMs = Math.max(t._lastCountedMs || 0, cms);
+              }
+              if (prevLast && cms > prevLast && cms > (t._lastSoundMs || 0)) {
+                inboundNew++;
+                t._lastSoundMs = Math.max(t._lastSoundMs || 0, cms);
+              }
             }
           });
           t._lastSeenMs = lastTime;
@@ -2155,7 +2163,17 @@
             myThreads = [t, ...myThreads.filter(x => x.chatId !== chatId)];
           }
           renderThreadItem(t);
-        }, () => {});
+        };
+        const msgUnsub = onSnapshot(getPublicCol(`messages_${chatId}`), handleThreadSnap, () => {});
+        // DARAJA: sikiliza pia collection ya zamana (toleo la zamana la app)
+        let legacyUnsub = null;
+        try {
+          const t0 = myThreads.find(x => x.chatId === chatId);
+          const h0 = t0 && t0.handle;
+          if (h0 && ('dm-' + h0) !== chatId && chatId.startsWith('dm-')) {
+            legacyUnsub = onSnapshot(getPublicCol(`messages_dm-${h0}`), handleThreadSnap, () => {});
+          }
+        } catch (e) {}
         // Typing-in-list (kama WhatsApp): "typing..." badala ya preview
         let typeUnsub = null;
         try {
@@ -2173,6 +2191,7 @@
         } catch (e) {}
         threadListeners[chatId] = () => {
           try { msgUnsub(); } catch (e) {}
+          if (legacyUnsub) { try { legacyUnsub(); } catch (e) {} }
           if (typeUnsub) { try { typeUnsub(); } catch (e) {} }
         };
       } catch (e) {}
@@ -2601,6 +2620,8 @@
         }
         if (headerSubtitle) headerSubtitle.innerHTML = `<span class="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping"></span> Public Room • Active`;
         if (headerSubtitle) currentSubtitleHtml = headerSubtitle.innerHTML;
+        finishOpenChat(chatId, null);
+        return;
       } else {
         const rawId = chatId.replace('dm-', '');
         const isUid = rawId.length > 20; // UID ni imara — handle hubadiliki
@@ -2670,10 +2691,16 @@
               headerSubtitle.innerHTML = `<span class="h-1.5 w-1.5 rounded-full ${online ? 'bg-emerald-400 animate-ping' : 'bg-slate-500'}"></span> ${online ? 'Online now' : 'Last seen: ' + timeAgo(u.lastActiveMs)}`;
               currentSubtitleHtml = headerSubtitle.innerHTML;
             }
-          }).catch(() => {});
+            finishOpenChat(chatId, uname && uname !== recipUid ? 'dm-' + uname : null);
+          }).catch(() => { finishOpenChat(chatId, null); });
+        } else {
+          finishOpenChat(chatId, null);
         }
       }
 
+    };
+
+    function finishOpenChat(chatId, legacyCid) {
       // Track DM thread in inbox + mark read
       if (chatId.startsWith('dm-')) {
         let tt = myThreads.find(x => x.chatId === chatId);
@@ -2712,8 +2739,8 @@
         if (replyBar) replyBar.classList.remove('hidden');
       }
 
-      loadRealtimeMessages(chatId);
-    };
+      loadRealtimeMessages(chatId, legacyCid);
+    }
 
     // DM ya zamana (handle) — hatua za muda tu
     function setupLegacyDm(rawHandle, headerTitle, headerIcon, headerSubtitle) {
@@ -2989,7 +3016,11 @@
       try {
         await setDoc(getPublicDoc(`messages_${currentActiveChatId}`, optMsgId), newMsg);
         delete pendingSends[optMsgId];
-        const pushTarget = currentActiveChatId.startsWith('dm-') ? currentActiveChatId.replace('dm-', '') : null;
+        if (currentActiveChatId.startsWith('dm-') && activeChatRecipient.handle) {
+          const legacyCid2 = 'dm-' + activeChatRecipient.handle;
+          if (legacyCid2 !== currentActiveChatId) setDoc(getPublicDoc(`messages_${legacyCid2}`, optMsgId), newMsg).catch(() => {});
+        }
+        const pushTarget = currentActiveChatId.startsWith('dm-') ? (activeChatRecipient.handle || currentActiveChatId.replace('dm-', '')) : null;
         if (pushTarget) notifyPush(pushTarget, currentUserName || ('@' + currentUserHandle), '📷 New photo');
       } catch (e) {
         markFailed(optMsgId, newMsg, currentActiveChatId);
@@ -3464,6 +3495,13 @@
       try {
         await setDoc(getPublicDoc(`messages_${currentActiveChatId}`, optMsgId), newMsg);
         delete pendingSends[optMsgId];
+        // DARAJA: piga nakala kwa collection ya handle (kwa wanao toleo la zamana)
+        if (currentActiveChatId.startsWith('dm-') && activeChatRecipient.handle) {
+          const legacyCid = 'dm-' + activeChatRecipient.handle;
+          if (legacyCid !== currentActiveChatId) {
+            setDoc(getPublicDoc(`messages_${legacyCid}`, optMsgId), newMsg).catch(() => {});
+          }
+        }
         // Push notify DM recipient (heshimu mute list yake)
         const pushTarget = currentActiveChatId.startsWith('dm-') ? (activeChatRecipient.handle || currentActiveChatId.replace('dm-', '')) : null;
         if (pushTarget) {
@@ -3660,6 +3698,10 @@
           try {
             await setDoc(getPublicDoc(`messages_${currentActiveChatId}`, optMsgId), newMsg);
             delete pendingSends[optMsgId];
+            if (currentActiveChatId.startsWith('dm-') && activeChatRecipient.handle) {
+              const legacyCid3 = 'dm-' + activeChatRecipient.handle;
+              if (legacyCid3 !== currentActiveChatId) setDoc(getPublicDoc(`messages_${legacyCid3}`, optMsgId), newMsg).catch(() => {});
+            }
           } catch (errSend) {
             markFailed(optMsgId, newMsg, currentActiveChatId);
           }
@@ -4300,7 +4342,7 @@
       });
     });
 
-    function loadRealtimeMessages(chatId) {
+    function loadRealtimeMessages(chatId, legacyCid) {
       const container = document.getElementById('messagesContainer');
       if (!container) return;
       container.innerHTML = '';
@@ -4309,91 +4351,98 @@
 
       if (messagesUnsubscribe) messagesUnsubscribe();
 
-      // REALTIME TYPING INDICATOR listener
+      // REALTIME TYPING INDICATOR listener (+ legacy kwa wanao toleo la zamana)
       if (typingUnsubscribe) typingUnsubscribe();
-      try {
-        typingUnsubscribe = onSnapshot(getPublicCol(`typing_${chatId}`), (snap) => {
-          const typers = [];
-          snap.forEach((d) => {
-            const v = d.data();
-            if (v.handle && v.handle !== currentUserHandle && v.typing === true && (Date.now() - (v.ts || 0)) < 6000) {
-              typers.push(v.handle);
-            }
-          });
-          const tEl = document.getElementById('typingIndicatorText');
-          const sEl = document.getElementById('onlineLiveStatusText');
-          if (!tEl || !sEl) return;
-          if (typers.length) {
-            tEl.textContent = (typers.length === 1 ? `@${typers[0]}` : `${typers.length} people`) + ' is typing...';
-            tEl.classList.remove('hidden');
-            sEl.classList.add('hidden');
-          } else {
-            tEl.classList.add('hidden');
-            sEl.classList.remove('hidden');
-            if (currentSubtitleHtml) sEl.innerHTML = currentSubtitleHtml;
-          }
-        }, (err) => {
-          if (!window.__typingErrShown) {
-            window.__typingErrShown = true;
-            triggerNotificationToast('Typing Error', 'system', 'Typing inakatwa — Firestore rules hazina typing_.* (weka rules mpya)', 'CX');
+      const processTyping = (snap) => {
+        const typers = [];
+        snap.forEach((d) => {
+          const v = d.data();
+          if (v.handle && v.handle !== currentUserHandle && v.typing === true && (Date.now() - (v.ts || 0)) < 6000) {
+            typers.push(v.handle);
           }
         });
+        const tEl = document.getElementById('typingIndicatorText');
+        const sEl = document.getElementById('onlineLiveStatusText');
+        if (!tEl || !sEl) return;
+        if (typers.length) {
+          tEl.textContent = (typers.length === 1 ? `@${typers[0]}` : `${typers.length} people`) + ' is typing...';
+          tEl.classList.remove('hidden');
+          sEl.classList.add('hidden');
+        } else {
+          tEl.classList.add('hidden');
+          sEl.classList.remove('hidden');
+          if (currentSubtitleHtml) sEl.innerHTML = currentSubtitleHtml;
+        }
+      };
+      try {
+        const t1 = onSnapshot(getPublicCol(`typing_${chatId}`), processTyping, () => {});
+        let t2 = null;
+        if (legacyCid && legacyCid !== chatId) {
+          t2 = onSnapshot(getPublicCol(`typing_${legacyCid}`), processTyping, () => {});
+        }
+        typingUnsubscribe = () => { try { t1(); } catch (e) {} if (t2) { try { t2(); } catch (e) {} } };
       } catch (e) {}
 
-      try {
-        const q = getPublicCol(`messages_${chatId}`); // PLAIN listener — imethibitishwa, haiachi updates
-        messagesUnsubscribe = onSnapshot(q, (snapshot) => {
-          const messages = [];
-          snapshot.forEach((docSnap) => {
-            const data = docSnap.data();
-            data.id = docSnap.id;
-            messages.push(data);
-          });
+      const processSnap = (snapshot) => {
+        const messages = [];
+        snapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          data.id = docSnap.id;
+          messages.push(data);
+        });
 
-          // Client-side Sorting + last 50 tu
-          messages.sort((a, b) => (a.createdAtMs || 0) - (b.createdAtMs || 0));
-          const visible = messages.slice(-50);
+        // Client-side Sorting + last 50 tu
+        messages.sort((a, b) => (a.createdAtMs || 0) - (b.createdAtMs || 0));
+        const visible = messages.slice(-50);
 
-          let receivedNewCount = 0;
-          visible.forEach((msg) => {
-            const isSent = msg.senderId === currentUserId || msg.senderHandle === currentUserHandle;
-            if (!isSent && blockedUsers.includes(msg.senderHandle)) return; // blocked users hidden
-            if (!renderedMsgIds.has(msg.id)) {
-              if (!isSent) receivedNewCount++;
-              renderMessageBubble(msg, isSent);
-              // EMOTION SENSE: ujumbe wenye hisia → mlipuko wa emoji + reaction otomatiki
-              if (!isSent && msg.text) {
-                const emoRecv = detectEmotion(msg.text);
-                if (emoRecv) {
-                  const bubEl = container.lastElementChild;
-                  const r = bubEl ? bubEl.getBoundingClientRect() : null;
-                  burstEmojis(r ? r.left + r.width / 2 : null, r ? r.top : null, emoRecv.burst); // mlipuko TU — hakuna reaction inayobaki
-                }
+        let receivedNewCount = 0;
+        visible.forEach((msg) => {
+          const isSent = msg.senderId === currentUserId || msg.senderHandle === currentUserHandle;
+          if (!isSent && blockedUsers.includes(msg.senderHandle)) return;
+          if (!renderedMsgIds.has(msg.id)) {
+            if (!isSent) receivedNewCount++;
+            renderMessageBubble(msg, isSent);
+            if (!isSent && msg.text) {
+              const emoRecv = detectEmotion(msg.text);
+              if (emoRecv) {
+                const bubEl = container.lastElementChild;
+                const r = bubEl ? bubEl.getBoundingClientRect() : null;
+                burstEmojis(r ? r.left + r.width / 2 : null, r ? r.top : null, emoRecv.burst);
               }
             }
-            // SYNC STATUS: my messages -> update ticks live; others' messages -> mark delivered/read
-            if (isSent) {
-              updateMsgTick(msg.id, msg.status || 'sent');
-            } else if (db && msg.id && msg.status !== 'read') {
-              const chatVisible = !document.hidden
-                && !(document.getElementById('screenActiveChat')?.classList.contains('hidden'));
-              const receiptsOn = !dmRecipientPrefs || dmRecipientPrefs.readReceipts !== false;
-              const newStatus = (chatVisible && receiptsOn) ? 'read' : 'delivered';
-              if (newStatus !== msg.status) {
-                updateDoc(getPublicDoc(`messages_${currentActiveChatId}`, msg.id), { status: newStatus }).catch(() => {
-                  if (!window.__statusErrShown) {
-                    window.__statusErrShown = true;
-                    triggerNotificationToast('Delivery Error', 'system', 'Ticks hazisasishwi — angalia Firestore rules (update ya messages)', 'CX');
-                  }
-                });
-              }
-            }
-          });
-
-          if (receivedNewCount > 0 && !mutedChats.includes(currentActiveChatId)) {
-            playReceivedSound();
           }
-        }, (err) => {});
+          // SYNC STATUS: my messages -> update ticks live; others' messages -> mark delivered/read
+          if (isSent) {
+            updateMsgTick(msg.id, msg.status || 'sent');
+          } else if (db && msg.id && msg.status !== 'read') {
+            const chatVisible = !document.hidden
+              && !(document.getElementById('screenActiveChat')?.classList.contains('hidden'));
+            const receiptsOn = !dmRecipientPrefs || dmRecipientPrefs.readReceipts !== false;
+            const newStatus = (chatVisible && receiptsOn) ? 'read' : 'delivered';
+            if (newStatus !== msg.status) {
+              updateDoc(getPublicDoc(`messages_${currentActiveChatId}`, msg.id), { status: newStatus }).catch(() => {
+                if (!window.__statusErrShown) {
+                  window.__statusErrShown = true;
+                  triggerNotificationToast('Delivery Error', 'system', 'Ticks hazisasishwi — angalia Firestore rules (update ya messages)', 'CX');
+                }
+              });
+            }
+          }
+        });
+
+        if (receivedNewCount > 0 && !mutedChats.includes(currentActiveChatId)) {
+          playReceivedSound();
+        }
+      };
+
+      try {
+        const un1 = onSnapshot(getPublicCol(`messages_${chatId}`), processSnap, () => {});
+        let un2 = null;
+        if (legacyCid && legacyCid !== chatId) {
+          // DARAJA: pia sikiliza collection ya zamana (toleo la zamana la app)
+          un2 = onSnapshot(getPublicCol(`messages_${legacyCid}`), processSnap, () => {});
+        }
+        messagesUnsubscribe = () => { try { un1(); } catch (e) {} if (un2) { try { un2(); } catch (e) {} } };
       } catch (err) {
         renderMessageBubble({ id: 'welcome_init', text: "Welcome to ClassmateX Chat!", senderHandle: "fahmy_mazrui", isCeo: true }, false);
       }
