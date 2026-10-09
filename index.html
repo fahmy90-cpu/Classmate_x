@@ -167,6 +167,20 @@
     }
     .msg-text-body { white-space: pre-wrap; word-break: break-word; }
 
+    /* ===== EMOJI BLAST (emojiBlowUp) ===== */
+    @keyframes emojiBlowUp {
+      0% { transform: translate(0, 0) scale(0.4) rotate(0deg); opacity: 0; }
+      15% { opacity: 1; }
+      100% { transform: translate(var(--dx, 0px), var(--dy, -300px)) rotate(var(--rot, 0deg)) scale(1); opacity: 0; }
+    }
+    .emoji-particle {
+      position: absolute;
+      pointer-events: none;
+      z-index: 100;
+      animation: emojiBlowUp 1.6s cubic-bezier(.16,.8,.3,1) forwards;
+      will-change: transform, opacity;
+    }
+
     /* ===== BUBBLE STYLES (user choice) ===== */
     .bstyle-ios .chat-bubble-sent, .bstyle-ios .chat-bubble-received { border-radius: 18px; }
     .bstyle-sharp .chat-bubble-sent, .bstyle-sharp .chat-bubble-received { border-radius: 5px; }
@@ -693,6 +707,10 @@
       <!-- Live Story Preview Canvas -->
       <div id="storyCanvasPreview" class="flex-grow relative flex flex-col items-center justify-center overflow-hidden transition-all duration-300 bg-gradient-to-br from-purple-700 via-indigo-800 to-slate-900">
         <textarea id="storyTextInput" rows="3" placeholder="Add a caption..." class="absolute bottom-28 left-4 right-4 z-10 bg-transparent text-center text-2xl font-extrabold text-white outline-none resize-none placeholder-white/40 leading-relaxed drop-shadow-lg"></textarea>
+        <button id="storyCaptionEmojiBtn" class="absolute bottom-28 right-3 z-20 h-8 w-8 rounded-full bg-slate-950/60 backdrop-blur text-white flex items-center justify-center touch-active" title="Emoji">
+          <i class="ph ph-smiley text-base"></i>
+        </button>
+        <div id="storyCaptionEmojiPanel" class="hidden absolute bottom-40 left-3 right-3 z-20 bg-slate-950/85 backdrop-blur rounded-2xl p-2 grid grid-cols-10 gap-0.5"></div>
 
         <!-- Media Attachment Preview -->
         <div id="storyMediaPreviewContainer" class="hidden absolute inset-0 z-0 overflow-hidden">
@@ -722,7 +740,7 @@
           <span class="text-[8px] font-black text-slate-500 uppercase shrink-0 ml-1">Font:</span>
           <button data-font="default" class="story-font-btn story-tool-btn h-7 px-2 rounded-full bg-slate-800 text-white text-[9px] font-black border border-accent-pink shrink-0 touch-active" style="font-family:Inter,sans-serif">Aa</button>
           <button data-font="fancy" class="story-font-btn story-tool-btn h-7 px-2 rounded-full bg-slate-800 text-white text-[9px] border border-slate-700 shrink-0 touch-active" style="font-family:'Comic Sans MS','Segoe Script',cursive">Aa</button>
-          <button data-font="mono" class="story-font-btn story-tool-btn h-7 px-2 rounded-full bg-slate-800 text-white text-[9px] border border-slate-700 shrink-0 touch-active" style="font-family:monospace">Aa</button>
+          <button data-font="serif" class="story-font-btn story-tool-btn h-7 px-2 rounded-full bg-slate-800 text-white text-[9px] border border-slate-700 shrink-0 touch-active" style="font-family:Georgia,serif">Aa</button>
           <button id="storyRotateBtn" class="story-tool-btn h-7 w-7 rounded-full bg-slate-800 text-white border border-slate-700 shrink-0 touch-active flex items-center justify-center" title="Rotate image"><i class="ph ph-arrow-clockwise text-xs"></i></button>
         </div>
         <div class="flex items-center gap-2 py-1 overflow-x-auto no-scrollbar">
@@ -752,6 +770,30 @@
             <i class="ph ph-paper-plane-tilt text-base"></i>
             <span>Post Status Now</span>
           </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STORY IMAGE EDITOR (crop + rotate kabla ya kupost — tofauti na ya chat) -->
+    <div id="storyEditModal" class="hidden absolute inset-0 z-50 bg-slate-950/98 backdrop-blur flex flex-col animate-pop-in">
+      <div class="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0">
+        <button id="stEditCancel" class="touch-active text-slate-300 text-xs font-bold hover:text-white">Cancel</button>
+        <span class="text-white text-xs font-black tracking-wide">Edit Photo</span>
+        <button id="stEditDone" class="touch-active text-accent-pink text-xs font-black">Done</button>
+      </div>
+      <div class="flex-grow flex items-center justify-center overflow-hidden relative p-3" id="stEditStage">
+        <div id="stEditViewport" class="relative overflow-hidden bg-black shadow-2xl" style="width:300px;height:400px;touch-action:none">
+          <img id="stEditImage" class="absolute max-w-none select-none" draggable="false" style="transform-origin:0 0" alt="" />
+        </div>
+      </div>
+      <div class="p-3 space-y-2.5 border-t border-slate-800 shrink-0">
+        <input id="stEditZoom" type="range" min="1" max="3" step="0.01" value="1" class="w-full" style="accent-color:#ec4899">
+        <div class="flex items-center justify-center gap-2 flex-wrap">
+          <button data-saspect="9:16" class="st-aspect-btn px-3 py-1.5 rounded-full bg-slate-800 text-white text-[10px] font-black border border-accent-pink">9:16</button>
+          <button data-saspect="1:1" class="st-aspect-btn px-3 py-1.5 rounded-full bg-slate-800 text-white text-[10px] font-black border border-slate-700">1:1</button>
+          <button data-saspect="4:5" class="st-aspect-btn px-3 py-1.5 rounded-full bg-slate-800 text-white text-[10px] font-black border border-slate-700">4:5</button>
+          <button data-saspect="free" class="st-aspect-btn px-3 py-1.5 rounded-full bg-slate-800 text-white text-[10px] font-black border border-slate-700">Free</button>
+          <button id="stEditRotate" class="px-3 py-1.5 rounded-full bg-slate-800 text-white border border-slate-700 touch-active flex items-center gap-1"><i class="ph ph-arrow-clockwise text-xs"></i><span class="text-[10px] font-black">Rotate</span></button>
         </div>
       </div>
     </div>
@@ -2020,12 +2062,17 @@
       }
     }
 
+    let navBadgeRaf = null;
     function updateNavBadge() {
-      const total = myThreads.reduce((s, t) => s + (t.unread || 0), 0);
-      const badge = document.getElementById('navChatsBadge');
-      if (!badge) return;
-      badge.classList.toggle('hidden', total === 0);
-      badge.textContent = total > 99 ? '99+' : total;
+      if (navBadgeRaf) return; // punguza re-renders — moja kwa frame
+      navBadgeRaf = requestAnimationFrame(() => {
+        navBadgeRaf = null;
+        const total = myThreads.reduce((s, t) => s + (t.unread || 0), 0);
+        const badge = document.getElementById('navChatsBadge');
+        if (!badge) return;
+        badge.classList.toggle('hidden', total === 0);
+        badge.textContent = total > 99 ? '99+' : total;
+      });
     }
 
     // Filter chips (All / Unread) — kama WhatsApp
@@ -2098,6 +2145,11 @@
         ['mouseup', 'mouseleave'].forEach(ev => item.addEventListener(ev, () => clearTimeout(tPressTimer)));
         list.insertBefore(item, list.firstChild);
       }
+      // Punguza re-renders: ruka kama hakuna mabadiliko
+      const sig = JSON.stringify([t.unread, t.lastMsg, t.lastMsgTime, t.typingNow, aliasMap[t.handle] || t.handle]);
+      if (item.dataset.sig === sig) return;
+      item.dataset.sig = sig;
+
       const unreadHtml = (t.unread || 0) > 0
         ? `<span class="min-w-[18px] h-[18px] px-1 rounded-full bg-accent-pink text-white text-[9px] font-black flex items-center justify-center shrink-0">${t.unread > 9 ? '9+' : t.unread}</span>`
         : '';
@@ -2594,6 +2646,34 @@
     });
 
     // Open Chat Thread Function - Sync DM Recipient Header
+    // Tumia taarifa za mpokeaji DM kwenye header (jina, dp, online, role)
+    function applyDmRecipient(u, uname, chatId, headerTitle, headerIcon, headerSubtitle) {
+      activeChatRecipient.handle = uname;
+      activeChatRecipient.avatar = u.avatar || null;
+      activeChatRecipient.lastActiveMs = u.lastActiveMs;
+      activeChatRecipient.isOnline = u.isOnline;
+      activeChatRecipient.isCeo = !!u.isCeo;
+      dmRecipientPrefs = u.prefs || null;
+      const tt = myThreads.find(x => x.chatId === chatId);
+      if (tt) { tt.handle = uname; saveMyThreads(); renderThreadItem(tt); }
+      const role = normalizeRole(u);
+      const isCeoR = role === 'admin';
+      if (headerTitle) {
+        headerTitle.innerHTML = `<span>@${aliasMap[uname] || uname}</span> ${isCeoR ? getVerifiedBadgeHtml(true) : getRoleBadgeHtml(role)}`;
+      }
+      if (headerIcon) {
+        headerIcon.className = `h-9 w-9 rounded-full ${isCeoR ? 'neon-story-ring' : 'bg-emerald-500'} text-white font-black flex items-center justify-center text-xs shadow-xs shrink-0 overflow-hidden`;
+        headerIcon.innerHTML = u.avatar
+          ? `<img src="${u.avatar}" class="avatar-img" />`
+          : `<div class="h-full w-full bg-slate-900 flex items-center justify-center rounded-full">${uname.substring(0,2).toUpperCase()}</div>`;
+      }
+      const online = isUserOnline(u);
+      if (headerSubtitle) {
+        headerSubtitle.innerHTML = `<span class="h-1.5 w-1.5 rounded-full ${online ? 'bg-emerald-400 animate-ping' : 'bg-slate-500'}"></span> ${online ? 'Online now' : 'Last seen: ' + timeAgo(u.lastActiveMs)}`;
+        currentSubtitleHtml = headerSubtitle.innerHTML;
+      }
+    }
+
     window.openChatThread = function(chatId) {
       currentActiveChatId = chatId;
       document.getElementById('screenChatsList')?.classList.add('hidden');
@@ -2664,33 +2744,28 @@
         }
         if (db) {
           getDocs(query(getPublicCol("users"), where("uid", "==", recipUid))).then((snap) => {
-            if (snap.empty) return;
+            if (snap.empty) {
+              // UID haijapatikani (user hajawahi login na toleo jipya) — tumia handle ya thread
+              const tt0 = myThreads.find(x => x.chatId === chatId);
+              const h0 = tt0 && tt0.handle;
+              if (h0 && h0.length <= 20 && h0 !== recipUid) {
+                getDoc(getPublicDoc("users", h0)).then((dsnap) => {
+                  if (dsnap.exists()) {
+                    const uu = dsnap.data();
+                    applyDmRecipient(uu, uu.username || h0, chatId, headerTitle, headerIcon, headerSubtitle);
+                    finishOpenChat(chatId, 'dm-' + (uu.username || h0));
+                  } else {
+                    finishOpenChat(chatId, null);
+                  }
+                }).catch(() => finishOpenChat(chatId, null));
+              } else {
+                finishOpenChat(chatId, null);
+              }
+              return;
+            }
             const u = snap.docs[0].data();
             const uname = u.username || 'user';
-            activeChatRecipient.handle = uname;
-            activeChatRecipient.avatar = u.avatar || null;
-            activeChatRecipient.lastActiveMs = u.lastActiveMs;
-            activeChatRecipient.isOnline = u.isOnline;
-            activeChatRecipient.isCeo = !!u.isCeo;
-            dmRecipientPrefs = u.prefs || null;
-            const tt = myThreads.find(x => x.chatId === chatId);
-            if (tt) { tt.handle = uname; saveMyThreads(); renderThreadItem(tt); }
-            const role = normalizeRole(u);
-            const isCeoR = role === 'admin';
-            if (headerTitle) {
-              headerTitle.innerHTML = `<span>@${aliasMap[uname] || uname}</span> ${isCeoR ? getVerifiedBadgeHtml(true) : getRoleBadgeHtml(role)}`;
-            }
-            if (headerIcon) {
-              headerIcon.className = `h-9 w-9 rounded-full ${isCeoR ? 'neon-story-ring' : 'bg-emerald-500'} text-white font-black flex items-center justify-center text-xs shadow-xs shrink-0 overflow-hidden`;
-              headerIcon.innerHTML = u.avatar
-                ? `<img src="${u.avatar}" class="avatar-img" />`
-                : `<div class="h-full w-full bg-slate-900 flex items-center justify-center rounded-full">${uname.substring(0,2).toUpperCase()}</div>`;
-            }
-            const online = isUserOnline(u);
-            if (headerSubtitle) {
-              headerSubtitle.innerHTML = `<span class="h-1.5 w-1.5 rounded-full ${online ? 'bg-emerald-400 animate-ping' : 'bg-slate-500'}"></span> ${online ? 'Online now' : 'Last seen: ' + timeAgo(u.lastActiveMs)}`;
-              currentSubtitleHtml = headerSubtitle.innerHTML;
-            }
+            applyDmRecipient(u, uname, chatId, headerTitle, headerIcon, headerSubtitle);
             finishOpenChat(chatId, uname && uname !== recipUid ? 'dm-' + uname : null);
           }).catch(() => { finishOpenChat(chatId, null); });
         } else {
@@ -2846,40 +2921,33 @@
       return null;
     }
 
-    function burstEmojis(x, y, emojis) {
-      // FOUNTAIN SUPER: vivuzi vyanza CHINI (karibu na input) vikipanda JUU
+    function triggerEmojiMilipuko(targetEl, emojiChar) {
+      // FOUNTAIN: milipuko 10-15 za emoji, chini → juu, z-index 100
       const container = document.getElementById('messagesContainer');
-      if (!container || !emojis || !emojis.length) return;
+      if (!container || !emojiChar) return;
       const rect = container.getBoundingClientRect();
-      const originX = Math.max(40, Math.min(rect.width - 40, ((x != null) ? x - rect.left : rect.width / 2)));
-
-      const spawnOne = (delay) => {
-        setTimeout(() => {
-          const s = document.createElement('span');
-          s.textContent = emojis[(Math.random() * emojis.length) | 0];
-          const size = 20 + Math.random() * 22;
-          const startX = originX + (Math.random() - 0.5) * 70;
-          const startY = rect.height - 14;
-          s.style.cssText = `position:absolute;left:${startX}px;top:${startY}px;font-size:${size}px;pointer-events:none;z-index:60;will-change:transform,opacity;`;
-          container.appendChild(s);
-          const dx = (Math.random() - 0.5) * 190;
-          const dy = -(240 + Math.random() * 240);
-          const rot = (Math.random() - 0.5) * 100;
-          const sc = 0.8 + Math.random() * 0.8;
-          const anim = s.animate([
-            { transform: 'translate(0px, 0px) rotate(0deg) scale(0.5)', opacity: 0 },
-            { opacity: 1, offset: 0.1 },
-            { transform: `translate(${dx}px, ${dy}px) rotate(${rot}deg) scale(${sc})`, opacity: 0 }
-          ], { duration: 1900, easing: 'cubic-bezier(.16,.8,.3,1)' });
-          anim.onfinish = () => s.remove();
-          setTimeout(() => { try { s.remove(); } catch (e) {} }, 2400);
-        }, delay);
-      };
-
-      // Wimbi 3 la fountain: 22 + 12 + 8 = 42 vivuzi
-      for (let i = 0; i < 22; i++) spawnOne(Math.random() * 130);
-      setTimeout(() => { for (let i = 0; i < 12; i++) spawnOne(Math.random() * 150); }, 270);
-      setTimeout(() => { for (let i = 0; i < 8; i++) spawnOne(Math.random() * 120); }, 530);
+      let cx = rect.width / 2;
+      let cy = rect.height - 14;
+      if (targetEl) {
+        const r = targetEl.getBoundingClientRect();
+        cx = Math.max(40, Math.min(rect.width - 40, r.left + r.width / 2 - rect.left));
+        cy = Math.max(50, r.top - rect.top);
+      }
+      const count = 10 + ((Math.random() * 6) | 0);
+      for (let i = 0; i < count; i++) {
+        const s = document.createElement('span');
+        s.className = 'emoji-particle';
+        s.textContent = emojiChar;
+        s.style.left = (cx + (Math.random() - 0.5) * 70) + 'px';
+        s.style.top = cy + 'px';
+        s.style.fontSize = (20 + Math.random() * 22) + 'px';
+        s.style.setProperty('--dx', ((Math.random() - 0.5) * 200) + 'px');
+        s.style.setProperty('--dy', (-(200 + Math.random() * 260)) + 'px');
+        s.style.setProperty('--rot', ((Math.random() - 0.5) * 120) + 'deg');
+        s.style.animationDelay = (Math.random() * 0.18) + 's';
+        container.appendChild(s);
+        setTimeout(() => { try { s.remove(); } catch (e) {} }, 2000);
+      }
     }
 
     // ===== IMAGE CROPPER (Instagram style) =====
@@ -3208,7 +3276,9 @@
 
       let tickBadge = '';
       if (isSent) {
-        tickBadge = tickHtml(msg.status || 'sent');
+        tickBadge = msg.pending
+          ? '<span class="msg-tick" title="Queued - waiting for network">🕒</span>'
+          : tickHtml(msg.status || 'sent');
       }
 
       const showSender = currentActiveChatId === 'global-group'; // DM: hakuna jina (kama WhatsApp)
@@ -3367,7 +3437,7 @@
       bubble.addEventListener('contextmenu', (e) => { e.preventDefault(); });
 
       container.appendChild(bubbleWrapper);
-      container.scrollTop = container.scrollHeight;
+      container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
     }
 
     // Attach File Input Handler
@@ -3481,18 +3551,29 @@
         quoteReply: quoteReplyData ? { ...quoteReplyData } : null
       };
 
+      // OFFLINE: weka kwenye queue, onyesha kwa saa 🕒
+      if (!navigator.onLine) {
+        const q = getPendingQueue();
+        q.push({ chatId: currentActiveChatId, msg: newMsg });
+        savePendingQueue(q);
+        newMsg.pending = true;
+      }
+
       // OPTIMISTIC UI: Render instantly & clear input immediately!
       document.getElementById('emojiPanel')?.classList.add('hidden');
       renderMessageBubble(newMsg, true);
       playSentSound();
       const emoHit = detectEmotion(text || '');
-      if (emoHit) burstEmojis(null, null, emoHit.burst);
+      if (emoHit) triggerEmojiMilipuko(null, emoHit.emoji);
 
       if (input) input.value = '';
       quoteReplyData = null;
       document.getElementById('quoteReplyPreviewBar')?.classList.add('hidden');
 
       try {
+        if (!navigator.onLine) {
+          // offline — ujumbe tayari kwenye queue; usifanye kitu
+        } else {
         await setDoc(getPublicDoc(`messages_${currentActiveChatId}`, optMsgId), newMsg);
         delete pendingSends[optMsgId];
         // DARAJA: piga nakala kwa collection ya handle (kwa wanao toleo la zamana)
@@ -3516,6 +3597,7 @@
         } else if (currentActiveChatId === 'global-group') {
           notifyGlobal(text || (mediaType === 'image' ? '📷 Photo' : '📎 File'), currentUserHandle);
         }
+        }
       } catch(e) {
         markFailed(optMsgId, newMsg, currentActiveChatId);
       }
@@ -3524,70 +3606,60 @@
     // ===== PUSH NOTIFICATIONS (OneSignal - free tier) =====
     // Weka credentials zako hapa (OneSignal Dashboard > Settings > Keys & IDs)
     const ONESIGNAL_APP_ID = 'a9ace05b-c41f-48cb-9c6c-3a4736bd296e';
-    const ONESIGNAL_REST_KEY = 'os_v2_app_vgwoaw6ed5emxhdmhjdtnpjjn2ksezyovc2uewupnd6adedfropvco27662q2v5erneex2z4vl5qiezw466ere64prhviiie3bw4arq';
+    // Push SENDING imeondolewa kwa usalama (REST key haifai kwenye client).
+    // Notifications bado ZIPO: watumiaji wanapokea; Admin hutuma moja kwa moja kutoka OneSignal Dashboard → Messages → Push.
 
-    async function notifyGlobal(message, fromHandle) {
-      if (ONESIGNAL_REST_KEY.indexOf('PASTE') === 0) return;
-      try {
-        const resp = await fetch('https://onesignal.com/api/v1/notifications', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json; charset=utf-8', 'Authorization': 'Basic ' + ONESIGNAL_REST_KEY },
-          body: JSON.stringify({
-            app_id: ONESIGNAL_APP_ID,
-            filters: [{ field: 'tag', key: 'handle', relation: '!=', value: fromHandle }],
-            headings: { en: '🌐 Global Hub' },
-            contents: { en: `@${fromHandle}: ${message.length > 100 ? message.substring(0, 100) + '...' : message}` },
-            url: location.href
-          })
-        });
-        if (!resp.ok) {
-          triggerNotificationToast('Push Error', 'system', 'OneSignal status ' + resp.status + ' — key yako huenda imevunjwa (angalia Dashboard)', 'CX');
+    async function notifyGlobal() {
+      // No-op: REST key imeondolewa kwa usalama. Tuma kwa OneSignal Dashboard.
+      return;
+    }
+
+    async function notifyPush() {
+      // No-op: REST key imeondolewa kwa usalama. Tuma kwa OneSignal Dashboard.
+      return;
+    }
+
+    async function notifyPushAll() {
+      // No-op: REST key imeondolewa kwa usalama. Tuma kwa OneSignal Dashboard.
+      return;
+    }
+
+    // ===== OFFLINE QUEUE (WhatsApp-style): ujumbe uhifadhiwe, utumwe net inaporudi =====
+    const OFFLINE_QUEUE_KEY = 'cx_pending_queue';
+    function getPendingQueue() {
+      try { return JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || '[]'); } catch (e) { return []; }
+    }
+    function savePendingQueue(q) {
+      try { localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(q)); } catch (e) {}
+    }
+    async function flushPendingQueue() {
+      const q = getPendingQueue();
+      if (!q.length || !db) return;
+      const failed = [];
+      for (const item of q) {
+        try {
+          await setDoc(getPublicDoc(`messages_${item.chatId}`, item.msg.id), item.msg);
+          updateMsgTick(item.msg.id, 'sent');
+        } catch (e) {
+          failed.push(item); // bado offline — acha kwenye queue
         }
-      } catch (e) {}
+      }
+      savePendingQueue(failed);
+      if (failed.length !== q.length) {
+        triggerNotificationToast('Sent', 'system', (q.length - failed.length) + ' message(s) delivered', 'CX');
+      }
     }
+    window.addEventListener('offline', () => {
+      triggerNotificationToast('Offline', 'system', 'Ujumbe utahifadhiwa na kutumwa net inaporudi', 'CX');
+    });
+    window.addEventListener('online', () => {
+      flushPendingQueue();
+    });
 
-    async function notifyPush(targetHandle, title, message) {
-      if (ONESIGNAL_REST_KEY.indexOf('PASTE') === 0) return; // bado haijawekwa
-      try {
-        await fetch('https://onesignal.com/api/v1/notifications', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json; charset=utf-8',
-            'Authorization': 'Basic ' + ONESIGNAL_REST_KEY
-          },
-          body: JSON.stringify({
-            app_id: ONESIGNAL_APP_ID,
-            filters: [{ field: 'tag', key: 'handle', relation: '=', value: targetHandle }],
-            headings: { en: title },
-            contents: { en: message.length > 120 ? message.substring(0, 120) + '...' : message },
-            url: location.href
-          })
-        }).then((resp) => {
-          if (resp && !resp.ok) {
-            triggerNotificationToast('Push Error', 'system', 'OneSignal status ' + resp.status + ' — key huenda imevunjwa (angalia Dashboard > Keys)', 'CX');
-          }
-        }).catch(() => {});
-      } catch (e) {}
-    }
-
-    async function notifyPushAll(message, title) {
-      if (ONESIGNAL_REST_KEY.indexOf('PASTE') === 0) return;
-      try {
-        await fetch('https://onesignal.com/api/v1/notifications', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json; charset=utf-8',
-            'Authorization': 'Basic ' + ONESIGNAL_REST_KEY
-          },
-          body: JSON.stringify({
-            app_id: ONESIGNAL_APP_ID,
-            included_segments: ['Total Subscriptions'],
-            headings: { en: title || '📢 ClassmateX Announcement' },
-            contents: { en: message.length > 150 ? message.substring(0, 150) + '...' : message },
-            url: location.href
-          })
-        });
-      } catch (e) {}
+    // ===== DEBOUNCE (search) =====
+    function debounce(fn, ms) {
+      let t = null;
+      return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
     }
 
     // ===== EMOJI PANEL kwenye input =====
@@ -3849,9 +3921,9 @@
     let storyRotation = 0;
 
     const STORY_FONTS = {
-      default: "Inter, sans-serif",
-      fancy: "'Comic Sans MS', 'Segoe Script', cursive",
-      mono: "monospace"
+      default: "Inter, system-ui, sans-serif",       // Sans
+      serif: "Georgia, 'Times New Roman', serif",    // Serif
+      fancy: "'Comic Sans MS', 'Segoe Script', cursive" // Fancy / Handwriting
     };
 
     function applyStoryStudio() {
@@ -3935,6 +4007,28 @@
       });
     });
 
+    // Caption Emoji Picker
+    const STORY_CAPTION_EMOJIS = ['❤️','😂','😍','🔥','🎉','🥳','🙏','😎','🤩','😊','👍','💯','✨','🚀','💪','🥰','😭','👏','🌍','🇹🇿','☀️','🌙','⭐','💯','🍀','🎵','💡','🙌','💃','🕺'];
+    function buildStoryCaptionEmojiPanel() {
+      const panel = document.getElementById('storyCaptionEmojiPanel');
+      if (!panel || panel.children.length) return;
+      STORY_CAPTION_EMOJIS.forEach(em => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'text-xl py-1.5 hover:scale-125 transition transform';
+        b.textContent = em;
+        b.addEventListener('click', () => {
+          const ta = document.getElementById('storyTextInput');
+          if (ta) { ta.value += em; ta.focus(); }
+        });
+        panel.appendChild(b);
+      });
+    }
+    document.getElementById('storyCaptionEmojiBtn')?.addEventListener('click', () => {
+      buildStoryCaptionEmojiPanel();
+      document.getElementById('storyCaptionEmojiPanel')?.classList.toggle('hidden');
+    });
+
     // Story Swatch Color Selection
     document.querySelectorAll('.status-color-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -3954,8 +4048,15 @@
 
     document.getElementById('storyMediaInput')?.addEventListener('change', (e) => {
       const file = e.target.files[0];
+      if (!file) return;
+      if (file.type.startsWith('image/')) {
+        // Picha → EDITOR (crop + rotate) kabla ya kupost
+        openStoryEditor(file);
+        e.target.value = '';
+        return;
+      }
       if (file) {
-        selectedStoryMedia = { file, url: URL.createObjectURL(file), type: file.type.startsWith('video/') ? 'video' : 'image' };
+        selectedStoryMedia = { file, url: URL.createObjectURL(file), type: 'video' };
         const container = document.getElementById('storyMediaPreviewContainer');
         const img = document.getElementById('storyImagePreview');
         const video = document.getElementById('storyVideoPreview');
@@ -3987,11 +4088,15 @@
       let storyMediaUrl = null;
       if (selectedStoryMedia) {
         if (selectedStoryMedia.type === 'image') {
-          try {
-            storyMediaUrl = await compressImageToDataUrl(selectedStoryMedia.file, 1080, 0.75);
-          } catch (err) {
-            triggerNotificationToast("Story Failed", "system", "Picha haikupakiwa", "CX");
-            return;
+          if (selectedStoryMedia.edited && selectedStoryMedia.url) {
+            storyMediaUrl = selectedStoryMedia.url; // imeshapitia editor
+          } else {
+            try {
+              storyMediaUrl = await compressImageToDataUrl(selectedStoryMedia.file, 1080, 0.75);
+            } catch (err) {
+              triggerNotificationToast("Story Failed", "system", "Picha haikupakiwa", "CX");
+              return;
+            }
           }
         } else {
           if (selectedStoryMedia.file.size > 900 * 1024) {
@@ -4031,6 +4136,148 @@
       document.getElementById('storyMediaPreviewContainer')?.classList.add('hidden');
       document.getElementById('createStoryModal')?.classList.add('hidden');
       triggerNotificationToast("Status Published", currentUserHandle, "Your status is live for 24 hours!", "CX");
+    });
+
+    // ===== STORY IMAGE EDITOR (crop + rotate — ya story pekee, si chat) =====
+    const stEdit = { img: null, x: 0, y: 0, scale: 1, minScale: 1, rot: 0, aspect: '9:16', vw: 300, vh: 400 };
+
+    function openStoryEditor(file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          stEdit.img = img;
+          stEdit.rot = 0;
+          stEdit.scale = 1;
+          setStAspect('9:16');
+          document.getElementById('storyEditModal').classList.remove('hidden');
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function setStAspect(a) {
+      stEdit.aspect = a;
+      const stage = document.getElementById('stEditStage');
+      const maxW = Math.min((stage?.clientWidth || 340) - 24, 340);
+      const maxH = Math.min((stage?.clientHeight || 480) - 24, 520);
+      let vw = maxW, vh = maxW;
+      if (a === '1:1') { if (vw > maxH) { vw = maxH; vh = maxH; } }
+      else if (a === '4:5') { vh = vw * 1.25; if (vh > maxH) { vh = maxH; vw = vh * 0.8; } }
+      else if (a === '9:16') { vh = vw * 16 / 9; if (vh > maxH) { vh = maxH; vw = vh * 9 / 16; } }
+      else {
+        const iw0 = stEdit.rot % 180 === 0 ? stEdit.img.width : stEdit.img.height;
+        const ih0 = stEdit.rot % 180 === 0 ? stEdit.img.height : stEdit.img.width;
+        const r = Math.min(maxW / iw0, maxH / ih0);
+        vw = Math.max(140, iw0 * r);
+        vh = Math.max(140, ih0 * r);
+      }
+      stEdit.vw = vw;
+      stEdit.vh = vh;
+      const vp = document.getElementById('stEditViewport');
+      if (vp) { vp.style.width = vw + 'px'; vp.style.height = vh + 'px'; }
+      document.querySelectorAll('.st-aspect-btn').forEach(b => {
+        const active = b.dataset.saspect === a;
+        b.classList.toggle('border-accent-pink', active);
+        b.classList.toggle('border-slate-700', !active);
+      });
+      fitStEdit();
+    }
+
+    function fitStEdit() {
+      const img = stEdit.img;
+      if (!img) return;
+      const iw = stEdit.rot % 180 === 0 ? img.width : img.height;
+      const ih = stEdit.rot % 180 === 0 ? img.height : img.width;
+      stEdit.minScale = Math.max(stEdit.vw / iw, stEdit.vh / ih);
+      if (stEdit.scale < stEdit.minScale) stEdit.scale = stEdit.minScale;
+      stEdit.x = (stEdit.vw - iw * stEdit.scale) / 2;
+      stEdit.y = (stEdit.vh - ih * stEdit.scale) / 2;
+      const zoom = document.getElementById('stEditZoom');
+      if (zoom) { zoom.min = stEdit.minScale; zoom.max = stEdit.minScale * 3; zoom.value = stEdit.scale; }
+      applyStEdit();
+    }
+
+    function clampStEdit() {
+      const img = stEdit.img;
+      if (!img) return;
+      const iw = (stEdit.rot % 180 === 0 ? img.width : img.height) * stEdit.scale;
+      const ih = (stEdit.rot % 180 === 0 ? img.height : img.width) * stEdit.scale;
+      stEdit.x = Math.min(0, Math.max(stEdit.vw - iw, stEdit.x));
+      stEdit.y = Math.min(0, Math.max(stEdit.vh - ih, stEdit.y));
+    }
+
+    function applyStEdit() {
+      const el = document.getElementById('stEditImage');
+      if (!el || !stEdit.img) return;
+      clampStEdit();
+      el.style.transform = `translate(${stEdit.x}px, ${stEdit.y}px) scale(${stEdit.scale}) rotate(${stEdit.rot}deg)`;
+    }
+
+    let stDrag = null;
+    const stVp = document.getElementById('stEditViewport');
+    stVp?.addEventListener('pointerdown', (e) => {
+      stDrag = { sx: e.clientX, sy: e.clientY, ox: stEdit.x, oy: stEdit.y };
+      stVp.setPointerCapture(e.pointerId);
+    });
+    stVp?.addEventListener('pointermove', (e) => {
+      if (!stDrag) return;
+      stEdit.x = stDrag.ox + (e.clientX - stDrag.sx);
+      stEdit.y = stDrag.oy + (e.clientY - stDrag.sy);
+      applyStEdit();
+    });
+    stVp?.addEventListener('pointerup', () => { stDrag = null; });
+    stVp?.addEventListener('pointercancel', () => { stDrag = null; });
+
+    document.getElementById('stEditZoom')?.addEventListener('input', (e) => {
+      const ns = parseFloat(e.target.value);
+      const old = stEdit.scale;
+      const cx = stEdit.vw / 2, cy = stEdit.vh / 2;
+      stEdit.x = cx - ((cx - stEdit.x) / old) * ns;
+      stEdit.y = cy - ((cy - stEdit.y) / old) * ns;
+      stEdit.scale = ns;
+      applyStEdit();
+    });
+
+    document.querySelectorAll('.st-aspect-btn').forEach(btn => {
+      btn.addEventListener('click', () => setStAspect(btn.dataset.saspect));
+    });
+
+    document.getElementById('stEditRotate')?.addEventListener('click', () => {
+      stEdit.rot = (stEdit.rot + 90) % 360;
+      setStAspect(stEdit.aspect);
+    });
+
+    document.getElementById('stEditCancel')?.addEventListener('click', () => {
+      stEdit.img = null;
+      document.getElementById('storyEditModal').classList.add('hidden');
+    });
+
+    document.getElementById('stEditDone')?.addEventListener('click', () => {
+      const img = stEdit.img;
+      if (!img) return;
+      const outW = Math.min(1080, Math.round(stEdit.vw * 2.5));
+      const outH = Math.max(1, Math.round(outW * (stEdit.vh / stEdit.vw)));
+      const canvas = document.createElement('canvas');
+      canvas.width = outW;
+      canvas.height = outH;
+      const ctx = canvas.getContext('2d');
+      const r = outW / stEdit.vw;
+      ctx.save();
+      ctx.translate(stEdit.x * r, stEdit.y * r);
+      ctx.scale(stEdit.scale * r, stEdit.scale * r);
+      ctx.rotate(stEdit.rot * Math.PI / 180);
+      ctx.drawImage(img, 0, 0);
+      ctx.restore();
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+      stEdit.img = null;
+      document.getElementById('storyEditModal').classList.add('hidden');
+      selectedStoryMedia = { file: null, url: dataUrl, type: 'image', edited: true };
+      document.getElementById('storyMediaPreviewContainer')?.classList.remove('hidden');
+      const pv = document.getElementById('storyImagePreview');
+      if (pv) { pv.src = dataUrl; pv.classList.remove('hidden'); }
+      document.getElementById('storyVideoPreview')?.classList.add('hidden');
     });
 
     // ===== REAL STORIES: loaded from Firestore, expire after 24h =====
@@ -4179,7 +4426,7 @@
         timeEl2.textContent = leftTxt ? `${postedTxt} • expires in ${leftTxt}` : postedTxt;
       }
 
-      if (nameEl) nameEl.innerHTML = `${data.storyHandle || '@classmate'} ${String(data.storyHandle || '').replace('@','') === 'fahmy_mazrui' ? getVerifiedBadgeHtml(true) : ''}`;
+      if (nameEl) nameEl.innerHTML = `${escapeHtml(data.storyHandle || '@classmate')} ${String(data.storyHandle || '').replace('@','') === 'fahmy_mazrui' ? getVerifiedBadgeHtml(true) : ''}`;
       if (contentBox) contentBox.className = `flex-grow flex flex-col items-center justify-center rounded-3xl overflow-hidden ${data.storyBg || 'bg-slate-900'} border border-slate-800 relative my-2 p-4 text-center shadow-2xl transition-all duration-300`;
 
       if (data.storyMediaUrl) {
@@ -4407,7 +4654,7 @@
               if (emoRecv) {
                 const bubEl = container.lastElementChild;
                 const r = bubEl ? bubEl.getBoundingClientRect() : null;
-                burstEmojis(r ? r.left + r.width / 2 : null, r ? r.top : null, emoRecv.burst);
+                triggerEmojiMilipuko(bubEl, emoRecv.emoji);
               }
             }
           }
@@ -4524,10 +4771,22 @@
       // REALTIME: kila aliyesajiliwa anaonekana mara moja (hata bila refresh)
       if (membersUnsubscribe) { try { membersUnsubscribe(); } catch (e) {} membersUnsubscribe = null; }
       membersList.innerHTML = '<p class="text-[11px] text-slate-500 p-4 text-center animate-pulse">Loading classmates...</p>';
+      window.__membersLoaded = false;
+      // FALLBACK: kama listener hajaleta chochote baada ya sekunde 6, jaribu fetch moja
+      setTimeout(async () => {
+        if (window.__membersLoaded || !db) return;
+        try {
+          const snap = await getDocs(getPublicCol("users"));
+          const list = [];
+          snap.forEach(d => list.push(d.data()));
+          if (!window.__membersLoaded) renderMembers(list);
+        } catch (e) {}
+      }, 6000);
       try {
         membersUnsubscribe = onSnapshot(getPublicCol("users"), (snap) => {
           const list = [];
           snap.forEach(d => list.push(d.data()));
+          window.__membersLoaded = true;
           renderMembers(list);
         }, (err) => {
           membersUnsubscribe = null; // ruhusu kujaribu tena baadaye
@@ -4717,7 +4976,7 @@
     });
 
     // Search Chats Filter Handler
-    document.getElementById('searchChatsInput')?.addEventListener('input', (e) => {
+    document.getElementById('searchChatsInput')?.addEventListener('input', debounce((e) => {
       const term = e.target.value.toLowerCase().trim();
       document.querySelectorAll('.chat-thread-item').forEach(item => {
         const handle = (item.dataset.chatId || '').replace('dm-', '');
@@ -4725,15 +4984,15 @@
         const searchData = ((item.dataset.searchTerm || '') + ' ' + name + ' ' + item.textContent).toLowerCase();
         item.style.display = searchData.includes(term) ? 'flex' : 'none';
       });
-    });
+    }, 300));
 
     // Discover search: kwa @username AU jina
-    document.getElementById('searchMembersInput')?.addEventListener('input', (e) => {
+    document.getElementById('searchMembersInput')?.addEventListener('input', debounce((e) => {
       const term = e.target.value.toLowerCase().trim();
       document.querySelectorAll('[data-member-search]').forEach(card => {
         card.style.display = (card.getAttribute('data-member-search') || '').includes(term) ? 'flex' : 'none';
       });
-    });
+    }, 300));
 
     // Modal Triggers
     document.getElementById('openEditProfileBtn')?.addEventListener('click', () => document.getElementById('editProfileModal')?.classList.remove('hidden'));
@@ -5214,7 +5473,7 @@
     });
 
     // Members search + filter
-    document.getElementById('adminMemberSearch')?.addEventListener('input', renderAdminMembers);
+    document.getElementById('adminMemberSearch')?.addEventListener('input', debounce(renderAdminMembers, 300));
     document.querySelectorAll('.mfilter-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         adminFilter = btn.dataset.mfilter;
