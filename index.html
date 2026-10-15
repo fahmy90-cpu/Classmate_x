@@ -281,6 +281,13 @@
 
   <div id="appContainer" class="relative w-full h-full lg:max-w-md lg:h-[95vh] lg:rounded-[44px] lg:mx-auto bg-slate-950 lg:border-[8px] lg:border-slate-800/90 lg:shadow-2xl flex flex-col overflow-hidden transition-all duration-300">
 
+    <!-- CALL MINI PILL (call imefichwa — bado hai) -->
+    <button id="callMiniPill" class="hidden fixed top-16 left-1/2 -translate-x-1/2 z-[70] px-3 py-2 rounded-full bg-slate-900/95 border border-emerald-500/50 shadow-glow-brand flex items-center gap-2 animate-pop-in">
+      <span class="h-6 w-6 rounded-full bg-emerald-500 flex items-center justify-center animate-pulse"><i class="ph-fill ph-phone text-white text-xs"></i></span>
+      <span id="pillTimer" class="text-[10px] font-black text-emerald-400 font-mono">0:00</span>
+      <i class="ph ph-caret-up text-slate-400 text-xs"></i>
+    </button>
+
     <!-- CALL SCREEN (WebRTC — voice & video, BURE) -->
     <div id="callScreen" class="hidden absolute inset-0 z-[80] bg-slate-950 flex flex-col">
       <div class="pointer-events-none absolute inset-0 overflow-hidden">
@@ -307,6 +314,10 @@
           <button id="callDeclineBtn" class="h-14 w-14 rounded-full bg-rose-500 text-white flex items-center justify-center shadow-lg touch-active animate-pop-in"><i class="ph ph-phone-x text-2xl rotate-[135deg]"></i></button>
           <button id="callAcceptBtn" class="h-14 w-14 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-lg touch-active animate-pop-in"><i class="ph ph-phone text-2xl"></i></button>
         </div>
+        <!-- Minimize (nyuma — call inabaki hai) -->
+        <button id="callMinimizeBtn" class="absolute top-4 right-4 h-10 w-10 rounded-full bg-white/10 text-white flex items-center justify-center touch-active z-10" title="Minimize call">
+          <i class="ph ph-caret-down text-lg"></i>
+        </button>
         <!-- Active actions -->
         <div id="callActiveActions" class="hidden absolute bottom-24 inset-x-0 flex justify-center items-center gap-5">
           <button id="callMuteBtn" class="h-12 w-12 rounded-full bg-white/10 text-white flex items-center justify-center touch-active"><i class="ph ph-microphone text-xl"></i></button>
@@ -1845,6 +1856,35 @@
                 <span id="cacheSizeText" class="text-[10px] text-slate-400 font-mono">2.4 MB</span>
               </button>
             </div>
+          </div>
+
+          <!-- GROUP F0: CALLS -->
+          <div class="space-y-1">
+            <span class="text-[10px] font-black uppercase tracking-wider text-slate-500 px-2">F0. Calls</span>
+            <div class="bg-slate-900 rounded-2xl border border-slate-800 divide-y divide-slate-800/80 text-xs font-bold">
+              <div class="p-3 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                  <div class="h-7 w-7 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center"><i class="ph ph-phone-call text-base"></i></div>
+                  <div><p class="text-white text-xs">Incoming call sound</p><p class="text-[9px] text-slate-400 font-medium">Ring when receiving calls</p></div>
+                </div>
+                <input id="prefCallSound" type="checkbox" checked class="accent-accent-pink h-4 w-4 cursor-pointer">
+              </div>
+              <div class="p-3 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                  <div class="h-7 w-7 rounded-xl bg-brand-500/10 text-brand-400 flex items-center justify-center"><i class="ph ph-video-camera text-base"></i></div>
+                  <div><p class="text-white text-xs">Video calls on data</p><p class="text-[9px] text-slate-400 font-medium">Allow video when not on WiFi</p></div>
+                </div>
+                <input id="prefVideoOnData" type="checkbox" checked class="accent-accent-pink h-4 w-4 cursor-pointer">
+              </div>
+              <button onclick="renderCallLog()" class="w-full p-3 flex items-center justify-between text-left hover:bg-slate-800/50 transition">
+                <div class="flex items-center gap-2.5">
+                  <div class="h-7 w-7 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center"><i class="ph ph-clock-counter-clockwise text-base"></i></div>
+                  <div><p class="text-white text-xs">Call history</p><p class="text-[9px] text-slate-400 font-medium">View recent calls</p></div>
+                </div>
+                <i class="ph ph-caret-right text-slate-500"></i>
+              </button>
+            </div>
+            <div id="callLogBox" class="hidden bg-slate-900 rounded-2xl border border-slate-800 p-2 space-y-1"></div>
           </div>
 
           <!-- GROUP F: ABOUT -->
@@ -5255,7 +5295,7 @@
 
     // ===== WEBRTC CALLS (BURE — P2P) =====
     let callPc = null, callStream = null, callDocId = null, callUnsub = null, callTimerInt = null;
-    let callRole = null, callStartTs = 0, callAudioEl = null;
+    let callRole = null, callStartTs = 0, callAudioEl = null, callNoAnswerT = null, callCalleeOnline = null;
     const RTC_CONFIG = { iceServers: [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] }] };
 
     function fmtCallTime(ms) {
@@ -5268,6 +5308,9 @@
       try { if (callPc) callPc.close(); } catch (e) {}
       try { if (callAudioEl) { callAudioEl.pause(); callAudioEl.srcObject = null; } } catch (e) {}
       if (callTimerInt) { clearInterval(callTimerInt); callTimerInt = null; }
+      if (callNoAnswerT) { clearTimeout(callNoAnswerT); callNoAnswerT = null; }
+      document.getElementById('callMiniPill')?.classList.add('hidden');
+      document.getElementById('callScreen')?.classList.remove('hidden');
       callPc = null; callStream = null; callDocId = null; callUnsub = null; callRole = null;
       ['callScreen', 'callVideoWrap', 'callIncomingActions', 'callActiveActions', 'callTimer'].forEach(id => document.getElementById(id)?.classList.add('hidden'));
       const rl = document.getElementById('callRemoteVideo'); if (rl) rl.srcObject = null;
@@ -5290,13 +5333,29 @@
         triggerNotificationToast('Microphone', 'system', 'Ruhusu mic/camera kwenye browser settings', 'CX'); return;
       }
       callRole = 'caller'; callDocId = 'call_' + Date.now();
+      // STATUS HALISI: tazama kama yupo online
+      let _calleeOnline = null;
+      try {
+        const _cs = await getDoc(getPublicDoc("users", activeChatRecipient.handle));
+        if (_cs.exists()) _calleeOnline = isUserOnline(_cs.data());
+      } catch (e) {}
       showCallScreen(activeChatRecipient.handle, activeChatRecipient.avatar, type === 'video');
+      callCalleeOnline = _calleeOnline;
       if (type === 'video') {
         document.getElementById('callLocalVideo').srcObject = callStream;
         document.getElementById('callIncomingActions')?.classList.add('hidden');
         document.getElementById('callActiveActions')?.classList.remove('hidden');
       }
-      document.getElementById('callStatus').textContent = 'Calling...';
+      document.getElementById('callStatus').textContent = _calleeOnline === false ? 'Offline — will ring when back' : 'Ringing...';
+      // NO ANSWER: mwishoni mwa sekunde 45 bila kukubali → ishi
+      callNoAnswerT = setTimeout(async () => {
+        try {
+          const _s = await getDoc(getPublicDoc("calls", callDocId));
+          if (_s.exists() && _s.data().status === 'ringing') {
+            await updateDoc(getPublicDoc("calls", callDocId), { status: 'ended', endReason: 'no_answer' });
+          }
+        } catch (e) {}
+      }, 45000);
       callPc = new RTCPeerConnection(RTC_CONFIG);
       callStream.getTracks().forEach(t => callPc.addTrack(t, callStream));
       callPc.ontrack = (ev) => {
@@ -5325,7 +5384,12 @@
           (d.answerCands || []).forEach(c => { try { callPc.addIceCandidate(JSON.parse(c)); } catch (e) {} });
           callConnectedUI();
         }
-        if (d.status === 'ended') { callCleanup(); triggerNotificationToast('Call Ended', 'system', '', 'CX'); }
+        if (d.status === 'ended') {
+          const _reason = d.endReason || '';
+          callCleanup();
+          if (callRole === 'caller' && _reason === 'no_answer') triggerNotificationToast('No Answer', 'system', 'Hakujibu — jaribu tena baadaye', 'CX');
+          else if (callRole === 'caller') triggerNotificationToast('Call Ended', 'system', 'Call imemalizika', 'CX');
+        }
       });
     }
     function callConnectedUI() {
@@ -5378,7 +5442,7 @@
           snap.forEach((d) => {
             const v = d.data();
             if (v.status === 'ringing' && v.ts > Date.now() - 45000 && !callPc) {
-              try { playReceivedSound(); } catch (e) {}
+              if (userPrefs.callSound !== false) { try { playReceivedSound(); } catch (e) {} }
               document.getElementById('callName').textContent = '@' + v.caller;
               const inner = document.getElementById('callAvatarInner');
               if (inner) inner.innerHTML = avatarMap[v.caller] ? `<img src="${avatarMap[v.caller]}" class="avatar-img"/>` : v.caller.substring(0, 2).toUpperCase();
@@ -5419,6 +5483,62 @@
       triggerNotificationToast('Speaker', 'system', 'Speaker ' + (callAudioEl && callAudioEl.muted ? 'on' : 'toggle'), 'CX');
       if (callAudioEl) callAudioEl.muted = !callAudioEl.muted;
     });
+
+    // ===== CALL MINIMIZE (nyuma — call haiendeli) =====
+    document.getElementById('callMinimizeBtn')?.addEventListener('click', () => {
+      document.getElementById('callScreen')?.classList.add('hidden');
+      const pill = document.getElementById('callMiniPill');
+      if (pill) { pill.classList.remove('hidden'); pill.classList.add('flex'); }
+    });
+    document.getElementById('callMiniPill')?.addEventListener('click', () => {
+      document.getElementById('callMiniPill')?.classList.add('hidden');
+      document.getElementById('callScreen')?.classList.remove('hidden');
+    });
+    // Pill timer (inafuata call timer)
+    setInterval(() => {
+      try {
+        if (callStartTs && callTimerInt) {
+          const t = document.getElementById('pillTimer');
+          if (t) t.textContent = fmtCallTime(callStartTs);
+        }
+      } catch (e) {}
+    }, 1000);
+    // ===== CALL LOG (full data — historia) =====
+    function logCall(entry) {
+      try {
+        const log = JSON.parse(localStorage.getItem('cx_call_log') || '[]');
+        log.unshift(Object.assign({ ts: Date.now() }, entry));
+        localStorage.setItem('cx_call_log', JSON.stringify(log.slice(0, 30)));
+      } catch (e) {}
+    }
+    // Rekodi kila call inapomalizika
+    const _origCallCleanup = callCleanup;
+    callCleanup = function() {
+      try {
+        if (callDocId && callStartTs) {
+          logCall({ name: (activeChatRecipient && activeChatRecipient.handle) || 'call', type: callRole, duration: Date.now() - callStartTs });
+        } else if (callDocId) {
+          logCall({ name: (activeChatRecipient && activeChatRecipient.handle) || 'call', type: callRole, duration: 0 });
+        }
+      } catch (e) {}
+      _origCallCleanup();
+    };
+
+    function renderCallLog() {
+      const box = document.getElementById('callLogBox');
+      if (!box) return;
+      box.classList.toggle('hidden');
+      const log = JSON.parse(localStorage.getItem('cx_call_log') || '[]');
+      box.innerHTML = log.length ? '' : '<p class="text-[10px] text-slate-500 text-center py-2">No calls yet</p>';
+      log.forEach((c) => {
+        const row = document.createElement('div');
+        row.className = 'flex items-center gap-2.5 p-2 rounded-xl bg-slate-950/60';
+        const dur = c.duration ? Math.floor(c.duration / 60000) + 'm ' + Math.floor((c.duration % 60000) / 1000) + 's' : 'missed';
+        row.innerHTML = `<i class="ph ${c.type === 'caller' ? 'ph-phone-outgoing text-emerald-400' : 'ph-phone-incoming text-brand-400'} text-base"></i>
+          <div class="min-w-0 flex-grow"><p class="text-[11px] font-bold text-white truncate">@${escapeHtml(c.name || 'call')}</p><p class="text-[9px] text-slate-400">${timeAgo(c.ts)} • ${dur}</p></div>`;
+        box.appendChild(row);
+      });
+    }
 
     // ===== EMOJI PANEL kwenye input =====
     const EMOJI_CATS = [
@@ -6783,8 +6903,7 @@
         if (snap.empty && !localStorage.getItem('cx_seeded')) {
           localStorage.setItem('cx_seeded', '1');
           const seeds = [
-            { handle: 'fahmy_mazrui', text: 'Welcome everyone to ClassmateX Social App! 🚀', bg: 'bg-gradient-to-br from-purple-700 via-indigo-800 to-slate-900' },
-            { handle: 'sarah_juma', text: 'Hello classmates! Super excited to connect 🚀🔥', bg: 'bg-gradient-to-br from-rose-600 via-pink-600 to-purple-800' }
+            { handle: 'fahmy_mazrui', text: 'Welcome everyone to ClassmateX Social App! 🚀', bg: 'bg-gradient-to-br from-purple-700 via-indigo-800 to-slate-900' }
           ];
           for (const s of seeds) {
             await setDoc(getPublicDoc("stories", 'story_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5)), {
