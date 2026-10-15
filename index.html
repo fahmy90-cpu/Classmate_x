@@ -1876,6 +1876,24 @@
                 </div>
                 <input id="prefVideoOnData" type="checkbox" checked class="accent-accent-pink h-4 w-4 cursor-pointer">
               </div>
+              <div class="p-3">
+                <div class="flex items-center gap-2.5 mb-1.5">
+                  <div class="h-7 w-7 rounded-xl bg-pink-500/10 text-accent-pink flex items-center justify-center"><i class="ph ph-music-notes text-base"></i></div>
+                  <div><p class="text-white text-xs">Ringtone</p><p class="text-[9px] text-slate-400 font-medium">Sound when receiving a call</p></div>
+                </div>
+                <div class="grid grid-cols-3 gap-1.5">
+                  <button data-ctone="classic" class="call-tone-opt py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-[9px] font-black text-white">Classic</button>
+                  <button data-ctone="chime" class="call-tone-opt py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-[9px] font-black text-white">Chime</button>
+                  <button data-ctone="beep" class="call-tone-opt py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-[9px] font-black text-white">Beep</button>
+                </div>
+              </div>
+              <div class="p-3 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                  <div class="h-7 w-7 rounded-xl bg-rose-500/10 text-rose-400 flex items-center justify-center"><i class="ph ph-phone-x text-base"></i></div>
+                  <div><p class="text-white text-xs">Busy tone</p><p class="text-[9px] text-slate-400 font-medium">When call is declined/no answer</p></div>
+                </div>
+                <input id="prefBusyTone" type="checkbox" checked class="accent-accent-pink h-4 w-4 cursor-pointer">
+              </div>
               <button onclick="renderCallLog()" class="w-full p-3 flex items-center justify-between text-left hover:bg-slate-800/50 transition">
                 <div class="flex items-center gap-2.5">
                   <div class="h-7 w-7 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center"><i class="ph ph-clock-counter-clockwise text-base"></i></div>
@@ -2206,7 +2224,7 @@
     const pendingSends = {};
     let appOpened = false; // guard — app ifungwe mara MOJA tu
     let authResolved = false; // guard — splash haifungui mpaka auth itatuliwe
-    let userPrefs = { lastSeen: true, readReceipts: true, msgSounds: true, inAppSounds: true, pushPopups: true, bubbleStyle: 'rounded', tone: 'classic', vibrate: true, ghostMode: false };
+    let userPrefs = { lastSeen: true, readReceipts: true, msgSounds: true, inAppSounds: true, pushPopups: true, bubbleStyle: 'rounded', tone: 'classic', vibrate: true, ghostMode: false, callSound: true, videoOnData: true, busyTone: true, callRingtone: 'classic' };
 
     // ===== BUBBLE STYLES (muhimmu — ilikuwa inatumika bila kuweko) =====
     const BUBBLE_STYLES = [
@@ -2609,7 +2627,7 @@
       } catch (e) {}
       starredMsgs = Array.isArray(userDoc?.starred) ? userDoc.starred : [];
       applyBubbleStyle();
-      ['prefLastSeen','prefReadReceipts','prefMsgSounds','prefInAppSounds','prefPushPopups','prefVibrate','prefGhostMode'].forEach(pid => {
+      ['prefLastSeen','prefReadReceipts','prefMsgSounds','prefInAppSounds','prefPushPopups','prefVibrate','prefGhostMode','prefCallSound','prefVideoOnData','prefBusyTone'].forEach(pid => {
         const el = document.getElementById(pid);
         if (!el) return;
         const base = pid.replace('pref', '');
@@ -5293,6 +5311,55 @@
       triggerNotificationToast('Welcome to ClassmateX 🎉', currentUserHandle, 'Your profile is ready — start chatting!', 'CX');
     });
 
+    // ===== CALL TONES (sauti za simu — Web Audio) =====
+    let toneNodes = [];
+    function stopTones() {
+      toneNodes.forEach(n => { try { n.stop ? n.stop() : n.disconnect(); } catch (e) {} });
+      toneNodes = [];
+      try { if (toneInterval) { clearInterval(toneInterval); toneInterval = null; } } catch (e) {}
+    }
+    let toneInterval = null;
+    function beep(freqs, dur, vol) {
+      try {
+        const ctx = getAudioContext();
+        freqs.forEach((f) => {
+          const o = ctx.createOscillator(); const g = ctx.createGain();
+          o.type = 'sine'; o.frequency.value = f;
+          g.gain.setValueAtTime(vol || 0.12, ctx.currentTime);
+          g.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + dur);
+          o.connect(g); g.connect(ctx.destination);
+          o.start(); o.stop(ctx.currentTime + dur);
+          toneNodes.push(o);
+        });
+      } catch (e) {}
+    }
+    function playTone(type) {
+      stopTones();
+      try {
+        if (type === 'ringback') {
+          // Mpigaji anasikia: ring ring (pause) ring ring — 440+480
+          const ring = () => { beep([440, 480], 1.2, 0.08); toneInterval = setTimeout(ring, 4000); };
+          ring();
+        } else if (type === 'ring') {
+          // Mpokeaji: ringtone ndefu (heshimu ringtone pref)
+          const tone = userPrefs.callRingtone || 'classic';
+          const ring = () => {
+            if (tone === 'chime') { beep([659, 880], 0.5, 0.15); toneInterval = setTimeout(() => beep([988], 0.5, 0.13), 600); toneInterval = setTimeout(ring, 2500); }
+            else if (tone === 'beep') { beep([880], 0.25, 0.15); toneInterval = setTimeout(ring, 1200); }
+            else { beep([440, 480], 1.4, 0.15); toneInterval = setTimeout(ring, 3200); }
+          };
+          ring();
+          try { if (navigator.vibrate) navigator.vibrate([400, 200, 400]); } catch (e) {}
+        } else if (type === 'busy') {
+          // Busy: beep beep (2×) kisha ishi
+          beep([480, 620], 0.5, 0.13);
+          toneInterval = setTimeout(() => beep([480, 620], 0.5, 0.13), 800);
+        } else if (type === 'end') {
+          beep([350], 0.35, 0.1);
+        }
+      } catch (e) {}
+    }
+
     // ===== WEBRTC CALLS (BURE — P2P) =====
     let callPc = null, callStream = null, callDocId = null, callUnsub = null, callTimerInt = null;
     let callRole = null, callStartTs = 0, callAudioEl = null, callNoAnswerT = null, callCalleeOnline = null;
@@ -5309,6 +5376,7 @@
       try { if (callAudioEl) { callAudioEl.pause(); callAudioEl.srcObject = null; } } catch (e) {}
       if (callTimerInt) { clearInterval(callTimerInt); callTimerInt = null; }
       if (callNoAnswerT) { clearTimeout(callNoAnswerT); callNoAnswerT = null; }
+      stopTones();
       document.getElementById('callMiniPill')?.classList.add('hidden');
       document.getElementById('callScreen')?.classList.remove('hidden');
       callPc = null; callStream = null; callDocId = null; callUnsub = null; callRole = null;
@@ -5347,6 +5415,7 @@
         document.getElementById('callActiveActions')?.classList.remove('hidden');
       }
       document.getElementById('callStatus').textContent = _calleeOnline === false ? 'Offline — will ring when back' : 'Ringing...';
+      playTone('ringback');
       // NO ANSWER: mwishoni mwa sekunde 45 bila kukubali → ishi
       callNoAnswerT = setTimeout(async () => {
         try {
@@ -5386,13 +5455,17 @@
         }
         if (d.status === 'ended') {
           const _reason = d.endReason || '';
+          if (callRole === 'caller' && (_reason === 'no_answer' || _reason === 'declined') && userPrefs.busyTone !== false) playTone('busy');
+          else playTone('end');
           callCleanup();
           if (callRole === 'caller' && _reason === 'no_answer') triggerNotificationToast('No Answer', 'system', 'Hakujibu — jaribu tena baadaye', 'CX');
+          else if (callRole === 'caller' && _reason === 'declined') triggerNotificationToast('Busy', 'system', 'Alikataa simu', 'CX');
           else if (callRole === 'caller') triggerNotificationToast('Call Ended', 'system', 'Call imemalizika', 'CX');
         }
       });
     }
     function callConnectedUI() {
+      stopTones();
       document.getElementById('callStatus').textContent = 'Connected';
       document.getElementById('callRingPulse')?.classList.add('hidden');
       document.getElementById('callIncomingActions')?.classList.add('hidden');
@@ -5442,7 +5515,7 @@
           snap.forEach((d) => {
             const v = d.data();
             if (v.status === 'ringing' && v.ts > Date.now() - 45000 && !callPc) {
-              if (userPrefs.callSound !== false) { try { playReceivedSound(); } catch (e) {} }
+              if (userPrefs.callSound !== false) { playTone('ring'); }
               document.getElementById('callName').textContent = '@' + v.caller;
               const inner = document.getElementById('callAvatarInner');
               if (inner) inner.innerHTML = avatarMap[v.caller] ? `<img src="${avatarMap[v.caller]}" class="avatar-img"/>` : v.caller.substring(0, 2).toUpperCase();
@@ -5454,7 +5527,8 @@
               callDocId = d.id;
               document.getElementById('callAcceptBtn').onclick = () => acceptIncomingCall(v, d.id);
               document.getElementById('callDeclineBtn').onclick = () => {
-                updateDoc(getPublicDoc("calls", d.id), { status: 'ended' }).catch(() => {});
+                updateDoc(getPublicDoc("calls", d.id), { status: 'ended', endReason: 'declined' }).catch(() => {});
+                stopTones();
                 callCleanup();
               };
             }
@@ -5539,6 +5613,22 @@
         box.appendChild(row);
       });
     }
+
+    // Ringtone picker (calls)
+    document.querySelectorAll('.call-tone-opt').forEach((b) => {
+      b.addEventListener('click', () => {
+        userPrefs.callRingtone = b.dataset.ctone;
+        if (db && currentUserHandle) setDoc(getPublicDoc("users", currentUserHandle), { prefs: userPrefs }, { merge: true }).catch(() => {});
+        document.querySelectorAll('.call-tone-opt').forEach(x => x.classList.replace('border-accent-pink', 'border-slate-700'));
+        b.classList.replace('border-slate-700', 'border-accent-pink');
+        playTone(b.dataset.ctone === 'ring' ? 'ring' : 'ring'); // preview
+      });
+    });
+    // Restore
+    const _restoreCallTones = () => {
+      const cur = userPrefs.callRingtone || 'classic';
+      document.querySelectorAll('.call-tone-opt').forEach(x => x.classList.toggle('border-accent-pink', x.dataset.ctone === cur));
+    };
 
     // ===== EMOJI PANEL kwenye input =====
     const EMOJI_CATS = [
