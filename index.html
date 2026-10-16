@@ -2841,16 +2841,40 @@
       }
     }
 
+    const uidLike = (h) => !h || /^[A-Za-z0-9_-]{20,}$/.test(String(h));
+    function resolveUidHandle(t) {
+      // Thread iliyoshikilia UID badala ya @jina — tatua mara moja
+      if (!uidLike(t.handle) || t._resolvingUid) return;
+      t._resolvingUid = true;
+      getDocs(query(getPublicCol("users"), where("uid", "==", t.handle))).then((s) => {
+        if (!s.empty) {
+          const u = s.docs[0].data();
+          t.handle = u.username || t.handle;
+          t.peer = t.handle;
+          if (u.avatar) t.avatar = u.avatar;
+          saveMyThreads();
+          renderThreadItem(t);
+        }
+      }).catch(() => {}).finally(() => { delete t._resolvingUid; });
+    }
     function renderThreadItem(t) {
       const list = document.getElementById('chatThreadList');
       if (!list) return;
+      // Kama ni UID — anza kuitatua (hatua 1: tumia avatarMap kama ipo; hatua 2: fetch)
+      if (uidLike(t.handle)) {
+        if (avatarMap[t.handle] && nameMap[t.handle]) { t.handle = nameMap[t.handle] === t.handle ? t.handle : t.handle; }
+        resolveUidHandle(t);
+        t._dispHandle = nameMap[t.handle] ? (aliasMap[t.handle] || t.handle) : t.handle.substring(0, 8);
+      } else {
+        t._dispHandle = aliasMap[t.handle] || t.handle;
+      }
       let item = list.querySelector(`[data-chat-id="${t.chatId}"][data-dynamic-thread]`);
       if (!item) {
         item = document.createElement('div');
         item.className = 'chat-thread-item chat-thread-trigger flex items-center gap-3 p-3 cursor-pointer transition hover:bg-slate-900/60';
         item.dataset.chatId = t.chatId;
         item.setAttribute('data-dynamic-thread', '1');
-        item.dataset.searchTerm = '@' + t.handle;
+        item.dataset.searchTerm = '@' + (t._dispHandle || t.handle);
         item.addEventListener('click', () => window.openChatThread(t.chatId));
 
         // Long-press: Archive / Delete chat
@@ -2899,7 +2923,7 @@
         </div>
         <div class="flex-grow min-w-0">
           <div class="flex justify-between items-baseline mb-0.5 gap-2">
-            <h4 class="text-xs font-black truncate text-white">@${escapeHtml(aliasMap[t.handle] || t.handle)}</h4>
+            <h4 class="text-xs font-black truncate text-white" title="@${escapeHtml(t.handle)}">@${escapeHtml(t._dispHandle || aliasMap[t.handle] || t.handle)}</h4>
             <span class="text-[10px] text-slate-400 shrink-0">${t.lastMsgTime || ''}</span>
           </div>
           <div class="flex justify-between items-center gap-2">
@@ -5212,6 +5236,7 @@
         setDoc(getPublicDoc("users", currentUserHandle), { isOnline: true, lastActiveMs: Date.now() }, { merge: true }).catch(() => {});
         try { flushPendingQueue(); } catch (e) {}
         try { refreshAuthToken(); } catch (e) {}
+        try { attachCallListener(); } catch (e) {}  // pokea calls ukiingia tena
       }
     });
     // App inapofungwa kabisa → jaribu kuweka Offline (mwisho wa kujitokeza)
@@ -5383,6 +5408,7 @@
     // ===== WEBRTC CALLS (BURE — P2P) =====
     let callPc = null, callStream = null, callDocId = null, callUnsub = null, callTimerInt = null;
     let callRole = null, callStartTs = 0, callAudioEl = null, callNoAnswerT = null, callCalleeOnline = null;
+    let callRemoteSet = false, callAnsCandCount = 0, callOfferCandCount = 0;
     const RTC_CONFIG = { iceServers: [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] }] };
 
     function fmtCallTime(ms) {
@@ -5400,6 +5426,7 @@
       document.getElementById('callMiniPill')?.classList.add('hidden');
       document.getElementById('callScreen')?.classList.remove('hidden');
       callPc = null; callStream = null; callDocId = null; callUnsub = null; callRole = null;
+      callRemoteSet = false; callAnsCandCount = 0;
       ['callScreen', 'callVideoWrap', 'callIncomingActions', 'callActiveActions', 'callTimer'].forEach(id => document.getElementById(id)?.classList.add('hidden'));
       const rl = document.getElementById('callRemoteVideo'); if (rl) rl.srcObject = null;
       const lv = document.getElementById('callLocalVideo'); if (lv) lv.srcObject = null;
@@ -5470,8 +5497,13 @@
         const d = snap.data();
         if (d.status === 'active' && d.answer && callPc.signalingState === 'have-local-offer') {
           await callPc.setRemoteDescription(JSON.parse(d.answer));
-          (d.answerCands || []).forEach(c => { try { callPc.addIceCandidate(JSON.parse(c)); } catch (e) {} });
-          callConnectedUI();
+          callRemoteSet = true;
+        }
+        // ICE INCREMENTAL: ongeza candidates zote mpya kila snapshot
+        if (callRemoteSet) {
+          const ac = d.answerCands || [];
+          for (let ci = callAnsCandCount; ci < ac.length; ci++) { try { callPc.addIceCandidate(JSON.parse(ac[ci])); } catch (e) {} }
+          callAnsCandCount = ac.length;
         }
         if (d.status === 'ended') {
           const _reason = d.endReason || '';
@@ -5519,10 +5551,15 @@
       const ans = await callPc.createAnswer();
       await callPc.setLocalDescription(ans);
       await updateDoc(getPublicDoc("calls", callDocId), { answer: JSON.stringify(ans), status: 'active' });
+      callRemoteSet = true;
+      callOfferCandCount = (d.offerCands || []).length;
       (d.offerCands || []).forEach(c => { try { callPc.addIceCandidate(JSON.parse(c)); } catch (e) {} });
       callUnsub = onSnapshot(getPublicDoc("calls", callDocId), (snap) => {
         if (!snap.exists()) return;
         const d2 = snap.data();
+        const oc = d2.offerCands || [];
+        for (let ci = callOfferCandCount; ci < oc.length; ci++) { try { callPc.addIceCandidate(JSON.parse(oc[ci])); } catch (e) {} }
+        callOfferCandCount = oc.length;
         if (d2.status === 'ended') { callCleanup(); triggerNotificationToast('Call Ended', 'system', '', 'CX'); }
       });
       callConnectedUI();
