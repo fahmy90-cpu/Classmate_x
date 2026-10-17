@@ -297,7 +297,7 @@
     </button>
 
     <!-- CALL SCREEN (WebRTC — voice & video, BURE) -->
-    <div id="callScreen" class="hidden absolute inset-0 z-[80] bg-slate-950 flex flex-col">
+    <div id="callScreen" class="hidden absolute inset-0 z-[80] bg-slate-950/85 backdrop-blur-xl flex flex-col">
       <div class="pointer-events-none absolute inset-0 overflow-hidden">
         <div class="absolute -top-20 -left-20 h-72 w-72 rounded-full bg-brand-500/20 blur-3xl animate-glow"></div>
         <div class="absolute -bottom-20 -right-20 h-72 w-72 rounded-full bg-emerald-500/15 blur-3xl animate-glow" style="animation-delay:2s"></div>
@@ -313,9 +313,10 @@
         <p id="callStatus" class="mt-1.5 text-xs font-bold text-slate-400">Ringing...</p>
         <p id="callTimer" class="mt-1 text-sm font-black text-emerald-400 font-mono hidden">0:00</p>
         <!-- Video -->
-        <div id="callVideoWrap" class="hidden absolute inset-x-4 top-4 bottom-40 rounded-3xl overflow-hidden border border-white/10 bg-black shadow-2xl">
+        <div id="callVideoWrap" class="hidden absolute inset-x-3 top-3 bottom-40 rounded-3xl overflow-hidden border border-white/10 bg-black shadow-2xl">
           <video id="callRemoteVideo" class="w-full h-full object-cover" autoplay playsinline></video>
-          <video id="callLocalVideo" class="absolute bottom-3 right-3 w-24 h-32 rounded-2xl object-cover border-2 border-white/40 shadow-lg" autoplay playsinline muted></video>
+          <span id="callTopTimer" class="absolute top-3 left-1/2 -translate-x-1/2 z-20 px-3 py-1 rounded-full bg-slate-950/70 backdrop-blur border border-white/15 text-emerald-400 text-xs font-black font-mono hidden">0:00</span>
+          <video id="callLocalVideo" class="absolute w-24 h-32 rounded-2xl object-cover border-2 border-white/40 shadow-lg cursor-move" style="bottom:12px;right:12px;touch-action:none" autoplay playsinline muted></video>
         </div>
         <!-- Incoming actions -->
         <div id="callIncomingActions" class="hidden absolute bottom-24 inset-x-0 flex justify-center gap-16">
@@ -331,6 +332,7 @@
           <button id="callMuteBtn" class="h-12 w-12 rounded-full bg-white/10 text-white flex items-center justify-center touch-active"><i class="ph ph-microphone text-xl"></i></button>
           <button id="callSpeakerBtn" class="h-12 w-12 rounded-full bg-white/10 text-white flex items-center justify-center touch-active"><i class="ph ph-speaker-high text-xl"></i></button>
           <button id="callVideoToggleBtn" class="h-12 w-12 rounded-full bg-white/10 text-white flex items-center justify-center touch-active"><i class="ph ph-video-camera text-xl"></i></button>
+          <button id="callSwitchCamBtn" class="h-12 w-12 rounded-full bg-white/10 text-white flex items-center justify-center touch-active" title="Switch camera"><i class="ph ph-camera-rotate text-xl"></i></button>
           <button id="callEndBtn" class="h-14 w-14 rounded-full bg-rose-500 text-white flex items-center justify-center shadow-lg shadow-rose-500/40 touch-active"><i class="ph ph-phone-x text-2xl rotate-[135deg]"></i></button>
         </div>
       </div>
@@ -1152,50 +1154,90 @@
     </div>
 
     <!-- ABOUT US MODAL -->
-    <div id="aboutModal" class="hidden absolute inset-0 z-50 bg-slate-950 flex flex-col justify-between p-4 animate-pop-in">
-      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+    <div id="aboutModal" class="hidden absolute inset-0 z-50 bg-slate-950 flex flex-col p-0 animate-pop-in">
+      <div class="flex items-center justify-between border-b border-slate-800 px-4 py-3 shrink-0">
         <h3 class="text-xs font-black text-white flex items-center gap-1.5"><i class="ph ph-info text-brand-400 text-base"></i> About ClassmateX</h3>
         <button onclick="document.getElementById('aboutModal')?.classList.add('hidden')" class="h-8 w-8 rounded-full bg-slate-800 text-slate-300 flex items-center justify-center"><i class="ph ph-x text-base"></i></button>
       </div>
-      <div class="flex-grow my-4 overflow-y-auto space-y-3 pr-1 text-xs">
-        <div class="flex flex-col items-center text-center py-2">
-          <div class="h-16 w-16 rounded-3xl bg-gradient-to-tr from-brand-600 via-accent-purple to-accent-pink flex items-center justify-center text-white font-black text-2xl shadow-glow-pink mb-2">CX</div>
-          <h2 class="text-sm font-black text-white">Classmate<span class="text-accent-pink">X</span></h2>
-          <p class="text-[10px] text-slate-400">Live Realtime Social Chat</p>
-          <span class="mt-1 px-2.5 py-0.5 rounded-full bg-brand-500/10 text-brand-400 border border-brand-500/30 text-[9px] font-black">v1.0 • Made in Tanzania 🇹🇿</span>
+      <!-- Tabs -->
+      <div class="flex gap-1 px-3 pt-2 shrink-0 border-b border-slate-800/60">
+        <button data-atab="about" class="about-tab px-3 py-1.5 rounded-t-lg text-[10px] font-black bg-slate-800 text-white">About</button>
+        <button data-atab="privacy" class="about-tab px-3 py-1.5 rounded-t-lg text-[10px] font-black text-slate-400">Privacy</button>
+        <button data-atab="terms" class="about-tab px-3 py-1.5 rounded-t-lg text-[10px] font-black text-slate-400">Terms</button>
+      </div>
+      <div class="flex-grow overflow-y-auto p-4 space-y-3 text-xs">
+
+        <!-- TAB: ABOUT -->
+        <div id="aboutTab-about" class="space-y-3">
+          <div class="flex flex-col items-center text-center py-2">
+            <div class="h-16 w-16 rounded-3xl bg-gradient-to-tr from-brand-600 via-accent-purple to-accent-pink flex items-center justify-center text-white font-black text-2xl shadow-glow-pink mb-2">CX</div>
+            <h2 class="text-sm font-black text-white">Classmate<span class="text-accent-pink">X</span></h2>
+            <p class="text-[10px] text-slate-400">Live Realtime Social Chat</p>
+            <span class="mt-1 px-2.5 py-0.5 rounded-full bg-brand-500/10 text-brand-400 border border-brand-500/30 text-[9px] font-black">v1.0 • Free Forever • Made in Tanzania 🇹🇿</span>
+          </div>
+          <div class="bg-slate-900 p-3 rounded-2xl border border-slate-800 space-y-1.5">
+            <h4 class="text-[10px] font-black uppercase tracking-wider text-slate-400">Developer</h4>
+            <p class="text-slate-200 font-bold">Fahmy Mohamed Mazrui</p>
+            <p class="text-slate-400 text-[11px]">Founder &amp; CEO — ClassmateX</p>
+            <p class="text-slate-500 text-[10px]">📧 fahmymazrui@gmail.com • 📍 Dar es Salaam, Tanzania</p>
+          </div>
+          <div class="bg-slate-900 p-3 rounded-2xl border border-slate-800">
+            <h4 class="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1">About This App</h4>
+            <p class="text-slate-300 leading-relaxed">A free social app for classmates — direct messages, Global Hub, Stories with music, polls, voice notes, voice/video calls, scheduled messages, and more. No ads, no fees, no payments.</p>
+            <p class="text-slate-400 text-[10px] mt-1.5 leading-relaxed">Key Features: DM • Stories • Polls • Voice &amp; Video Calls • Music Cards • HD Wallpapers • Ghost Mode</p>
+          </div>
+          <div class="bg-slate-900 p-3 rounded-2xl border border-slate-800">
+            <h4 class="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1">Built With</h4>
+            <p class="text-slate-400 text-[10px] leading-relaxed">Firebase (Auth + Firestore) • OneSignal Push • Cloudflare Workers • GitHub Pages • Tailwind CSS • Phosphor Icons • WebRTC</p>
+          </div>
+          <div class="bg-slate-900 p-3 rounded-2xl border border-slate-800 text-center">
+            <h4 class="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Rate ClassmateX</h4>
+            <div class="flex justify-center gap-1.5 text-2xl">
+              <button type="button" data-r="1" class="rate-star touch-active text-slate-600 hover:scale-125 transition"><i class="ph-fill ph-star"></i></button>
+              <button type="button" data-r="2" class="rate-star touch-active text-slate-600 hover:scale-125 transition"><i class="ph-fill ph-star"></i></button>
+              <button type="button" data-r="3" class="rate-star touch-active text-slate-600 hover:scale-125 transition"><i class="ph-fill ph-star"></i></button>
+              <button type="button" data-r="4" class="rate-star touch-active text-slate-600 hover:scale-125 transition"><i class="ph-fill ph-star"></i></button>
+              <button type="button" data-r="5" class="rate-star touch-active text-slate-600 hover:scale-125 transition"><i class="ph-fill ph-star"></i></button>
+            </div>
+            <p id="rateThanks" class="hidden text-[10px] text-emerald-400 font-bold mt-1">Thanks for your feedback! ⭐</p>
+          </div>
         </div>
-        <div class="bg-slate-900 p-3 rounded-2xl border border-slate-800 space-y-1.5">
-          <h4 class="text-[10px] font-black uppercase tracking-wider text-slate-400">Developer</h4>
-          <p class="text-slate-200 font-bold">Fahmy Mohamed Mazrui</p>
-          <p class="text-slate-400 text-[11px]">Founder &amp; CEO — ClassmateX</p>
-          <p class="text-slate-500 text-[10px]">fahmymazrui@gmail.com</p>
-          <p class="text-slate-400 text-[10px] mt-1">Key Features: DM • Stories • Polls • Voice Notes • Music Cards • HD Wallpapers • Ghost Mode</p>
+
+        <!-- TAB: PRIVACY -->
+        <div id="aboutTab-privacy" class="hidden space-y-3">
+          <h3 class="text-sm font-black text-white">Privacy Policy</h3>
+          <p class="text-[10px] text-slate-500">Last updated: October 2026</p>
+          <div class="bg-slate-900 p-3 rounded-2xl border border-slate-800 space-y-2 text-slate-300 text-[11px] leading-relaxed">
+            <p><strong class="text-white">1. Data We Collect.</strong> We collect only what is necessary to run the app: your email address, display name, username, profile photo, bio, and the messages/stories you choose to share. We do not collect phone numbers, locations (only when you explicitly share location in a chat), or contacts (only when you explicitly share a contact).</p>
+            <p><strong class="text-white">2. How We Use It.</strong> Your data is used solely to: authenticate you, display your profile and messages to other users, deliver push notifications (via OneSignal), and enable voice/video calls (peer-to-peer via WebRTC — call audio/video never passes through our servers).</p>
+            <p><strong class="text-white">3. What We Never Do.</strong> We never sell your data. We never share it with advertisers. We never read your private direct messages — DMs are stored encrypted in transit and are readable only by the sender and recipient.</p>
+            <p><strong class="text-white">4. Storage &amp; Cookies.</strong> We use browser local storage and IndexedDB to keep the app fast and to store media on your own device. OneSignal uses browser storage to deliver notifications. Media shared in chats is automatically removed from our servers after 24 hours (a copy remains on the sender's and recipient's devices).</p>
+            <p><strong class="text-white">5. Your Rights.</strong> You may edit or delete your profile at any time (Profile → Edit). Deleting your account permanently removes your profile and data. To request complete data removal, contact fahmymazrui@gmail.com.</p>
+            <p><strong class="text-white">6. Children.</strong> ClassmateX is intended for students. Users under 13 should use the app with a guardian's knowledge. We do not knowingly collect data from children under 13.</p>
+            <p><strong class="text-white">7. Contact.</strong> Questions about privacy? Email fahmymazrui@gmail.com.</p>
+          </div>
         </div>
-        <div class="bg-slate-900 p-3 rounded-2xl border border-slate-800 space-y-1.5">
-          <h4 class="text-[10px] font-black uppercase tracking-wider text-slate-400">About This App</h4>
-          <p class="text-slate-300 leading-relaxed">A free social app for classmates — direct messages, Global Hub, Stories with music, polls, voice notes, scheduled messages, and more. No ads, no fees.</p>
-        </div>
-        <div class="bg-slate-900 p-3 rounded-2xl border border-slate-800">
-          <h4 class="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Built With</h4>
-          <p class="text-slate-400 text-[10px] leading-relaxed">Firebase (Auth + Firestore) • OneSignal Push • Cloudflare Workers • GitHub Pages • Tailwind CSS • Phosphor Icons</p>
+
+        <!-- TAB: TERMS -->
+        <div id="aboutTab-terms" class="hidden space-y-3">
+          <h3 class="text-sm font-black text-white">Terms &amp; Conditions</h3>
+          <p class="text-[10px] text-slate-500">Last updated: October 2026</p>
+          <div class="bg-slate-900 p-3 rounded-2xl border border-slate-800 space-y-2 text-slate-300 text-[11px] leading-relaxed">
+            <p><strong class="text-white">1. Acceptance.</strong> By using ClassmateX you agree to these terms. If you do not agree, please do not use the app.</p>
+            <p><strong class="text-white">2. The Service.</strong> ClassmateX is a free social messaging platform for classmates. It is provided "as is" — while we work hard to keep it reliable, we do not guarantee uninterrupted service.</p>
+            <p><strong class="text-white">3. Your Conduct.</strong> You agree to: be respectful to other users; not harass, bully, or send hate speech; not share illegal, explicit, or harmful content; not impersonate others; not attempt to hack, disrupt, or reverse-engineer the app. Violations may result in a permanent ban by the administrator.</p>
+            <p><strong class="text-white">4. Content.</strong> You own what you post. By posting, you allow other users to view it within the app. Media expires from servers after 24 hours; chats may be deleted by participants at any time.</p>
+            <p><strong class="text-white">5. Payments &amp; Refunds.</strong> ClassmateX is 100% free. There are no payments, subscriptions, or in-app purchases — therefore no refunds apply.</p>
+            <p><strong class="text-white">6. Cookies &amp; Storage.</strong> The app uses browser storage to remember your login and preferences, and OneSignal for push notifications. No tracking cookies are used for advertising.</p>
+            <p><strong class="text-white">7. Liability.</strong> We are not responsible for user-generated content or for losses arising from use of the app. Voice/video calls are peer-to-peer and their quality depends on your connection.</p>
+            <p><strong class="text-white">8. Changes.</strong> We may update these terms; continued use after changes means acceptance. Material changes will be announced in the app.</p>
+            <p><strong class="text-white">9. Contact.</strong> fahmymazrui@gmail.com</p>
+          </div>
         </div>
       </div>
-      <div class="bg-slate-900 p-3 rounded-2xl border border-slate-800">
-        <h4 class="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Terms &amp; Feature Guide</h4>
-        <p class="text-slate-400 text-[10px] leading-relaxed">• Be respectful — no harassment or hate speech<br>• Media auto-expires from server after 24h (kept on your device)<br>• DMs are private between participants only<br>• Admin may ban accounts violating school rules</p>
+      <div class="p-3 border-t border-slate-800 shrink-0">
+        <button onclick="document.getElementById('aboutModal')?.classList.add('hidden')" class="w-full py-2.5 rounded-xl bg-slate-800 text-white text-xs font-bold">Close</button>
       </div>
-      <div class="bg-slate-900 p-3 rounded-2xl border border-slate-800 text-center">
-        <h4 class="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Rate ClassmateX</h4>
-        <div id="rateStars" class="flex justify-center gap-1.5 text-2xl">
-          <button type="button" data-r="1" class="rate-star touch-active text-slate-600 hover:scale-125 transition"><i class="ph-fill ph-star"></i></button>
-          <button type="button" data-r="2" class="rate-star touch-active text-slate-600 hover:scale-125 transition"><i class="ph-fill ph-star"></i></button>
-          <button type="button" data-r="3" class="rate-star touch-active text-slate-600 hover:scale-125 transition"><i class="ph-fill ph-star"></i></button>
-          <button type="button" data-r="4" class="rate-star touch-active text-slate-600 hover:scale-125 transition"><i class="ph-fill ph-star"></i></button>
-          <button type="button" data-r="5" class="rate-star touch-active text-slate-600 hover:scale-125 transition"><i class="ph-fill ph-star"></i></button>
-        </div>
-        <p id="rateThanks" class="hidden text-[10px] text-emerald-400 font-bold mt-1">Asante kwa feedback! ⭐</p>
-      </div>
-      <button onclick="document.getElementById('aboutModal')?.classList.add('hidden')" class="w-full py-2.5 rounded-xl bg-slate-800 text-white text-xs font-bold">Close</button>
     </div>
 
     <!-- STARRED MESSAGES MODAL -->
@@ -2332,7 +2374,7 @@
       avatarElements.forEach(id => {
         const el = document.getElementById(id);
         if (el) {
-          el.innerHTML = `<img src="${dataUrl}" class="avatar-img" />`;
+          el.innerHTML = `<img alt="User avatar" src="${dataUrl}" class="avatar-img" />`;
         }
       });
     }
@@ -2917,7 +2959,7 @@
       item.innerHTML = `
         <div class="relative shrink-0">
           <div class="h-11 w-11 rounded-full bg-gradient-to-tr from-brand-500 to-accent-pink text-white font-black text-xs flex items-center justify-center overflow-hidden">
-            ${(t.avatar || avatarMap[t.handle]) ? `<img src="${t.avatar || avatarMap[t.handle]}" class="avatar-img" />` : String(t.handle).substring(0,2).toUpperCase()}
+            ${(t.avatar || avatarMap[t.handle]) ? `<img alt="User avatar" src="${t.avatar || avatarMap[t.handle]}" class="avatar-img" />` : String(t.handle).substring(0,2).toUpperCase()}
           </div>
           <span class="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-emerald-400 border-2 border-slate-950"></span>
         </div>
@@ -3187,7 +3229,7 @@
 
       if (avatarEl) {
         avatarEl.innerHTML = user.avatar
-          ? `<img src="${user.avatar}" class="avatar-img" />`
+          ? `<img alt="User avatar" src="${user.avatar}" class="avatar-img" />`
           : (user.handle || 'US').substring(0,2).toUpperCase();
       }
 
@@ -3534,7 +3576,7 @@
       if (headerIcon) {
         headerIcon.className = `h-9 w-9 rounded-full ${isCeoR ? 'neon-story-ring' : 'bg-emerald-500'} text-white font-black flex items-center justify-center text-xs shadow-xs shrink-0 overflow-hidden`;
         headerIcon.innerHTML = u.avatar
-          ? `<img src="${u.avatar}" class="avatar-img" />`
+          ? `<img alt="User avatar" src="${u.avatar}" class="avatar-img" />`
           : `<div class="h-full w-full bg-slate-900 flex items-center justify-center rounded-full">${uname.substring(0,2).toUpperCase()}</div>`;
       }
       const online = isUserOnline(u);
@@ -4035,6 +4077,19 @@
       }
     }
 
+    // About tabs
+    document.querySelectorAll('.about-tab').forEach((b) => {
+      b.addEventListener('click', () => {
+        document.querySelectorAll('.about-tab').forEach((x) => {
+          const on = x === b;
+          x.className = 'about-tab px-3 py-1.5 rounded-t-lg text-[10px] font-black ' + (on ? 'bg-slate-800 text-white' : 'text-slate-400');
+        });
+        ['about', 'privacy', 'terms'].forEach((t) => {
+          document.getElementById('aboutTab-' + t)?.classList.toggle('hidden', t !== b.dataset.atab);
+        });
+      });
+    });
+
     // ===== RATING MODULE =====
     document.querySelectorAll('.rate-star').forEach((b) => {
       b.addEventListener('click', async () => {
@@ -4299,6 +4354,11 @@
         }
         return;
       }
+      const _callCard = e.target.closest('.call-card');
+      if (_callCard) {
+        startCall(_callCard.textContent.includes('Video') ? 'video' : 'audio');
+        return;
+      }
       const spdBtn = e.target.closest('.vb-speed');
       if (spdBtn && voiceAudioEl) {
         const rates = [1, 1.5, 2];
@@ -4440,6 +4500,16 @@
         </div>
       ` : '';
 
+      if (msg.type === 'call') {
+        const missed = msg.callOutcome !== 'completed';
+        const icon = msg.callType === 'video' ? 'ph-video-camera' : 'ph-phone';
+        const label = (missed ? 'Missed ' : '') + (msg.callType === 'video' ? 'Video Call' : 'Voice Call') + (msg.callDuration ? ' • ' + msg.callDuration : '');
+        contentHtml += `<div class="call-card flex items-center gap-2.5 p-2.5 rounded-xl my-1 min-w-[190px] cursor-pointer touch-active ${missed ? 'bg-rose-500/15 border border-rose-500/40' : 'bg-emerald-500/10 border border-emerald-500/30'}">
+          <i class="ph ${icon} text-xl ${missed ? 'text-rose-400' : 'text-emerald-400'}"></i>
+          <div class="min-w-0"><p class="text-[11px] font-black ${missed ? 'text-rose-300' : 'text-emerald-300'}">${escapeHtml(label)}</p>
+          <p class="text-[9px] text-slate-400">Tap to call back</p></div>
+        </div>`;
+      }
       if (msg.forwardedFrom) {
         contentHtml += `<div class="flex items-center gap-1 mb-1 text-[9px] font-black uppercase tracking-wider text-slate-400"><i class="ph ph-share-fat text-accent-pink"></i> Forwarded from <span class="text-accent-pink">@${escapeHtml(aliasMap[msg.forwardedFrom] || msg.forwardedFrom)}</span></div>`;
       }
@@ -5332,7 +5402,7 @@
           const dataUrl = await compressSquareImageToDataUrl(file, 256, 0.85);
           _obAvatarData = dataUrl;
           const pv = document.getElementById('obAvatarPreview');
-          if (pv) pv.innerHTML = `<img src="${dataUrl}" class="avatar-img" />`;
+          if (pv) pv.innerHTML = `<img alt="User avatar" src="${dataUrl}" class="avatar-img" />`;
         } catch (e) {}
       };
       const inp = document.createElement('input');
@@ -5415,6 +5485,34 @@
       const s = Math.floor((Date.now() - ms) / 1000);
       return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
     }
+    let callWasVideo = false, callChatId = null;
+    async function sendCallCardToChat(outcome, durMs) {
+      try {
+        const cid = callChatId || currentActiveChatId;
+        if (!cid || cid === 'global-group') return;
+        const mins = Math.floor((durMs || 0) / 60000), secs = Math.floor(((durMs || 0) % 60000) / 1000);
+        const durStr = (durMs || 0) > 0 ? (mins + ':' + String(secs).padStart(2, '0')) : null;
+        const cardId = 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+        const card = {
+          id: cardId, text: '', type: 'call',
+          callType: callWasVideo ? 'video' : 'audio',
+          callOutcome: outcome, callDuration: durStr,
+          senderId: currentUserId || 'demo-user', senderHandle: currentUserHandle, senderEmail: currentUserEmail,
+          isCeo: isCeoUser, senderRole: currentUserRole,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          createdAtMs: Date.now(), status: 'sent',
+          toUid: null, toEmail: null
+        };
+        const tt = myThreads.find(x => x.chatId === cid);
+        if (tt && activeChatRecipient.uid) {
+          card.toUid = activeChatRecipient.uid;
+          card.toEmail = activeChatRecipient.email || null;
+        }
+        await setDoc(getPublicDoc(`messages_${cid}`, cardId), card);
+        if (tt && tt.peer) setDoc(getPublicDoc(`messages_dm-${tt.peer}`, cardId), card).catch(() => {});
+        else if (activeChatRecipient.uid) setDoc(getPublicDoc(`messages_dm-${activeChatRecipient.uid}`, cardId), card).catch(() => {});
+      } catch (e) {}
+    }
     function callCleanup() {
       try { if (callUnsub) callUnsub(); } catch (e) {}
       try { if (callStream) callStream.getTracks().forEach(t => t.stop()); } catch (e) {}
@@ -5434,7 +5532,7 @@
     function showCallScreen(name, avatar, isVideo) {
       document.getElementById('callName').textContent = name || 'Call';
       const inner = document.getElementById('callAvatarInner');
-      if (inner) inner.innerHTML = avatar ? `<img src="${avatar}" class="avatar-img"/>` : (name || '?').substring(0, 2).toUpperCase();
+      if (inner) inner.innerHTML = avatar ? `<img alt="User avatar" src="${avatar}" class="avatar-img"/>` : (name || '?').substring(0, 2).toUpperCase();
       document.getElementById('callScreen')?.classList.remove('hidden');
       document.getElementById('callVideoWrap')?.classList.toggle('hidden', !isVideo);
     }
@@ -5448,6 +5546,7 @@
         triggerNotificationToast('Microphone', 'system', 'Ruhusu mic/camera kwenye browser settings', 'CX'); return;
       }
       callRole = 'caller'; callDocId = 'call_' + Date.now();
+      callWasVideo = (type === 'video'); callChatId = currentActiveChatId;
       // STATUS HALISI: tazama kama yupo online
       let _calleeOnline = null;
       try {
@@ -5471,7 +5570,7 @@
             await updateDoc(getPublicDoc("calls", callDocId), { status: 'ended', endReason: 'no_answer' });
           }
         } catch (e) {}
-      }, 45000);
+      }, 30000);
       callPc = new RTCPeerConnection(RTC_CONFIG);
       callStream.getTracks().forEach(t => callPc.addTrack(t, callStream));
       callPc.ontrack = (ev) => {
@@ -5510,7 +5609,8 @@
           if (callRole === 'caller' && (_reason === 'no_answer' || _reason === 'declined') && userPrefs.busyTone !== false) playTone('busy');
           else playTone('end');
           callCleanup();
-          if (callRole === 'caller' && _reason === 'no_answer') triggerNotificationToast('No Answer', 'system', 'Hakujibu — jaribu tena baadaye', 'CX');
+          if (callRole === 'caller' && _reason === 'no_answer') { triggerNotificationToast('No Answer', 'system', 'Hakujibu — jaribu tena baadaye', 'CX'); }
+          if (callRole === 'callee' && (_reason === 'missed' || _reason === 'cancelled')) { playTone('end'); triggerNotificationToast('Missed Call', 'system', 'Ulikosa simu', 'CX'); }
           else if (callRole === 'caller' && _reason === 'declined') triggerNotificationToast('Busy', 'system', 'Alikataa simu', 'CX');
           else if (callRole === 'caller') triggerNotificationToast('Call Ended', 'system', 'Call imemalizika', 'CX');
         }
@@ -5526,7 +5626,11 @@
       t?.classList.remove('hidden');
       callStartTs = Date.now();
       if (callTimerInt) clearInterval(callTimerInt);
-      callTimerInt = setInterval(() => { if (t) t.textContent = fmtCallTime(callStartTs); }, 1000);
+      callTimerInt = setInterval(() => {
+        if (t) t.textContent = fmtCallTime(callStartTs);
+        const tt = document.getElementById('callTopTimer');
+        if (tt) { tt.textContent = fmtCallTime(callStartTs); tt.classList.remove('hidden'); }
+      }, 1000);
     }
     async function acceptIncomingCall(d, id) {
       try {
@@ -5536,6 +5640,7 @@
         updateDoc(getPublicDoc("calls", id), { status: 'ended' }).catch(() => {}); return;
       }
       callRole = 'callee'; callDocId = id;
+      callWasVideo = (d.type === 'video'); callChatId = d.chatId || currentActiveChatId;
       showCallScreen(d.caller, avatarMap[d.caller] || null, d.type === 'video');
       if (d.type === 'video') document.getElementById('callLocalVideo').srcObject = callStream;
       callPc = new RTCPeerConnection(RTC_CONFIG);
@@ -5575,7 +5680,7 @@
               if (userPrefs.callSound !== false) { playTone('ring'); }
               document.getElementById('callName').textContent = '@' + v.caller;
               const inner = document.getElementById('callAvatarInner');
-              if (inner) inner.innerHTML = avatarMap[v.caller] ? `<img src="${avatarMap[v.caller]}" class="avatar-img"/>` : v.caller.substring(0, 2).toUpperCase();
+              if (inner) inner.innerHTML = avatarMap[v.caller] ? `<img alt="User avatar" src="${avatarMap[v.caller]}" class="avatar-img"/>` : v.caller.substring(0, 2).toUpperCase();
               document.getElementById('callScreen')?.classList.remove('hidden');
               document.getElementById('callVideoWrap')?.classList.add('hidden');
               document.getElementById('callStatus').textContent = v.type === 'video' ? 'Incoming video call...' : 'Incoming call...';
@@ -5596,8 +5701,14 @@
     // Wire buttons
     document.getElementById('wpActionCallBtn')?.addEventListener('click', () => { document.getElementById('viewProfileModal')?.classList.add('hidden'); startCall('audio'); });
     document.getElementById('wpActionVideoBtn')?.addEventListener('click', () => { document.getElementById('viewProfileModal')?.classList.add('hidden'); startCall('video'); });
-    document.getElementById('callEndBtn')?.addEventListener('click', () => {
-      if (callDocId) updateDoc(getPublicDoc("calls", callDocId), { status: 'ended' }).catch(() => {});
+    document.getElementById('callEndBtn')?.addEventListener('click', async () => {
+      if (callDocId) {
+        try {
+          const _s = await getDoc(getPublicDoc("calls", callDocId));
+          const _stillRinging = _s.exists() && _s.data().status === 'ringing';
+          updateDoc(getPublicDoc("calls", callDocId), { status: 'ended', endReason: _stillRinging ? 'missed' : 'completed' }).catch(() => {});
+        } catch (e) { updateDoc(getPublicDoc("calls", callDocId), { status: 'ended' }).catch(() => {}); }
+      }
       callCleanup();
     });
     document.getElementById('callMuteBtn')?.addEventListener('click', (e) => {
@@ -5610,6 +5721,51 @@
       const t = callStream.getVideoTracks()[0];
       if (t) { t.enabled = !t.enabled; e.currentTarget.classList.toggle('bg-rose-500', !t.enabled); }
     });
+    // Switch camera (front/back)
+    document.getElementById('callSwitchCamBtn')?.addEventListener('click', async () => {
+      if (!callPc || !callStream) return;
+      try {
+        const vids = await navigator.mediaDevices.enumerateDevices();
+        const cams = vids.filter(d => d.kind === 'videoinput');
+        if (cams.length < 2) { triggerNotificationToast('Camera', 'system', 'Kamera moja tu kwenye kifaa', 'CX'); return; }
+        const cur = callStream.getVideoTracks()[0];
+        const curLabel = cur ? cur.label : '';
+        const next = cams.find(c => c.label !== curLabel) || cams[0];
+        const nStream = await navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: next.deviceId } }, audio: false });
+        const nTrack = nStream.getVideoTracks()[0];
+        const sender = callPc.getSenders().find(s => s.track && s.track.kind === 'video');
+        if (sender) await sender.replaceTrack(nTrack);
+        callStream.getVideoTracks().forEach(t => { t.stop(); callStream.removeTrack(t); });
+        callStream.addTrack(nTrack);
+        document.getElementById('callLocalVideo').srcObject = callStream;
+      } catch (e) {}
+    });
+    // PiP draggable
+    (function() {
+      const pip = document.getElementById('callLocalVideo');
+      if (!pip) return;
+      let dragging = false, sx = 0, sy = 0, sl = 0, st = 0;
+      pip.addEventListener('pointerdown', (e) => {
+        dragging = true; sx = e.clientX; sy = e.clientY;
+        sl = parseInt(pip.style.left || 'auto', 10) || 0; st = parseInt(pip.style.top || 'auto', 10) || 0;
+        if (isNaN(sl)) sl = 0; if (isNaN(st)) st = 0;
+        pip.setPointerCapture(e.pointerId);
+      });
+      pip.addEventListener('pointermove', (e) => {
+        if (!dragging) return;
+        const wrap = document.getElementById('callVideoWrap');
+        if (!wrap) return;
+        const r = wrap.getBoundingClientRect();
+        let nl = sl + (e.clientX - sx), nt = st + (e.clientY - sy);
+        nl = Math.max(0, Math.min(r.width - pip.offsetWidth, nl));
+        nt = Math.max(0, Math.min(r.height - pip.offsetHeight, nt));
+        pip.style.left = nl + 'px'; pip.style.top = nt + 'px'; pip.style.right = 'auto'; pip.style.bottom = 'auto';
+      });
+      const endD = () => { dragging = false; };
+      pip.addEventListener('pointerup', endD);
+      pip.addEventListener('pointercancel', endD);
+    })();
+
     document.getElementById('callSpeakerBtn')?.addEventListener('click', () => {
       triggerNotificationToast('Speaker', 'system', 'Speaker ' + (callAudioEl && callAudioEl.muted ? 'on' : 'toggle'), 'CX');
       if (callAudioEl) callAudioEl.muted = !callAudioEl.muted;
@@ -5646,10 +5802,11 @@
     const _origCallCleanup = callCleanup;
     callCleanup = function() {
       try {
-        if (callDocId && callStartTs) {
-          logCall({ name: (activeChatRecipient && activeChatRecipient.handle) || 'call', type: callRole, duration: Date.now() - callStartTs });
-        } else if (callDocId) {
-          logCall({ name: (activeChatRecipient && activeChatRecipient.handle) || 'call', type: callRole, duration: 0 });
+        const _dur = callStartTs ? (Date.now() - callStartTs) : 0;
+        const _outcome = callStartTs ? 'completed' : 'missed';
+        if (callDocId) {
+          logCall({ name: (activeChatRecipient && activeChatRecipient.handle) || 'call', type: callRole, duration: _dur });
+          if (callRole === 'caller') sendCallCardToChat(_outcome, _dur);
         }
       } catch (e) {}
       _origCallCleanup();
@@ -6002,7 +6159,7 @@
         if (!t.handle) return;
         const row = document.createElement('button');
         row.className = 'w-full px-3 py-2.5 text-left flex items-center gap-2.5 hover:bg-slate-800/60 transition';
-        row.innerHTML = `<span class="h-8 w-8 rounded-full bg-gradient-to-tr from-brand-500 to-accent-pink text-[10px] font-black text-white flex items-center justify-center overflow-hidden">${(t.avatar || avatarMap[t.handle]) ? `<img src="${t.avatar || avatarMap[t.handle]}" class="avatar-img" />` : escapeHtml(String(t.handle).substring(0,2).toUpperCase())}</span>
+        row.innerHTML = `<span class="h-8 w-8 rounded-full bg-gradient-to-tr from-brand-500 to-accent-pink text-[10px] font-black text-white flex items-center justify-center overflow-hidden">${(t.avatar || avatarMap[t.handle]) ? `<img alt="User avatar" src="${t.avatar || avatarMap[t.handle]}" class="avatar-img" />` : escapeHtml(String(t.handle).substring(0,2).toUpperCase())}</span>
           <span class="text-[11px] font-bold text-white truncate">@${escapeHtml(aliasMap[t.handle] || t.handle)}</span>`;
         row.addEventListener('click', () => {
           document.getElementById('contactShareModal')?.classList.add('hidden');
@@ -6981,7 +7138,7 @@
       item.innerHTML = `
         <div class="neon-story-ring relative">
           <div class="h-12 w-12 rounded-full bg-slate-900 text-white font-black text-xs flex items-center justify-center overflow-hidden shrink-0">
-            ${(s.avatar || avatarMap[s.handle]) ? `<img src="${s.avatar || avatarMap[s.handle]}" class="avatar-img" />` : String(s.handle).substring(0,2).toUpperCase()}
+            ${(s.avatar || avatarMap[s.handle]) ? `<img alt="User avatar" src="${s.avatar || avatarMap[s.handle]}" class="avatar-img" />` : String(s.handle).substring(0,2).toUpperCase()}
           </div>
           ${countBadge}
         </div>
@@ -7155,7 +7312,7 @@
         const ownerH = String(data.storyHandle || '@user').replace('@', '');
         const _sAv = data.storyAvatar || avatarMap[ownerH];
         svAvatar.innerHTML = _sAv
-          ? `<img src="${_sAv}" class="avatar-img" />`
+          ? `<img alt="User avatar" src="${_sAv}" class="avatar-img" />`
           : ownerH.substring(0, 2).toUpperCase();
       }
       if (delDirect) delDirect.classList.toggle('hidden', !isOwnStory);
@@ -7972,7 +8129,7 @@
         row.type = 'button';
         row.className = 'w-full px-3 py-2 flex items-center gap-2.5 hover:bg-slate-800/60 transition text-left';
         const av = avatarMap[h];
-        row.innerHTML = `<span class="h-7 w-7 rounded-full bg-gradient-to-tr from-brand-500 to-accent-pink text-[9px] font-black text-white flex items-center justify-center overflow-hidden">${av ? `<img src="${av}" class="avatar-img"/>` : escapeHtml(h.substring(0,2).toUpperCase())}</span>
+        row.innerHTML = `<span class="h-7 w-7 rounded-full bg-gradient-to-tr from-brand-500 to-accent-pink text-[9px] font-black text-white flex items-center justify-center overflow-hidden">${av ? `<img alt="User avatar" src="${av}" class="avatar-img"/>` : escapeHtml(h.substring(0,2).toUpperCase())}</span>
           <span class="min-w-0"><span class="block text-[11px] font-bold text-white truncate">@${escapeHtml(aliasMap[h] || h)}</span>
           <span class="block text-[9px] text-slate-400 truncate">${escapeHtml(nameMap[h] || 'Classmate')}</span></span>
           <i class="ph ph-arrow-up-left text-slate-500 ml-auto"></i>`;
