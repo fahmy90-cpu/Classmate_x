@@ -316,6 +316,7 @@
         <div id="callVideoWrap" class="hidden absolute inset-x-3 top-3 bottom-40 rounded-3xl overflow-hidden border border-white/10 bg-black shadow-2xl">
           <video id="callRemoteVideo" class="w-full h-full object-cover" autoplay playsinline></video>
           <span id="callTopTimer" class="absolute top-3 left-1/2 -translate-x-1/2 z-20 px-3 py-1 rounded-full bg-slate-950/70 backdrop-blur border border-white/15 text-emerald-400 text-xs font-black font-mono hidden">0:00</span>
+          <button id="callSwapBtn" class="absolute top-3 right-3 z-20 h-9 w-9 rounded-full bg-slate-950/70 backdrop-blur border border-white/15 text-white flex items-center justify-center touch-active" title="Swap views"><i class="ph ph-arrows-left-right text-sm"></i></button>
           <video id="callLocalVideo" class="absolute w-24 h-32 rounded-2xl object-cover border-2 border-white/40 shadow-lg cursor-move" style="bottom:12px;right:12px;touch-action:none" autoplay playsinline muted></video>
         </div>
         <!-- Incoming actions -->
@@ -2759,7 +2760,7 @@
         // 3. TICKS (messages create + update + delete)
         try {
           const tid = 'selftest_' + Date.now();
-          await setDoc(getPublicDoc('messages_selftest', tid), { senderHandle: currentUserHandle, senderEmail: currentUserEmail, text: 't', status: 'sent', createdAtMs: Date.now(), senderId: currentUserId });
+          await setDoc(getPublicDoc('messages_selftest', tid), { senderHandle: currentUserHandle, senderEmail: (auth && auth.currentUser && auth.currentUser.email) || currentUserEmail, text: 't', status: 'sent', createdAtMs: Date.now(), senderId: currentUserId });
           await updateDoc(getPublicDoc('messages_selftest', tid), { status: 'delivered' });
           await deleteDoc(getPublicDoc('messages_selftest', tid));
         } catch (e) { report('TICKS: ' + (e.code || e.message)); return; }
@@ -4051,7 +4052,7 @@
         id: optMsgId, text: '',
         senderId: currentUserId || 'demo-user',
         senderHandle: currentUserHandle,
-        senderEmail: currentUserEmail,
+        senderEmail: (auth && auth.currentUser && auth.currentUser.email) || currentUserEmail,
         isCeo: isCeoUser,
         senderRole: currentUserRole,
         time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -4831,7 +4832,7 @@
               const segId = 'msg_' + Date.now() + '_' + pi + '_' + Math.random().toString(36).substr(2, 5);
               const segMsg = {
                 id: segId, text: '',
-                senderId: currentUserId || 'demo-user', senderHandle: currentUserHandle, senderEmail: currentUserEmail,
+                senderId: currentUserId || 'demo-user', senderHandle: currentUserHandle, senderEmail: (auth && auth.currentUser && auth.currentUser.email) || currentUserEmail,
                 isCeo: isCeoUser, senderRole: currentUserRole,
                 time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                 createdAtMs: Date.now() + pi, status: 'sent',
@@ -4862,7 +4863,7 @@
         const optMsgId = 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
         const newMsg = {
           id: optMsgId, text: '',
-          senderId: currentUserId || 'demo-user', senderHandle: currentUserHandle, senderEmail: currentUserEmail,
+          senderId: currentUserId || 'demo-user', senderHandle: currentUserHandle, senderEmail: (auth && auth.currentUser && auth.currentUser.email) || currentUserEmail,
           isCeo: isCeoUser, senderRole: currentUserRole,
           time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           createdAtMs: Date.now(), status: 'sent',
@@ -4966,7 +4967,7 @@
         text: text || '',
         senderId: currentUserId || 'demo-user',
         senderHandle: currentUserHandle,
-        senderEmail: currentUserEmail,
+        senderEmail: (auth && auth.currentUser && auth.currentUser.email) || currentUserEmail,
         isCeo: isCeoUser,
         senderRole: currentUserRole,
         time: timeStr,
@@ -5497,7 +5498,7 @@
           id: cardId, text: '', type: 'call',
           callType: callWasVideo ? 'video' : 'audio',
           callOutcome: outcome, callDuration: durStr,
-          senderId: currentUserId || 'demo-user', senderHandle: currentUserHandle, senderEmail: currentUserEmail,
+          senderId: currentUserId || 'demo-user', senderHandle: currentUserHandle, senderEmail: (auth && auth.currentUser && auth.currentUser.email) || currentUserEmail,
           isCeo: isCeoUser, senderRole: currentUserRole,
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           createdAtMs: Date.now(), status: 'sent',
@@ -5721,6 +5722,26 @@
       const t = callStream.getVideoTracks()[0];
       if (t) { t.enabled = !t.enabled; e.currentTarget.classList.toggle('bg-rose-500', !t.enabled); }
     });
+    // SWAP (WhatsApp style): badilisha nani mkubwa — wewe au yeye
+    let callSwapped = false;
+    document.getElementById('callSwapBtn')?.addEventListener('click', () => {
+      const rv = document.getElementById('callRemoteVideo');
+      const lv = document.getElementById('callLocalVideo');
+      if (!rv || !lv) return;
+      callSwapped = !callSwapped;
+      if (callSwapped) {
+        lv.className = 'w-full h-full object-cover';
+        lv.style.cssText = '';
+        rv.className = 'absolute w-24 h-32 rounded-2xl object-cover border-2 border-white/40 shadow-lg cursor-move';
+        rv.style.cssText = 'bottom:12px;right:56px;touch-action:none;z-index:5';
+      } else {
+        rv.className = 'w-full h-full object-cover';
+        rv.style.cssText = '';
+        lv.className = 'absolute w-24 h-32 rounded-2xl object-cover border-2 border-white/40 shadow-lg cursor-move';
+        lv.style.cssText = 'bottom:12px;right:12px;touch-action:none';
+      }
+    });
+
     // Switch camera (front/back)
     document.getElementById('callSwitchCamBtn')?.addEventListener('click', async () => {
       if (!callPc || !callStream) return;
@@ -6015,7 +6036,7 @@
             id: optMsgId, text: '',
             senderId: currentUserId || 'demo-user',
             senderHandle: currentUserHandle,
-        senderEmail: currentUserEmail,
+        senderEmail: (auth && auth.currentUser && auth.currentUser.email) || currentUserEmail,
             isCeo: isCeoUser,
             senderRole: currentUserRole,
             time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -6120,7 +6141,7 @@
           forwardedFrom: msg.author || 'user',
               senderId: currentUserId,
               senderHandle: currentUserHandle,
-        senderEmail: currentUserEmail,
+        senderEmail: (auth && auth.currentUser && auth.currentUser.email) || currentUserEmail,
               isCeo: isCeoUser,
               senderRole: currentUserRole,
               time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -6192,7 +6213,7 @@
       const optMsgId = 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
       const newMsg = Object.assign({
         id: optMsgId, text: '', senderId: currentUserId || 'demo-user',
-        senderHandle: currentUserHandle, senderEmail: currentUserEmail,
+        senderHandle: currentUserHandle, senderEmail: (auth && auth.currentUser && auth.currentUser.email) || currentUserEmail,
         isCeo: isCeoUser, senderRole: currentUserRole,
         time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         createdAtMs: Date.now(), status: 'sent',
@@ -6308,7 +6329,7 @@
         poll: { question: q, options: opts.map(t => ({ text: t, votes: 0 })), voters: {} },
         senderId: currentUserId || 'demo-user',
         senderHandle: currentUserHandle,
-        senderEmail: currentUserEmail,
+        senderEmail: (auth && auth.currentUser && auth.currentUser.email) || currentUserEmail,
         isCeo: isCeoUser,
         senderRole: currentUserRole,
         time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -8850,7 +8871,7 @@
           text: `📣 ADMIN ANNOUNCEMENT:\n\n${text}`,
           senderId: currentUserId,
           senderHandle: currentUserHandle,
-        senderEmail: currentUserEmail,
+        senderEmail: (auth && auth.currentUser && auth.currentUser.email) || currentUserEmail,
           isCeo: isCeoUser,
           senderRole: currentUserRole,
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -8877,6 +8898,7 @@
         }
         currentUserId = user.uid;
         currentUserEmail = user.email || currentUserEmail;
+        try { if (auth.currentUser && auth.currentUser.email) currentUserEmail = auth.currentUser.email; } catch (e) {}
 
         const fetchUdoc = async () => {
           let found = null;
