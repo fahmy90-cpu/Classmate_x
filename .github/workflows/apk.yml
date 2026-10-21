@@ -14,19 +14,19 @@ jobs:
           distribution: 'zulu'
           java-version: '17'
           
-      - name: Download bundletool
+      - name: Download bundletool & uber-apk-signer
         run: |
           wget https://github.com/google/bundletool/releases/download/1.15.6/bundletool-all-1.15.6.jar -O bundletool.jar
+          wget https://github.com/patrickfav/uber-apk-signer/releases/download/v1.3.0/uber-apk-signer-1.3.0.jar -O uber-apk-signer.jar
           
       - name: Build APKs from AAB
         run: |
           java -jar bundletool.jar build-apks --bundle=ClassmateX.aab --output=app.apks --mode=universal
           unzip app.apks -d output
           
-      - name: Sign APK with Debug Key
+      - name: Sign APK properly
         run: |
-          keytool -genkeypair -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
-          jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore debug.keystore -storepass android output/universal.apk androiddebugkey
+          java -jar uber-apk-signer.jar --apks output/universal.apk --overwrite
           mv output/universal.apk ClassmateX-universal.apk
 
       - name: Upload APK Artifact
