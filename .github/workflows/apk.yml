@@ -1,0 +1,31 @@
+name: Build APK from AAB
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+          
+      - name: Download bundletool
+        run: |
+          wget https://github.com/google/bundletool/releases/download/1.15.6/bundletool-all-1.15.6.jar -O bundletool.jar
+          
+      - name: Build APKs from AAB
+        run: |
+          java -jar bundletool.jar build-apks --bundle=ClassmateX.aab --output=app.apks --mode=universal
+          unzip app.apks -d output
+          mv output/universal.apk ClassmateX-universal.apk
+          
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ClassmateX-APK
+          path: ClassmateX-universal.apk
