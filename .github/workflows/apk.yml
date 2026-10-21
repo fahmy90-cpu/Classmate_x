@@ -1,4 +1,4 @@
-name: Build APK from AAB
+name: Build APK Perfect
 on:
   workflow_dispatch:
 
@@ -7,30 +7,35 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Set up Java
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Set up Java JDK
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
-          
+
       - name: Download bundletool & uber-apk-signer
         run: |
           wget https://github.com/google/bundletool/releases/download/1.15.6/bundletool-all-1.15.6.jar -O bundletool.jar
           wget https://github.com/patrickfav/uber-apk-signer/releases/download/v1.3.0/uber-apk-signer-1.3.0.jar -O uber-apk-signer.jar
-          
-      - name: Build APKs from AAB
+
+      - name: Build APK from AAB
         run: |
           java -jar bundletool.jar build-apks --bundle=ClassmateX.aab --output=app.apks --mode=universal
           unzip app.apks -d output
-          
-      - name: Sign APK properly
-        run: |
-          java -jar uber-apk-signer.jar --apks output/universal.apk --overwrite
-          mv output/universal.apk ClassmateX-universal.apk
 
-      - name: Upload APK Artifact
+      - name: Sign APK with uber-apk-signer
+        run: |
+          java -jar uber-apk-signer.jar --apks output/universal.apk --allowResign --overwrite
+          mv output/universal.apk ClassmateX-signed.apk
+
+      - name: Upload Signed APK
         uses: actions/upload-artifact@v4
         with:
-          name: ClassmateX-APK
-          path: ClassmateX-universal.apk
+          name: ClassmateX-Perfect-APK
+          path: ClassmateX-signed.apk
