@@ -1,0 +1,16 @@
+{
+  "name": "ClassmateX — Live Realtime Social Chat",
+  "short_name": "ClassmateX",
+  "description": "Chat na classmates wako — DM, Stories, Calls, bure kabisa.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#020617",
+  "theme_color": "#18122B",
+  "lang": "sw",
+  "icons": [
+    { "src": "logo.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "logo.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
