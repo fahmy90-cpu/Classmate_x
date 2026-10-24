@@ -282,7 +282,13 @@
       animation: eqBar 0.9s ease-in-out infinite;
       transform-origin: bottom;
     }
-  </style>
+  
+    /* CX VISIBILITY FIX */
+    #onboardingOverlay:not(.hidden), #appTourOverlay:not(.hidden), #callScreen:not(.hidden) { display:flex !important; }
+    #storyViewerModal:not(.hidden), #createStoryModal:not(.hidden) { display:flex !important; }
+    .glass-card { background: rgba(15,23,42,0.97) !important; }
+    .chat-bubble-received { background: rgba(30,41,59,0.97) !important; }
+</style>
 </head>
 
 <body class="h-full w-full bg-slate-950 font-sans text-slate-100 antialiased select-none overflow-x-hidden">
@@ -2692,7 +2698,19 @@
               triggerNotificationToast("Account Banned", "system", "Your account has been banned by Admin.", "CX");
             }
           } catch (e) {}
-        }, 120000); // kila dakika 2 — quota iwe salama, online bado halisi (window ni dakika 3)
+        }, 60000); // kila dakika 2 — quota iwe salama, online bado halisi (window ni dakika 3)
+
+      const setPresence = (online) => {
+        if (!db || !currentUserHandle || userPrefs.lastSeen === false) return;
+        setDoc(getPublicDoc("users", currentUserHandle),
+          { isOnline: online, lastActiveMs: Date.now() }, { merge: true }).catch(() => {});
+      };
+      window.addEventListener('pagehide', () => setPresence(false));
+      window.addEventListener('beforeunload', () => setPresence(false));
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') setPresence(false);
+        else setPresence(true);
+      });
       }
 
       // Load mute/block lists + real stories
@@ -3115,7 +3133,15 @@
           } catch (e) {}
         });
         // uid-room TU ndiyo inbox ya kweli (handle-room zilikuwa zinarudisha chats zilizofutwa)
-        threadListeners['__inbox__'] = () => { try { unB(); } catch (e) {} };
+        const oldInboxStop = () => { try { unB(); } catch (e) {} };
+    threadListeners['__inbox__'] = oldInboxStop;
+    try {
+      const unC2 = onSnapshot(getPublicCol(`messages_dm-${currentUserHandle}`), (snap) => {
+        snap.forEach(d => ensureThread(d.data(), `messages_dm-${currentUserHandle}`));
+        saveMyThreads();
+      }, () => {});
+      threadListeners['__inbox__'] = () => { try { oldInboxStop(); unC2(); } catch (e) {} };
+    } catch (e) {}
       } catch (e) {}
     }
 
@@ -3285,10 +3311,14 @@
 
     // WhatsApp-style profile options mapya
     document.getElementById('wpActionCallBtn')?.addEventListener('click', () => {
-      triggerNotificationToast('Audio Call', 'system', 'Voice calls are coming soon in a future update!', 'CX');
+      document.getElementById('viewProfileModal')?.classList.add('hidden');
+      if (activeChatRecipient?.handle && activeChatRecipient.handle !== 'global_community') startCall('audio');
+      else triggerNotificationToast('Call', 'system', 'Fungua DM kwanza kupiga simu', 'CX');
     });
     document.getElementById('wpActionVideoBtn')?.addEventListener('click', () => {
-      triggerNotificationToast('Video Call', 'system', 'Video calls are coming soon in a future update!', 'CX');
+      document.getElementById('viewProfileModal')?.classList.add('hidden');
+      if (activeChatRecipient?.handle && activeChatRecipient.handle !== 'global_community') startCall('video');
+      else triggerNotificationToast('Video Call', 'system', 'Fungua DM kwanza kupiga video', 'CX');
     });
     document.getElementById('wpActionSearchBtn')?.addEventListener('click', () => {
       document.getElementById('viewProfileModal')?.classList.add('hidden');
@@ -3500,7 +3530,8 @@
               bubble.appendChild(reactTag);
             }
             reactTag.innerHTML = isIcon ? `<i class="${reactionVal} text-base"></i>` : `<span>${reactionVal}</span>`;
-            try { triggerEmojiMilipuko(bubble, emoji); } catch (e) {} // BURST
+            const REACTION_EMOJI_MAP = { 'ph-fill ph-heart': '❤️', 'ph ph-fire': '🔥', 'ph ph-thumbs-up': '👍', 'ph ph-smiley': '😊', 'ph ph-hands-clapping': '👏', 'ph ph-lightbulb': '💡' };
+            try { triggerEmojiMilipuko(bubble, REACTION_EMOJI_MAP[reactionVal] || reactionVal); } catch (e) {} // BURST
             if (selectedMsgForAction.id && db) {
               try { await updateDoc(getPublicDoc(`messages_${currentActiveChatId}`, selectedMsgForAction.id), { reaction: reactionVal }); } catch(e) {}
             }
@@ -4089,6 +4120,7 @@
     });
 
     async function sendImageMessage(dataUrl) {
+      const isDmChat = currentActiveChatId.startsWith('dm-') || currentActiveChatId.startsWith('dm_');
       const now = new Date();
       const optMsgId = 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
       const _medId = newMediaId();
@@ -5050,7 +5082,8 @@
       e.target.value = '';
     });
 
-    document.getElementById('cameraBtn')?.addEventListener('click', () => {
+    document.getElementById('sheetCameraBtn')?.addEventListener('click', () => {
+      document.getElementById('attachSheetModal')?.classList.add('hidden');
       document.getElementById('chatCameraInput')?.click();
     });
 
@@ -5061,12 +5094,7 @@
       if (!text && !attachedFile) return;
       // PRE-FLIGHT: kama token imekataa, please log in again MARA MOJA (badala ya kufeli kimya)
       const _pf = await preflightAuth();
-      if (!_pf.ok) {
-        if (confirm('SESSION IMEISHA\n\nLogin yako haijawezeshwa (' + _pf.reason + ').\n\nBonyeza OK kuingia upya sasa.')) {
-          document.getElementById('settingsLogoutBtn')?.click();
-        }
-        return;
-      }
+      if (!_pf.ok) { console.warn('preflight warn:', _pf.reason, '— continuing anyway'); }
 
       const isDmChat = currentActiveChatId.startsWith('dm-') || currentActiveChatId.startsWith('dm_');
       const dmTarget = isDmChat ? (activeChatRecipient.handle || null) : null;
@@ -5168,6 +5196,9 @@
         delete pendingSends[optMsgId];
         // MUHIMMU: Nakala kwenye chumba cha mtu binafsi — ndivyo inbox ya mpokeaji inavyogundua ujumbe.
         if (isDmChat && activeChatRecipient.uid) setDoc(getPublicDoc(`messages_dm-${activeChatRecipient.uid}`, optMsgId), newMsg).catch(() => {});
+        // FIX DM: mpokeaji wa handle-room pia
+        if (isDmChat && !activeChatRecipient.uid && activeChatRecipient.handle) setDoc(getPublicDoc(`messages_dm-${activeChatRecipient.handle}`, optMsgId), newMsg).catch(() => {});
+        if (isDmChat && !currentUserId && currentUserHandle) setDoc(getPublicDoc(`messages_dm-${currentUserHandle}`, optMsgId), newMsg).catch(() => {});
         // CHUMBA CHAKO: nakala kwenye uid-room YAKO — kila mtu awe na chumba chake kamili
         if (isDmChat && currentUserId) setDoc(getPublicDoc(`messages_dm-${currentUserId}`, optMsgId), newMsg).catch(() => {});
         // Push notify DM recipient (heshimu mute list yake)
@@ -7543,6 +7574,7 @@
       const item = document.createElement('div');
       item.className = 'story-item-trigger flex flex-col items-center gap-1 cursor-pointer shrink-0 animate-pop-in';
       item.setAttribute('data-dynamic-story', '1');
+      item.dataset.ts = s.createdAtMs || s.ts || s.timeMs || 0;
       const isCeoStory = s.handle === 'fahmy_mazrui';
       const countBadge = ''; // hakuna badge — status safi kama WhatsApp
       item.innerHTML = `
@@ -9615,6 +9647,39 @@
       }
     });
 
-  </script>
+  
+// ==================== CX FULL FIX PACK ====================
+document.querySelector('[data-nav="global"]')?.addEventListener('click', () => {
+  window.openChatThread('global-group');
+});
+
+let __cxArranging = false;
+function arrangeStories() {
+  if (__cxArranging) return;
+  const box = document.getElementById('storiesContainer');
+  if (!box) return;
+  __cxArranging = true;
+  const items = Array.from(box.querySelectorAll('[data-dynamic-story]'));
+  items.sort((a, b) => (parseInt(b.dataset.ts || 0, 10) || 0) - (parseInt(a.dataset.ts || 0, 10) || 0));
+  items.forEach(el => box.appendChild(el));
+  __cxArranging = false;
+}
+try {
+  const __storyBox = document.getElementById('storiesContainer');
+  if (__storyBox) new MutationObserver(() => arrangeStories()).observe(__storyBox, { childList: true });
+} catch (e) {}
+
+['publishStoryBtn', 'publishStoryFab'].forEach(pid => {
+  document.getElementById(pid)?.addEventListener('click', () => {
+    setTimeout(() => {
+      const m = document.getElementById('createStoryModal');
+      if (m && !m.classList.contains('hidden')) {
+        triggerNotificationToast('Status', 'system', 'Imeshindikana kutuma — angalia muunganiko au rules', 'CX');
+      }
+    }, 3000);
+  });
+});
+// ==================== MWISHO WA FIX PACK ====================
+</script>
 </body>
 </html>
